@@ -9,11 +9,13 @@ import {
   updatePaymentStatus
 } from "../../controller/forms/invoiceTaxForm.js";
 
+import { authenticateUser } from "../../middleware/auth.middleware.js";
+
 const router = express.Router();
 
 /* 🔹 CREATE INVOICE WITH IMAGES */
 router.post(
-  "/create",
+  "/create",authenticateUser,
   upload.fields([
     { name: "logo", maxCount: 1 },
     { name: "signature", maxCount: 1 },

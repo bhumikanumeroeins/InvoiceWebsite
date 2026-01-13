@@ -19,7 +19,7 @@ export const createInvoice = async (req, res) => {
       });
     }
 
-    /* ---------------- DATE VALIDATION (DD-MM-YYYY ONLY) ---------------- */
+    /* ---------------- DATE VALIDATION ---------------- */
     if (data.invoiceMeta?.invoiceDate) {
       const parsedInvoiceDate = parseDDMMYYYY(
         data.invoiceMeta.invoiceDate
@@ -65,10 +65,13 @@ export const createInvoice = async (req, res) => {
       data.payment.qrCode = req.files.qrCode[0].filename;
     }
 
-    /* ---------------- SAVE INVOICE ---------------- */
+    /* ---------------- FORCE DEFAULTS ---------------- */
+    data.paymentStatus = "unpaid";
+    data.createdBy = req.user.userId; // 👈 from token
+
+    /* ---------------- SAVE ---------------- */
     const invoice = await InvoiceTaxForm.create(data);
 
-    /* ---------------- RESPONSE ---------------- */
     return res.status(201).json({
       success: true,
       message: "Invoice created successfully",
@@ -77,13 +80,13 @@ export const createInvoice = async (req, res) => {
 
   } catch (error) {
     console.error("CREATE INVOICE ERROR 👉", error);
-
     return res.status(500).json({
       success: false,
       message: error.message
     });
   }
 };
+
 
 
 // get all invoices

@@ -108,10 +108,18 @@ const invoiceSchema = new mongoose.Schema({
     default: "unpaid"
   },
 
+  createdBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Registration",
+  required: true
+},
+
   createdAt: {
     type: Date,
     default: Date.now
   }
+
+  
 });
 
 export default mongoose.model("InvoiceTaxForm", invoiceSchema);
