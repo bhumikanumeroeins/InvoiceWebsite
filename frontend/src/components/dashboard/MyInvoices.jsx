@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, Filter, Loader2 } from 'lucide-react';
+import { invoiceAPI, getUploadsUrl } from '../../services/api';
 
 const MyInvoices = ({ onInvoiceClick }) => {
   const [invoices, setInvoices] = useState([]);
@@ -11,14 +12,60 @@ const MyInvoices = ({ onInvoiceClick }) => {
     setLoading(true);
     setError(null);
     try {
+      const response = await invoiceAPI.getAll();
       
-      const sampleData = [
-        { id: 1, customer: '', number: 'BFA-222', date: '06/01/2026', paid: 10584.00, total: 10584.00, status: 'paid' },
-        { id: 2, customer: 'infrabuild pvt ltd andheri ...', number: 'BFA-221', date: '06/01/2026', paid: 0.00, total: 10584.00, status: 'unpaid' },
-        { id: 3, customer: 'infrabuild pvt ltd andheri ...', number: 'BFA-220', date: '06/01/2026', paid: 0.00, total: 10584.00, status: 'unpaid' },
-      ];
-      setInvoices(sampleData);
+      // Transform backend data to frontend format
+      const transformedInvoices = (response.data || []).map(inv => ({
+        id: inv._id,
+        _id: inv._id,
+        customer: inv.client?.name || '',
+        number: inv.invoiceMeta?.invoiceNo || '',
+        date: inv.invoiceMeta?.invoiceDate 
+          ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString('en-GB') 
+          : '',
+        dueDate: inv.invoiceMeta?.dueDate 
+          ? new Date(inv.invoiceMeta.dueDate).toLocaleDateString('en-GB') 
+          : '',
+        paid: 0, // Backend doesn't track payments yet
+        total: inv.totals?.grandTotal || 0,
+        status: 'unpaid', // Backend doesn't track status yet
+        // Data for preview
+        logo: inv.business?.logo ? `${getUploadsUrl()}/uploads/${inv.business.logo}` : null,
+        companyName: inv.business?.name || '',
+        companyAddress: `${inv.business?.address || ''}\n${inv.business?.phone || ''}, ${inv.business?.email || ''}`,
+        billTo: {
+          name: inv.client?.name || '',
+          address: `${inv.client?.address || ''}\n${inv.client?.email || ''}`,
+        },
+        shipTo: inv.shipTo?.shippingAddress ? {
+          name: '',
+          address: inv.shipTo.shippingAddress,
+        } : null,
+        invoiceNumber: inv.invoiceMeta?.invoiceNo || '',
+        invoiceDate: inv.invoiceMeta?.invoiceDate 
+          ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString('en-GB') 
+          : '',
+        items: (inv.items || []).map(item => ({
+          qty: item.quantity || 1,
+          description: item.description || '',
+          unitPrice: item.rate || 0,
+          amount: item.amount || 0,
+        })),
+        terms: (inv.terms || []).map(t => t.text),
+        subtotal: inv.totals?.subtotal || 0,
+        taxAmount: inv.totals?.taxTotal || 0,
+        paymentInfo: {
+          bankName: inv.payment?.bankName || '',
+          accountNo: inv.payment?.accountNo || '',
+          ifscCode: inv.payment?.ifscCode || '',
+        },
+        signature: inv.signature ? `${getUploadsUrl()}/uploads/${inv.signature}` : null,
+        qrCode: inv.payment?.qrCode ? `${getUploadsUrl()}/uploads/${inv.payment.qrCode}` : null,
+      }));
+      
+      setInvoices(transformedInvoices);
     } catch (err) {
+      console.error('Fetch invoices error:', err);
       setError('Failed to fetch invoices');
     } finally {
       setLoading(false);

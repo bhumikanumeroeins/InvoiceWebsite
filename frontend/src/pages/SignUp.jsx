@@ -1,26 +1,33 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { FileText } from 'lucide-react';
+import { authAPI } from '../services/api';
 
 const SignUp = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setError('');
+        setSuccess('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        setSuccess('');
 
         try {
-            console.log('Sign up:', formData);
+            await authAPI.register(formData);
+            setSuccess('Account created successfully! Redirecting to login...');
+            setTimeout(() => navigate('/signin'), 2000);
         } catch (err) {
             setError(err.message || 'Something went wrong');
         } finally {
@@ -50,6 +57,12 @@ const SignUp = () => {
                     {error && (
                         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
                             {error}
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-xl text-sm">
+                            {success}
                         </div>
                     )}
 

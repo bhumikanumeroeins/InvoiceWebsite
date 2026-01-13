@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, ChevronDown, Settings, LogOut, Plus, FileText, Users, BarChart3, UserPlus, X, Receipt, CreditCard, FileCheck, Truck, ShoppingCart, Eye } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import InvoiceForm from '../components/invoice/InvoiceForm';
 import MyInvoices from '../components/dashboard/MyInvoices';
 import MyCustomers from '../components/dashboard/MyCustomers';
 import MyReports from '../components/dashboard/MyReports';
 import NewCustomer from '../components/dashboard/NewCustomer';
 import InvoicePreview from '../components/dashboard/InvoicePreview';
+import { getCurrentUser, authAPI } from '../services/api';
 
 const documentTypes = [
   { id: 'invoice', label: 'Invoice', icon: FileText },
@@ -24,13 +25,26 @@ const documentTypes = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('myInvoices');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [userEmail] = useState('user@example.com');
+  const [userEmail, setUserEmail] = useState('');
   const [selectedDocType, setSelectedDocType] = useState('invoice');
   const [showExtraTabs, setShowExtraTabs] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (user && user.email) {
+      setUserEmail(user.email);
+    }
+  }, []);
+
+  const handleSignOut = () => {
+    authAPI.logout();
+    navigate('/');
+  };
 
   const currentDoc = documentTypes.find(d => d.id === selectedDocType) || documentTypes[0];
 
@@ -101,7 +115,6 @@ const Dashboard = () => {
   };
 
   const handleInvoiceSaved = (invoiceData) => {
-    // When invoice is saved, show preview
     setSelectedInvoice(invoiceData);
     setActiveTab('invoicePreview');
     setShowExtraTabs(false);
@@ -150,7 +163,10 @@ const Dashboard = () => {
                 <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2">
                   <Settings className="w-4 h-4" /> Settings
                 </button>
-                <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-red-600">
+                <button 
+                  onClick={handleSignOut}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-red-600"
+                >
                   <LogOut className="w-4 h-4" /> Sign Out
                 </button>
               </div>

@@ -57,8 +57,27 @@ const InvoicePreview = ({ invoice, onClose, onEdit }) => {
     }
   };
 
-  // Sample invoice data for preview
-  const previewData = invoice || {
+  // Sample invoice data for preview - use actual invoice data if available
+  const previewData = invoice ? {
+    logo: invoice.logo,
+    companyName: invoice.companyName,
+    companyAddress: invoice.companyAddress,
+    billTo: invoice.billTo,
+    shipTo: invoice.shipTo,
+    invoiceNumber: invoice.invoiceNumber || invoice.number,
+    invoiceDate: invoice.invoiceDate || invoice.date,
+    dueDate: invoice.dueDate,
+    items: invoice.items || [],
+    terms: invoice.terms || [],
+    subtotal: invoice.subtotal || 0,
+    taxAmount: invoice.taxAmount || 0,
+    total: invoice.total || 0,
+    paymentInfo: invoice.paymentInfo,
+    signature: invoice.signature,
+    qrCode: invoice.qrCode,
+    number: invoice.number || invoice.invoiceNumber,
+    date: invoice.date || invoice.invoiceDate,
+  } : {
     number: 'BFA-227',
     date: '12/01/2026',
     dueDate: '27/01/2026',

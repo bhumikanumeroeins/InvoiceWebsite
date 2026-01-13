@@ -13,11 +13,15 @@ import {
   PenTool,
   CreditCard,
   QrCode,
+  Loader2,
+  LogIn,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import TaxModal from "./TaxModal";
 import SignatureModal from "./SignatureModal";
 import SavedItemsModal from "./SavedItemsModal";
 import FooterLabelModal from "./FooterLabelModal";
+import { invoiceAPI, isAuthenticated } from "../../services/api";
 
 const documentConfig = {
   invoice: {
@@ -127,9 +131,13 @@ const documentConfig = {
 const InvoiceForm = ({
   documentType = "invoice",
   documentLabel = "Invoice",
+  onSave,
 }) => {
   const config = documentConfig[documentType] || documentConfig["invoice"];
   const [formMode, setFormMode] = useState('basic'); // 'basic' or 'advanced'
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [invoiceData, setInvoiceData] = useState({
     fromName: "",
     fromAddress: "",
@@ -195,6 +203,9 @@ const InvoiceForm = ({
   const [signature, setSignature] = useState(null);
   const [logo, setLogo] = useState(null);
   const [qrCode, setQrCode] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
+  const [signatureFile, setSignatureFile] = useState(null);
+  const [qrCodeFile, setQrCodeFile] = useState(null);
   const [footerLabel, setFooterLabel] = useState('Terms & Conditions');
   const [hideFooterLabel, setHideFooterLabel] = useState(false);
 
@@ -334,18 +345,25 @@ const InvoiceForm = ({
   };
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
-    if (file) setLogo(URL.createObjectURL(file));
+    if (file) {
+      setLogo(URL.createObjectURL(file));
+      setLogoFile(file);
+    }
   };
   const handleSignatureUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       setSignature(URL.createObjectURL(file));
+      setSignatureFile(file);
       setShowSignatureModal(false);
     }
   };
   const handleQrCodeUpload = (e) => {
     const file = e.target.files[0];
-    if (file) setQrCode(URL.createObjectURL(file));
+    if (file) {
+      setQrCode(URL.createObjectURL(file));
+      setQrCodeFile(file);
+    }
   };
 
   const handleTermChange = (index, value) => {
@@ -374,6 +392,190 @@ const InvoiceForm = ({
     0
   );
   const total = subtotal + totalTax;
+
+  // Convert document type to backend format
+  const getBackendDocType = () => {
+    const typeMap = {
+      'invoice': 'invoice',
+      'tax-invoice': 'taxInvoice',
+      'proforma-invoice': 'proforma',
+      'receipt': 'receipt',
+      'sales-receipt': 'salesReceipt',
+      'cash-receipt': 'cashReceipt',
+      'quote': 'quote',
+      'estimate': 'estimate',
+      'credit-memo': 'creditMemo',
+      'credit-note': 'creditNote',
+      'purchase-order': 'purchaseOrder',
+      'delivery-note': 'deliveryNote',
+    };
+    return typeMap[documentType] || 'invoice';
+  };
+
+  // Format date to DD-MM-YYYY for backend
+  const formatDateForBackend = (dateStr) => {
+    if (!dateStr) return null;
+    const [year, month, day] = dateStr.split('-');
+    return `${day}-${month}-${year}`;
+  };
+
+  // Parse business address into components
+  const parseAddress = (addressStr) => {
+    const lines = addressStr.split('\n').filter(l => l.trim());
+    return {
+      address: lines[0] || '',
+      city: '',
+      state: '',
+      zip: '',
+      phone: lines[1]?.split(',')[0]?.trim() || '',
+      email: lines[1]?.split(',')[1]?.trim() || '',
+    };
+  };
+
+  // Parse client address
+  const parseClientAddress = (addressStr) => {
+    const lines = addressStr.split('\n').filter(l => l.trim());
+    return {
+      name: lines[0] || '',
+      address: lines[1] || '',
+      city: '',
+      state: '',
+      zip: '',
+      email: lines[2] || '',
+    };
+  };
+
+  // Handle save invoice
+  const handleSaveInvoice = async () => {
+    // Check if user is logged in
+    if (!isAuthenticated()) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    setSaving(true);
+    setSaveError('');
+    setShowLoginPrompt(false);
+
+    try {
+      // Prepare items for backend
+      const backendItems = items.map(item => {
+        const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
+        const itemTaxes = savedTaxes.filter(t => item.taxIds?.includes(t.id));
+        const taxAmount = itemTaxes.reduce((sum, t) => sum + (itemAmount * t.rate / 100), 0);
+        
+        return {
+          description: item.description,
+          quantity: item.quantity || 1,
+          rate: formMode === 'advanced' ? item.rate : item.amount,
+          amount: itemAmount,
+          tax: taxAmount,
+        };
+      });
+
+      // Prepare invoice data for backend
+      const businessInfo = parseAddress(invoiceData.fromAddress);
+      const clientInfo = parseClientAddress(invoiceData.billTo);
+
+      const invoicePayload = {
+        formType: formMode,
+        documentType: getBackendDocType(),
+        business: {
+          name: invoiceData.fromName,
+          ...businessInfo,
+        },
+        client: clientInfo,
+        shipTo: formMode === 'advanced' ? {
+          shippingAddress: invoiceData.shipTo,
+          shippingCity: '',
+          shippingState: '',
+          shippingZip: '',
+        } : undefined,
+        invoiceMeta: {
+          invoiceNo: invoiceData.invoiceNumber,
+          invoiceDate: formatDateForBackend(invoiceData.invoiceDate),
+          dueDate: formatDateForBackend(invoiceData.dueDate),
+          currency: invoiceData.currency,
+        },
+        items: backendItems,
+        terms: terms.filter(t => t.trim()).map(text => ({ text })),
+        payment: {
+          bankName: invoiceData.bankName,
+          accountNo: invoiceData.accountNo,
+          ifscCode: invoiceData.ifscCode,
+        },
+        totals: {
+          subtotal,
+          taxTotal: totalTax,
+          grandTotal: config.showTax ? total : subtotal,
+        },
+      };
+
+      // Create FormData for file uploads
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(invoicePayload));
+      
+      if (logoFile) {
+        formData.append('logo', logoFile);
+      }
+      if (signatureFile) {
+        formData.append('signature', signatureFile);
+      }
+      if (qrCodeFile) {
+        formData.append('qrCode', qrCodeFile);
+      }
+
+      const response = await invoiceAPI.create(formData);
+      
+      // Call onSave callback with properly formatted data for preview
+      if (onSave && response.data) {
+        const savedInvoice = response.data;
+        onSave({
+          _id: savedInvoice._id,
+          number: invoiceData.invoiceNumber,
+          customer: clientInfo.name || 'Customer',
+          date: invoiceData.invoiceDate,
+          dueDate: invoiceData.dueDate,
+          total: config.showTax ? total : subtotal,
+          // Data for template preview
+          logo: logo,
+          companyName: invoiceData.fromName,
+          companyAddress: invoiceData.fromAddress,
+          billTo: {
+            name: clientInfo.name,
+            address: `${clientInfo.address}\n${clientInfo.email}`,
+          },
+          shipTo: formMode === 'advanced' ? {
+            name: '',
+            address: invoiceData.shipTo,
+          } : null,
+          invoiceNumber: invoiceData.invoiceNumber,
+          invoiceDate: invoiceData.invoiceDate,
+          items: items.map(item => ({
+            qty: item.quantity || 1,
+            description: item.description,
+            unitPrice: formMode === 'advanced' ? item.rate : item.amount,
+            amount: formMode === 'advanced' ? (item.quantity * item.rate) : item.amount,
+          })),
+          terms: terms.filter(t => t.trim()),
+          subtotal: subtotal,
+          taxAmount: totalTax,
+          paymentInfo: {
+            bankName: invoiceData.bankName,
+            accountNo: invoiceData.accountNo,
+            ifscCode: invoiceData.ifscCode,
+          },
+          signature: signature,
+          qrCode: qrCode,
+        });
+      }
+    } catch (error) {
+      console.error('Save invoice error:', error);
+      setSaveError(error.message || 'Failed to save invoice');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
@@ -995,14 +1197,46 @@ const InvoiceForm = ({
 
         {/* Action Button */}
         <div className="px-8 py-6 bg-slate-50 border-t border-slate-200">
-          <button className="relative w-full py-4 bg-slate-900 text-white font-semibold rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-3 text-lg overflow-hidden">
+          {saveError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
+              {saveError}
+            </div>
+          )}
+          {showLoginPrompt && (
+            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <LogIn className="w-5 h-5 text-amber-600" />
+                <span className="text-amber-800 font-medium">Please sign in to save your invoice</span>
+              </div>
+              <Link 
+                to="/signin" 
+                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+              >
+                Sign In
+              </Link>
+            </div>
+          )}
+          <button 
+            onClick={handleSaveInvoice}
+            disabled={saving}
+            className="relative w-full py-4 bg-slate-900 text-white font-semibold rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-3 text-lg overflow-hidden disabled:opacity-50"
+          >
             {/* Decorative Background */}
             <div className="absolute inset-0">
               <div className="absolute top-0 left-1/4 w-32 h-32 bg-indigo-500/30 rounded-full blur-2xl" />
               <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-emerald-500/30 rounded-full blur-2xl" />
             </div>
-            <FileText className="w-5 h-5 relative z-10" />
-            <span className="relative z-10">Save {documentLabel}, Print or Send</span>
+            {saving ? (
+              <>
+                <Loader2 className="w-5 h-5 relative z-10 animate-spin" />
+                <span className="relative z-10">Saving...</span>
+              </>
+            ) : (
+              <>
+                <FileText className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">Save {documentLabel}, Print or Send</span>
+              </>
+            )}
           </button>
         </div>
       </div>
