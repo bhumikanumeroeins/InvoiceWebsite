@@ -19,7 +19,7 @@ export const createInvoice = async (req, res) => {
       });
     }
 
-    /* ---------------- DATE VALIDATION (DD-MM-YYYY ONLY) ---------------- */
+    /* ---------------- DATE VALIDATION ---------------- */
     if (data.invoiceMeta?.invoiceDate) {
       const parsedInvoiceDate = parseDDMMYYYY(
         data.invoiceMeta.invoiceDate
@@ -65,10 +65,13 @@ export const createInvoice = async (req, res) => {
       data.payment.qrCode = req.files.qrCode[0].filename;
     }
 
-    /* ---------------- SAVE INVOICE ---------------- */
+    /* ---------------- FORCE DEFAULTS ---------------- */
+    data.paymentStatus = "unpaid";
+    data.createdBy = req.user.userId; // 👈 from token
+
+    /* ---------------- SAVE ---------------- */
     const invoice = await InvoiceTaxForm.create(data);
 
-    /* ---------------- RESPONSE ---------------- */
     return res.status(201).json({
       success: true,
       message: "Invoice created successfully",
@@ -77,6 +80,32 @@ export const createInvoice = async (req, res) => {
 
   } catch (error) {
     console.error("CREATE INVOICE ERROR 👉", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+
+// get all invoices
+export const getAllInvoices = async (req, res) => {
+  try {
+    const userId = req.user.userId; // 👈 from token
+
+    const invoices = await InvoiceTaxForm
+      .find({ createdBy: userId })
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: invoices.length,
+      data: invoices
+    });
+
+  } catch (error) {
+    console.error("GET INVOICES ERROR 👉", error);
 
     return res.status(500).json({
       success: false,
@@ -86,58 +115,45 @@ export const createInvoice = async (req, res) => {
 };
 
 
-// get all invoices
-export const getAllInvoices = async (req, res) => {
-  try {
-    const invoices = await InvoiceTaxForm
-      .find()
-      .sort({ createdAt: -1 });
-
-    res.json({
-      success: true,
-      data: invoices
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
-
 // get invoice by id
 export const getInvoiceById = async (req, res) => {
   try {
-    const invoice = await InvoiceTaxForm.findById(req.params.id);
+    const { id } = req.params;
+    const userId = req.user.userId; // 👈 from token
+
+    const invoice = await InvoiceTaxForm.findOne({
+      _id: id,
+      createdBy: userId
+    });
 
     if (!invoice) {
       return res.status(404).json({
         success: false,
-        message: "Invoice not found"
+        message: "Invoice not found or access denied"
       });
     }
 
-    res.json({
+    return res.status(200).json({
       success: true,
       data: invoice
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error("GET INVOICE BY ID ERROR 👉", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message
     });
   }
 };
 
-
 // update invoice
 export const updateInvoice = async (req, res) => {
   try {
     /* ---------------- PARAMS ---------------- */
-    console.log("📌 req.params:", req.params);
     const { invoiceId } = req.params;
+    const userId = req.user.userId; // 👈 from token
 
     if (!invoiceId) {
       return res.status(400).json({
@@ -148,42 +164,37 @@ export const updateInvoice = async (req, res) => {
 
     /* ---------------- BODY ---------------- */
     const data = JSON.parse(req.body.data || "{}");
-    console.log("📌 parsed data:", data);
 
-    /* ---------------- FILES ---------------- */
-    console.log("📌 req.files:", req.files);
-
-    /* ---------------- CHECK INVOICE ---------------- */
-    const existingInvoice = await InvoiceTaxForm.findById(invoiceId);
+    /* ---------------- CHECK OWNERSHIP ---------------- */
+    const existingInvoice = await InvoiceTaxForm.findOne({
+      _id: invoiceId,
+      createdBy: userId
+    });
 
     if (!existingInvoice) {
       return res.status(404).json({
         success: false,
-        message: "Invoice not found"
+        message: "Invoice not found or access denied"
       });
     }
 
-    /* ---------------- DATE VALIDATION (DD-MM-YYYY ONLY IF SENT) ---------------- */
-
+    /* ---------------- DATE VALIDATION ---------------- */
     if (
       data.invoiceMeta &&
       Object.prototype.hasOwnProperty.call(data.invoiceMeta, "invoiceDate")
     ) {
       const value = data.invoiceMeta.invoiceDate;
 
-      if (value !== undefined && value !== null && value !== "") {
+      if (value) {
         const parsedInvoiceDate = parseDDMMYYYY(value);
-
         if (!parsedInvoiceDate) {
           return res.status(400).json({
             success: false,
             message: "invoiceDate must be in DD-MM-YYYY format"
           });
         }
-
         data.invoiceMeta.invoiceDate = parsedInvoiceDate;
       } else {
-        // prevent overwriting existing value
         delete data.invoiceMeta.invoiceDate;
       }
     }
@@ -194,16 +205,14 @@ export const updateInvoice = async (req, res) => {
     ) {
       const value = data.invoiceMeta.dueDate;
 
-      if (value !== undefined && value !== null && value !== "") {
+      if (value) {
         const parsedDueDate = parseDDMMYYYY(value);
-
         if (!parsedDueDate) {
           return res.status(400).json({
             success: false,
             message: "dueDate must be in DD-MM-YYYY format"
           });
         }
-
         data.invoiceMeta.dueDate = parsedDueDate;
       } else {
         delete data.invoiceMeta.dueDate;
@@ -231,13 +240,12 @@ export const updateInvoice = async (req, res) => {
     }
 
     /* ---------------- UPDATE ---------------- */
-    const updatedInvoice = await InvoiceTaxForm.findByIdAndUpdate(
-      invoiceId,
+    const updatedInvoice = await InvoiceTaxForm.findOneAndUpdate(
+      { _id: invoiceId, createdBy: userId },
       { $set: data },
       { new: true, runValidators: true }
     );
 
-    /* ---------------- RESPONSE ---------------- */
     return res.status(200).json({
       success: true,
       message: "Invoice updated successfully",
@@ -255,26 +263,34 @@ export const updateInvoice = async (req, res) => {
 };
 
 
-
 /* ---------------- DELETE INVOICE ---------------- */
 export const deleteInvoice = async (req, res) => {
   try {
-    const invoice = await InvoiceTaxForm.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    const userId = req.user.userId; // 👈 from token
+
+    /* ---------------- DELETE WITH OWNERSHIP CHECK ---------------- */
+    const invoice = await InvoiceTaxForm.findOneAndDelete({
+      _id: id,
+      createdBy: userId
+    });
 
     if (!invoice) {
       return res.status(404).json({
         success: false,
-        message: "Invoice not found"
+        message: "Invoice not found or access denied"
       });
     }
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Invoice deleted successfully"
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error("DELETE INVOICE ERROR 👉", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message
     });

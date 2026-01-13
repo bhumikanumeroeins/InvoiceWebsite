@@ -9,11 +9,13 @@ import {
   updatePaymentStatus
 } from "../../controller/forms/invoiceTaxForm.js";
 
+import { authenticateUser } from "../../middleware/auth.middleware.js";
+
 const router = express.Router();
 
 /* 🔹 CREATE INVOICE WITH IMAGES */
 router.post(
-  "/create",
+  "/create",authenticateUser,
   upload.fields([
     { name: "logo", maxCount: 1 },
     { name: "signature", maxCount: 1 },
@@ -23,9 +25,9 @@ router.post(
 );
 
 /* ---------------- INVOICE CRUD ---------------- */
-router.get("/list", getAllInvoices);
-router.get("/list/:id", getInvoiceById);
-router.put("/update/:invoiceId",upload.fields([
+router.get("/list", authenticateUser, getAllInvoices);
+router.get("/list/:id", authenticateUser, getInvoiceById);
+router.put("/update/:invoiceId",authenticateUser, upload.fields([
     { name: "logo", maxCount: 1 },
     { name: "signature", maxCount: 1 },
     { name: "qrCode", maxCount: 1 }
@@ -33,7 +35,7 @@ router.put("/update/:invoiceId",upload.fields([
   updateInvoice
 );
 
-router.delete("/delete/:id", deleteInvoice);
+router.delete("/delete/:id", authenticateUser, deleteInvoice);
 router.patch(
   "/invoices/:invoiceId/payment-status",
   updatePaymentStatus
