@@ -1,13 +1,26 @@
+import mongoose from "mongoose";
 import InvoiceTaxForm from "../../models/forms/invoiceTaxForm.js";
 
 import { parseDDMMYYYY } from "../../utils/utils.js";
 
 
+
+import ItemMaster from "../../models/items/items.js";
+
 // create invoice
+
 
 
 export const createInvoice = async (req, res) => {
   try {
+    /* ---------------- AUTH CHECK ---------------- */
+    if (!req.user?.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+
     /* ---------------- PARSE JSON ---------------- */
     const data = JSON.parse(req.body.data || "{}");
 
@@ -21,36 +34,28 @@ export const createInvoice = async (req, res) => {
 
     /* ---------------- DATE VALIDATION ---------------- */
     if (data.invoiceMeta?.invoiceDate) {
-      const parsedInvoiceDate = parseDDMMYYYY(
-        data.invoiceMeta.invoiceDate
-      );
-
+      const parsedInvoiceDate = parseDDMMYYYY(data.invoiceMeta.invoiceDate);
       if (!parsedInvoiceDate) {
         return res.status(400).json({
           success: false,
           message: "invoiceDate must be in DD-MM-YYYY format"
         });
       }
-
       data.invoiceMeta.invoiceDate = parsedInvoiceDate;
     }
 
     if (data.invoiceMeta?.dueDate) {
-      const parsedDueDate = parseDDMMYYYY(
-        data.invoiceMeta.dueDate
-      );
-
+      const parsedDueDate = parseDDMMYYYY(data.invoiceMeta.dueDate);
       if (!parsedDueDate) {
         return res.status(400).json({
           success: false,
           message: "dueDate must be in DD-MM-YYYY format"
         });
       }
-
       data.invoiceMeta.dueDate = parsedDueDate;
     }
 
-    /* ---------------- ATTACH FILES ---------------- */
+    /* ---------------- FILE UPLOADS ---------------- */
     if (req.files?.logo?.[0]) {
       data.business = data.business || {};
       data.business.logo = req.files.logo[0].filename;
@@ -65,12 +70,46 @@ export const createInvoice = async (req, res) => {
       data.payment.qrCode = req.files.qrCode[0].filename;
     }
 
-    /* ---------------- FORCE DEFAULTS ---------------- */
-    data.paymentStatus = "unpaid";
-    data.createdBy = req.user.userId; // 👈 from token
+    /* ---------------- ITEMS VALIDATION ---------------- */
+    if (!Array.isArray(data.items) || data.items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one item is required"
+      });
+    }
 
-    /* ---------------- SAVE ---------------- */
+    const itemIds = data.items.map(i => i.itemId || i);
+
+    const masterItems = await ItemMaster.find({
+      _id: { $in: itemIds },
+      createdBy: req.user.userId
+    });
+
+    if (!masterItems.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid items selected"
+      });
+    }
+
+    data.items = masterItems.map(item => ({
+      description: item.description,
+      quantity: item.quantity,
+      rate: item.rate,
+      amount: item.amount,
+      tax: item.tax
+    }));
+
+    /* ---------------- FORCE SYSTEM FIELDS ---------------- */
+    data.createdBy = new mongoose.Types.ObjectId(req.user.userId);
+    data.isDeleted = false;
+    data.paymentStatus = "unpaid";
+
+    /* ---------------- SAVE INVOICE ---------------- */
     const invoice = await InvoiceTaxForm.create(data);
+
+    /* ---------------- POPULATE USER ---------------- */
+    await invoice.populate("createdBy", "email");
 
     return res.status(201).json({
       success: true,
@@ -89,13 +128,17 @@ export const createInvoice = async (req, res) => {
 
 
 
-// get all invoices (excluding deleted)
+
+// get all invoices (only active ones)
 export const getAllInvoices = async (req, res) => {
   try {
     const userId = req.user.userId; // 👈 from token
 
     const invoices = await InvoiceTaxForm
-      .find({ createdBy: userId, isDeleted: false })
+      .find({
+        createdBy: userId,
+        isDeleted: false
+      })
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -114,8 +157,7 @@ export const getAllInvoices = async (req, res) => {
   }
 };
 
-
-// get invoice by id (excluding deleted)
+// get invoice by id (only active invoices)
 export const getInvoiceById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -148,6 +190,7 @@ export const getInvoiceById = async (req, res) => {
     });
   }
 };
+
 
 // update invoice
 export const updateInvoice = async (req, res) => {

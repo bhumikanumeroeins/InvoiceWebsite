@@ -6,7 +6,7 @@ import invoiceRoutesUser from "./routes/users/registration.js";
 import invoiceRoutes from "./routes/forms/invoiceTaxForm.js";
 import customers from "./routes/customers/customers.js";
 import tax from "./routes/taxes/tax.js";
-
+import items from "./routes/items/items.js";
 
 import path from "path";
 
@@ -23,7 +23,7 @@ app.use("/api/invoices", invoiceRoutesUser);
 app.use("/api/invoiceForms", invoiceRoutes);
 app.use("/api/customers", customers);
 app.use("/api/tax", tax);
-// app.use("/api/item", items);
+app.use("/api/item", items);
 
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
