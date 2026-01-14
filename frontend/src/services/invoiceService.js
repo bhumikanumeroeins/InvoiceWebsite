@@ -1,5 +1,32 @@
 import { apiCall } from './apiConfig';
 
+export const customerAPI = {
+  getAll: () => apiCall('/customers/list'),
+  getInvoices: (name) => apiCall(`/customers/invoices/${encodeURIComponent(name)}`),
+};
+
+export const taxAPI = {
+  getAll: () => apiCall('/tax/list'),
+  create: (data) => apiCall('/tax/create', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  delete: (taxId) => apiCall(`/tax/delete/${taxId}`, {
+    method: 'DELETE',
+  }),
+};
+
+export const itemAPI = {
+  getAll: () => apiCall('/item/list'),
+  create: (data) => apiCall('/item/create', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  delete: (itemId) => apiCall(`/item/delete/${itemId}`, {
+    method: 'DELETE',
+  }),
+};
+
 export const invoiceAPI = {
   create: (formData) => apiCall('/invoiceForms/create', {
     method: 'POST',

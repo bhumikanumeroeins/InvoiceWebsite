@@ -34,6 +34,8 @@ const Dashboard = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [editingInvoice, setEditingInvoice] = useState(null);
+  const [invoiceRefreshKey, setInvoiceRefreshKey] = useState(0);
+  const [customerRefreshKey, setCustomerRefreshKey] = useState(0);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -60,7 +62,7 @@ const Dashboard = () => {
     if (selectedCustomer) {
       tabs.push({ 
         id: 'newCustomer', 
-        label: selectedCustomer.customer || 'New Customer', 
+        label: selectedCustomer.client?.name || 'Customer', 
         icon: UserPlus, 
         closable: true 
       });
@@ -95,6 +97,12 @@ const Dashboard = () => {
 
   const handleBaseTabClick = (tabId) => {
     setActiveTab(tabId);
+    // Trigger refresh when switching to myInvoices or myCustomers
+    if (tabId === 'myInvoices') {
+      setInvoiceRefreshKey(prev => prev + 1);
+    } else if (tabId === 'myCustomers') {
+      setCustomerRefreshKey(prev => prev + 1);
+    }
   };
 
   const handleCustomerClick = (customer) => {
@@ -126,6 +134,9 @@ const Dashboard = () => {
     setActiveTab('invoicePreview');
     setShowExtraTabs(false);
     setEditingInvoice(null);
+    // Trigger refresh for invoices and customers after save
+    setInvoiceRefreshKey(prev => prev + 1);
+    setCustomerRefreshKey(prev => prev + 1);
   };
 
   return (
@@ -255,13 +266,13 @@ const Dashboard = () => {
           </div>
         )}
 
-        {activeTab === 'myInvoices' && <MyInvoices onInvoiceClick={handleInvoiceClick} />}
+        {activeTab === 'myInvoices' && <MyInvoices onInvoiceClick={handleInvoiceClick} refreshKey={invoiceRefreshKey} />}
 
-        {activeTab === 'myCustomers' && <MyCustomers onCustomerClick={handleCustomerClick} />}
+        {activeTab === 'myCustomers' && <MyCustomers onCustomerClick={handleCustomerClick} refreshKey={customerRefreshKey} />}
 
         {activeTab === 'myReports' && <MyReports />}
 
-        {activeTab === 'newCustomer' && <NewCustomer customer={selectedCustomer} />}
+        {activeTab === 'newCustomer' && <NewCustomer customer={selectedCustomer} onInvoiceClick={handleInvoiceClick} />}
 
         {activeTab === 'invoicePreview' && (
           <InvoicePreview 

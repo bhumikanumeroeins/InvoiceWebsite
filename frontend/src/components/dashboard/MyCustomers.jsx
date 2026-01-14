@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Users, Filter, Loader2 } from 'lucide-react';
+import { customerAPI } from '../../services/invoiceService';
 
-const MyCustomers = ({ onCustomerClick }) => {
+const MyCustomers = ({ onCustomerClick, refreshKey }) => {
   const [customers, setCustomers] = useState([]);
+  const [summary, setSummary] = useState({ totalAmount: 0, paidAmount: 0, balanceDue: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [customerFilter, setCustomerFilter] = useState('all');
@@ -11,14 +13,15 @@ const MyCustomers = ({ onCustomerClick }) => {
     setLoading(true);
     setError(null);
     try {
-     
-      const sampleData = [
-        { id: 1, customer: 'infrabuild pvt ltd andheri easr, mumbai 400069', documents: 2, payments: 'unpaid', paidAmount: 0.00, total: 21168.00 },
-        { id: 2, customer: '', documents: 1, payments: 'paid', paidAmount: 10584.00, total: 10584.00 },
-      ];
-      setCustomers(sampleData);
+      const response = await customerAPI.getAll();
+      if (response.success) {
+        setCustomers(response.data || []);
+        setSummary(response.summary || { totalAmount: 0, paidAmount: 0, balanceDue: 0 });
+      } else {
+        setError(response.message || 'Failed to fetch customers');
+      }
     } catch (err) {
-      setError('Failed to fetch customers');
+      setError(err.message || 'Failed to fetch customers');
     } finally {
       setLoading(false);
     }
@@ -26,32 +29,30 @@ const MyCustomers = ({ onCustomerClick }) => {
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [refreshKey]);
 
   const getFilteredCustomers = () => {
     switch (customerFilter) {
-      case 'overdue': return customers.filter(c => c.payments === 'overdue');
-      case 'unpaid': return customers.filter(c => c.payments === 'unpaid');
-      case 'partial': return customers.filter(c => c.payments === 'partial');
-      case 'paid': return customers.filter(c => c.payments === 'paid');
+      case 'overdue': return customers.filter(c => c.paymentStatus === 'overdue');
+      case 'unpaid': return customers.filter(c => c.paymentStatus === 'unpaid');
+      case 'partial': return customers.filter(c => c.paymentStatus === 'partiallyPaid');
+      case 'paid': return customers.filter(c => c.paymentStatus === 'paid');
       default: return customers;
     }
   };
 
   const getFilterCounts = () => ({
     all: customers.length,
-    overdue: customers.filter(c => c.payments === 'overdue').length,
-    unpaid: customers.filter(c => c.payments === 'unpaid').length,
-    partial: customers.filter(c => c.payments === 'partial').length,
-    paid: customers.filter(c => c.payments === 'paid').length,
+    overdue: customers.filter(c => c.paymentStatus === 'overdue').length,
+    unpaid: customers.filter(c => c.paymentStatus === 'unpaid').length,
+    partial: customers.filter(c => c.paymentStatus === 'partiallyPaid').length,
+    paid: customers.filter(c => c.paymentStatus === 'paid').length,
   });
 
   const filterCounts = getFilterCounts();
   const filteredCustomers = getFilteredCustomers();
 
-  const totalAmount = customers.reduce((sum, c) => sum + c.total, 0);
-  const paidAmount = customers.reduce((sum, c) => sum + c.paidAmount, 0);
-  const balanceDue = totalAmount - paidAmount;
+  const { totalAmount, paidAmount, balanceDue } = summary;
 
   const customerFilters = [
     { id: 'all', label: 'All Customers', color: 'bg-slate-500' },
@@ -61,11 +62,11 @@ const MyCustomers = ({ onCustomerClick }) => {
     { id: 'paid', label: 'Paid', color: 'bg-emerald-500' },
   ];
 
-  const getPaymentBadge = (payment) => {
-    switch (payment) {
+  const getPaymentBadge = (status) => {
+    switch (status) {
       case 'paid': return <span className="text-emerald-600 font-medium">Paid</span>;
       case 'unpaid': return <span className="text-orange-500 font-medium">Unpaid</span>;
-      case 'partial': return <span className="text-amber-500 font-medium">Partial</span>;
+      case 'partiallyPaid': return <span className="text-amber-500 font-medium">Partial</span>;
       case 'overdue': return <span className="text-red-500 font-medium">Overdue</span>;
       default: return <span className="text-slate-500">—</span>;
     }
@@ -156,22 +157,27 @@ const MyCustomers = ({ onCustomerClick }) => {
               <tbody>
                 {filteredCustomers.map((customer, index) => (
                   <tr 
-                    key={customer.id} 
+                    key={customer.client?.email || index} 
                     onClick={() => onCustomerClick && onCustomerClick(customer)}
                     className={`border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${
                       index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
                     }`}
                   >
-                    <td className="p-4 text-sm text-slate-700 font-medium">{customer.customer || '—'}</td>
-                    <td className="p-4 text-sm text-slate-600 text-center">{customer.documents}</td>
-                    <td className="p-4 text-sm text-center">{getPaymentBadge(customer.payments)}</td>
+                    <td className="p-4">
+                      <div className="text-sm text-slate-700 font-medium">{customer.client?.name || '—'}</div>
+                      {customer.client?.email && (
+                        <div className="text-xs text-slate-400">{customer.client.email}</div>
+                      )}
+                    </td>
+                    <td className="p-4 text-sm text-slate-600 text-center">{customer.documents || 0}</td>
+                    <td className="p-4 text-sm text-center">{getPaymentBadge(customer.paymentStatus)}</td>
                     <td className="p-4 text-sm text-right">
                       <span className={customer.paidAmount > 0 ? 'text-emerald-600 font-medium' : 'text-slate-600'}>
-                        ₹ {customer.paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        ₹ {(customer.paidAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </span>
                     </td>
                     <td className="p-4 text-sm text-slate-700 text-right font-medium">
-                      ₹ {customer.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ₹ {(customer.totals?.grandTotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}

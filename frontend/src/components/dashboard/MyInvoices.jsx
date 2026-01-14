@@ -3,7 +3,7 @@ import { FileText, Filter, Loader2, Trash2, RotateCcw, AlertTriangle } from 'luc
 import { invoiceAPI } from '../../services/invoiceService';
 import { getUploadsUrl } from '../../services/apiConfig';
 
-const MyInvoices = ({ onInvoiceClick }) => {
+const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
   const [invoices, setInvoices] = useState([]);
   const [trashInvoices, setTrashInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -102,9 +102,10 @@ const MyInvoices = ({ onInvoiceClick }) => {
     }
   };
 
+  // Refetch when component mounts or refreshKey changes
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [refreshKey]);
 
   // Handle checkbox selection
   const handleSelectInvoice = (id) => {

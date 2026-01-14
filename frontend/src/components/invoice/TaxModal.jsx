@@ -1,28 +1,39 @@
 import { useState } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Loader2 } from 'lucide-react';
 
-const TaxModal = ({ isOpen, onClose, savedTaxes, onSaveTax, onDeleteTax, selectedTaxes, onToggleTax }) => {
+const TaxModal = ({ isOpen, onClose, savedTaxes, onSaveTax, onDeleteTax, selectedTaxes, onToggleTax, loading }) => {
   const [newTaxName, setNewTaxName] = useState('');
   const [newTaxRate, setNewTaxRate] = useState('');
   const [isCompound, setIsCompound] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null);
 
   if (!isOpen) return null;
 
-  const handleAddTax = () => {
+  const handleAddTax = async () => {
     if (newTaxRate) {
+      setSaving(true);
       const newTax = {
-        id: Date.now(),
         name: newTaxName.trim() || `Tax ${parseFloat(newTaxRate)}%`,
         rate: parseFloat(newTaxRate),
         isCompound
       };
-      onSaveTax(newTax);
-      // Auto-select the newly added tax
-      onToggleTax(newTax.id);
-      setNewTaxName('');
-      setNewTaxRate('');
-      setIsCompound(false);
+      const savedTax = await onSaveTax(newTax);
+      if (savedTax) {
+        // Auto-select the newly added tax
+        onToggleTax(savedTax.id || savedTax._id);
+        setNewTaxName('');
+        setNewTaxRate('');
+        setIsCompound(false);
+      }
+      setSaving(false);
     }
+  };
+
+  const handleDeleteTax = async (taxId) => {
+    setDeleting(taxId);
+    await onDeleteTax(taxId);
+    setDeleting(null);
   };
 
   return (
@@ -51,11 +62,12 @@ const TaxModal = ({ isOpen, onClose, savedTaxes, onSaveTax, onDeleteTax, selecte
               {/* Tax Rows */}
               <div className="border border-slate-200 rounded-b-lg divide-y divide-slate-200">
                 {savedTaxes.map((tax) => {
-                  const isSelected = selectedTaxes.includes(tax.id);
+                  const taxId = tax.id || tax._id;
+                  const isSelected = selectedTaxes.includes(taxId);
                   return (
                     <div 
-                      key={tax.id} 
-                      onClick={() => onToggleTax(tax.id)}
+                      key={taxId} 
+                      onClick={() => onToggleTax(taxId)}
                       className={`grid grid-cols-12 gap-4 px-4 py-3 items-center cursor-pointer transition-colors ${
                         isSelected ? 'bg-emerald-50' : 'hover:bg-slate-50'
                       }`}
@@ -77,11 +89,16 @@ const TaxModal = ({ isOpen, onClose, savedTaxes, onSaveTax, onDeleteTax, selecte
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onDeleteTax(tax.id);
+                            handleDeleteTax(tax.id || tax._id);
                           }}
-                          className="w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+                          disabled={deleting === (tax.id || tax._id)}
+                          className="w-7 h-7 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white rounded-full flex items-center justify-center transition-colors"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          {deleting === (tax.id || tax._id) ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <X className="w-3.5 h-3.5" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -123,10 +140,17 @@ const TaxModal = ({ isOpen, onClose, savedTaxes, onSaveTax, onDeleteTax, selecte
               </label>
               <button
                 onClick={handleAddTax}
-                disabled={!newTaxRate}
-                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors text-sm whitespace-nowrap"
+                disabled={!newTaxRate || saving}
+                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors text-sm whitespace-nowrap flex items-center gap-2"
               >
-                Save Tax
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Tax'
+                )}
               </button>
             </div>
           </div>

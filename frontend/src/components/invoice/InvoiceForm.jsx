@@ -21,7 +21,7 @@ import TaxModal from "./TaxModal";
 import SignatureModal from "./SignatureModal";
 import SavedItemsModal from "./SavedItemsModal";
 import FooterLabelModal from "./FooterLabelModal";
-import { invoiceAPI } from "../../services/invoiceService";
+import { invoiceAPI, taxAPI, itemAPI } from "../../services/invoiceService";
 import { isAuthenticated } from "../../services/authService";
 
 const documentConfig = {
@@ -163,39 +163,16 @@ const InvoiceForm = ({
       taxIds: [],
       paymentMethod: "Other",
       paymentNote: "",
+      itemId: null, 
     },
   ]);
   const [terms, setTerms] = useState(["Payment is due within 15 days"]);
   
-  // Simulating taxes from backend/localStorage - these would come from API in real app
-  const getInitialTaxes = () => {
-    const stored = localStorage.getItem('invoicePro_savedTaxes');
-    if (stored) {
-      return JSON.parse(stored);
-    }
-    // Default taxes (would come from backend)
-    return [
-      { id: 1, name: 'GST', rate: 18, isCompound: false },
-      { id: 2, name: 'CGST', rate: 9, isCompound: false },
-      { id: 3, name: 'SGST', rate: 9, isCompound: false },
-    ];
-  };
-  const [savedTaxes, setSavedTaxes] = useState(getInitialTaxes);
+  const [savedTaxes, setSavedTaxes] = useState([]);
+  const [taxesLoading, setTaxesLoading] = useState(false);
   
-  // Saved Items - simulating backend with localStorage
-  const getInitialSavedItems = () => {
-    const stored = localStorage.getItem('invoicePro_savedItems');
-    if (stored) {
-      return JSON.parse(stored);
-    }
-    // Default saved items (would come from backend)
-    return [
-      { id: 1, description: 'Web Development Service', amount: 5000 },
-      { id: 2, description: 'UI/UX Design', amount: 3000 },
-      { id: 3, description: 'Monthly Maintenance', amount: 1500 },
-    ];
-  };
-  const [savedItems, setSavedItems] = useState(getInitialSavedItems);
+  const [savedItems, setSavedItems] = useState([]);
+  const [savedItemsLoading, setSavedItemsLoading] = useState(false);
   const [showSavedItemsModal, setShowSavedItemsModal] = useState(false);
   
   const [showTaxModal, setShowTaxModal] = useState(false);
@@ -262,6 +239,64 @@ const InvoiceForm = ({
     }
   }, [editInvoice]);
 
+  // Fetch taxes from API
+  useEffect(() => {
+    const fetchTaxes = async () => {
+      if (!isAuthenticated()) return;
+      
+      setTaxesLoading(true);
+      try {
+        const response = await taxAPI.getAll();
+        if (response.success) {
+          const taxes = (response.data || []).map(tax => ({
+            id: tax._id,
+            _id: tax._id,
+            name: tax.name,
+            rate: tax.rate,
+            isCompound: tax.isCompound || false,
+          }));
+          setSavedTaxes(taxes);
+        }
+      } catch (err) {
+        console.error('Failed to fetch taxes:', err);
+      } finally {
+        setTaxesLoading(false);
+      }
+    };
+    
+    fetchTaxes();
+  }, []);
+
+  // Fetch saved items from ItemMaster API
+  useEffect(() => {
+    const fetchSavedItems = async () => {
+      if (!isAuthenticated()) return;
+      
+      setSavedItemsLoading(true);
+      try {
+        const response = await itemAPI.getAll();
+        if (response.success) {
+          const items = (response.data || []).map(item => ({
+            id: item._id,
+            _id: item._id,
+            description: item.description,
+            quantity: item.quantity || 1,
+            rate: item.rate,
+            amount: item.amount,
+            tax: item.tax || 0,
+          }));
+          setSavedItems(items);
+        }
+      } catch (err) {
+        console.error('Failed to fetch saved items:', err);
+      } finally {
+        setSavedItemsLoading(false);
+      }
+    };
+    
+    fetchSavedItems();
+  }, []);
+
   const paymentMethods = [
     "Cash",
     "Check",
@@ -313,6 +348,7 @@ const InvoiceForm = ({
         taxIds: [],
         paymentMethod: "Other",
         paymentNote: "",
+        itemId: null,
       },
     ]);
   const removeItem = (index) => {
@@ -324,53 +360,111 @@ const InvoiceForm = ({
       ...items,
       {
         description: savedItem.description,
-        quantity: 1,
-        rate: savedItem.amount,
+        quantity: savedItem.quantity || 1,
+        rate: savedItem.rate || savedItem.amount,
         amount: savedItem.amount,
         taxIds: [],
         paymentMethod: "Other",
         paymentNote: "",
+        itemId: savedItem._id || savedItem.id, // Track ItemMaster reference
       },
     ]);
     setShowSavedItemsModal(false);
   };
-  const saveCurrentItemToLibrary = (index) => {
+  
+  const saveCurrentItemToLibrary = async (index) => {
     const item = items[index];
-    if (item.description && item.amount > 0) {
-      const newSavedItem = {
-        id: Date.now(),
-        description: item.description,
-        amount: item.amount,
-      };
-      const updatedSavedItems = [...savedItems, newSavedItem];
-      setSavedItems(updatedSavedItems);
-      localStorage.setItem('invoicePro_savedItems', JSON.stringify(updatedSavedItems));
+    if (item.description && (item.amount > 0 || item.rate > 0)) {
+      try {
+        const response = await itemAPI.create({
+          description: item.description,
+          quantity: item.quantity || 1,
+          rate: formMode === 'advanced' ? item.rate : item.amount,
+          tax: 0,
+        });
+        
+        if (response.success) {
+          const newSavedItem = {
+            id: response.data._id,
+            _id: response.data._id,
+            description: response.data.description,
+            quantity: response.data.quantity,
+            rate: response.data.rate,
+            amount: response.data.amount,
+            tax: response.data.tax || 0,
+          };
+          setSavedItems(prev => [...prev, newSavedItem]);
+          
+          // Update the current item with the new itemId
+          const newItems = [...items];
+          newItems[index].itemId = response.data._id;
+          setItems(newItems);
+        }
+      } catch (err) {
+        console.error('Failed to save item:', err);
+        alert('Failed to save item: ' + err.message);
+      }
     }
   };
-  const deleteSavedItem = (id) => {
-    const updatedSavedItems = savedItems.filter(item => item.id !== id);
-    setSavedItems(updatedSavedItems);
-    localStorage.setItem('invoicePro_savedItems', JSON.stringify(updatedSavedItems));
+  
+  const deleteSavedItem = async (id) => {
+    try {
+      const response = await itemAPI.delete(id);
+      if (response.success) {
+        setSavedItems(prev => prev.filter(item => item.id !== id && item._id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to delete item:', err);
+      alert('Failed to delete item: ' + err.message);
+    }
   };
   const openTaxModal = (index) => {
     setCurrentItemIndex(index);
     setShowTaxModal(true);
   };
-  const handleSaveTax = (newTax) => {
-    const updatedTaxes = [...savedTaxes, newTax];
-    setSavedTaxes(updatedTaxes);
-    localStorage.setItem('invoicePro_savedTaxes', JSON.stringify(updatedTaxes));
-    return newTax;
+  
+  const handleSaveTax = async (newTax) => {
+    try {
+      const response = await taxAPI.create({
+        name: newTax.name,
+        rate: newTax.rate,
+        isCompound: newTax.isCompound || false,
+      });
+      
+      if (response.success) {
+        const savedTax = {
+          id: response.data._id,
+          _id: response.data._id,
+          name: response.data.name,
+          rate: response.data.rate,
+          isCompound: response.data.isCompound || false,
+        };
+        setSavedTaxes(prev => [...prev, savedTax]);
+        return savedTax;
+      }
+    } catch (err) {
+      console.error('Failed to save tax:', err);
+      alert('Failed to save tax: ' + err.message);
+    }
+    return null;
   };
-  const handleDeleteTax = (taxId) => {
-    const updatedTaxes = savedTaxes.filter(t => t.id !== taxId);
-    setSavedTaxes(updatedTaxes);
-    localStorage.setItem('invoicePro_savedTaxes', JSON.stringify(updatedTaxes));
-    setItems(items.map(item => ({
-      ...item,
-      taxIds: item.taxIds.filter(id => id !== taxId)
-    })));
+  
+  const handleDeleteTax = async (taxId) => {
+    try {
+      const response = await taxAPI.delete(taxId);
+      if (response.success) {
+        setSavedTaxes(prev => prev.filter(t => t.id !== taxId && t._id !== taxId));
+        setItems(items.map(item => ({
+          ...item,
+          taxIds: item.taxIds.filter(id => id !== taxId)
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to delete tax:', err);
+      alert('Failed to delete tax: ' + err.message);
+    }
   };
+  
   const handleToggleTax = (taxId) => {
     if (currentItemIndex === null) return;
     const newItems = [...items];
@@ -501,23 +595,56 @@ const InvoiceForm = ({
     setShowLoginPrompt(false);
 
     try {
-      const backendItems = items.map(item => {
-        const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
-        const itemTaxes = savedTaxes.filter(t => item.taxIds?.includes(t.id));
-        const taxAmount = itemTaxes.reduce((sum, t) => sum + (itemAmount * t.rate / 100), 0);
+      // Step 1: Save items to ItemMaster first and collect itemIds
+      const itemIds = [];
+      
+      for (const item of items) {
+        if (!item.description) continue;
         
-        return {
-          description: item.description,
-          quantity: item.quantity || 1,
-          rate: formMode === 'advanced' ? item.rate : item.amount,
-          amount: itemAmount,
-          tax: taxAmount,
-        };
-      });
+        // If item already has an itemId (from saved items), use it
+        if (item.itemId) {
+          itemIds.push({ itemId: item.itemId });
+        } else {
+          // Create new item in ItemMaster
+          const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
+          const itemTaxes = savedTaxes.filter(t => item.taxIds?.includes(t.id));
+          const taxAmount = itemTaxes.reduce((sum, t) => sum + (itemAmount * t.rate / 100), 0);
+          
+          const response = await itemAPI.create({
+            description: item.description,
+            quantity: item.quantity || 1,
+            rate: formMode === 'advanced' ? item.rate : item.amount,
+            tax: taxAmount,
+          });
+          
+          if (response.success && response.data._id) {
+            itemIds.push({ itemId: response.data._id });
+            
+            // Add to saved items list
+            const newSavedItem = {
+              id: response.data._id,
+              _id: response.data._id,
+              description: response.data.description,
+              quantity: response.data.quantity,
+              rate: response.data.rate,
+              amount: response.data.amount,
+              tax: response.data.tax || 0,
+            };
+            setSavedItems(prev => [...prev, newSavedItem]);
+          } else {
+            throw new Error('Failed to save item to ItemMaster');
+          }
+        }
+      }
+
+      if (itemIds.length === 0) {
+        throw new Error('At least one item is required');
+      }
 
       const businessInfo = parseAddress(invoiceData.fromAddress);
       const clientInfo = parseClientAddress(invoiceData.billTo);
 
+      // Step 2: Create invoice with itemIds
       const invoicePayload = {
         formType: formMode,
         documentType: getBackendDocType(),
@@ -538,7 +665,7 @@ const InvoiceForm = ({
           dueDate: formatDateForBackend(invoiceData.dueDate),
           currency: invoiceData.currency,
         },
-        items: backendItems,
+        items: itemIds, // Send itemIds instead of full item objects
         terms: terms.filter(t => t.trim()).map(text => ({ text })),
         payment: {
           bankName: invoiceData.bankName,
@@ -566,8 +693,9 @@ const InvoiceForm = ({
       }
 
       let response;
-      if (isEditMode && editInvoice._id) {
-        response = await invoiceAPI.update(editInvoice._id, formData);
+      const invoiceId = editInvoice?._id || editInvoice?.id;
+      if (isEditMode && invoiceId) {
+        response = await invoiceAPI.update(invoiceId, formData);
       } else {
         response = await invoiceAPI.create(formData);
       }
@@ -576,6 +704,7 @@ const InvoiceForm = ({
         const savedInvoice = response.data;
         onSave({
           _id: savedInvoice._id,
+          id: savedInvoice._id,
           number: invoiceData.invoiceNumber,
           customer: clientInfo.name || 'Customer',
           date: invoiceData.invoiceDate,
@@ -1304,10 +1433,32 @@ const InvoiceForm = ({
         savedItems={savedItems}
         onSelectItem={addSavedItemToInvoice}
         onDeleteItem={deleteSavedItem}
-        onSaveNewItem={(newItem) => {
-          const updatedItems = [...savedItems, newItem];
-          setSavedItems(updatedItems);
-          localStorage.setItem('invoicePro_savedItems', JSON.stringify(updatedItems));
+        loading={savedItemsLoading}
+        onSaveNewItem={async (newItem) => {
+          try {
+            const response = await itemAPI.create({
+              description: newItem.description,
+              quantity: newItem.quantity || 1,
+              rate: newItem.rate,
+              tax: 0,
+            });
+            
+            if (response.success) {
+              const savedItem = {
+                id: response.data._id,
+                _id: response.data._id,
+                description: response.data.description,
+                quantity: response.data.quantity,
+                rate: response.data.rate,
+                amount: response.data.amount,
+                tax: response.data.tax || 0,
+              };
+              setSavedItems(prev => [...prev, savedItem]);
+            }
+          } catch (err) {
+            console.error('Failed to save item:', err);
+            alert('Failed to save item: ' + err.message);
+          }
         }}
       />
       <FooterLabelModal

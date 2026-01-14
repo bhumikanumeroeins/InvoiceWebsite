@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, FileText, Filter, Loader2, Calendar, Search, Download } from 'lucide-react';
+import { customerAPI } from '../../services/invoiceService';
+import { getUploadsUrl } from '../../services/apiConfig';
 
-const NewCustomer = ({ customer }) => {
+const NewCustomer = ({ customer, onInvoiceClick }) => {
   const [documents, setDocuments] = useState([]);
+  const [summary, setSummary] = useState({ totalAmount: 0, totalPaidAmount: 0, remainingAmount: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('documents');
@@ -12,18 +15,91 @@ const NewCustomer = ({ customer }) => {
   const [status, setStatus] = useState('all');
   const [documentType, setDocumentType] = useState('all');
 
-  const customerName = customer?.customer || 'New Customer';
+  const customerName = customer?.client?.name || 'Customer';
+
+  // Transform invoice data from backend format to preview format
+  const transformInvoice = (inv) => {
+    const total = inv.totals?.grandTotal || 0;
+    let paid = 0;
+    if (inv.paymentStatus === 'paid') paid = total;
+    else if (inv.paymentStatus === 'partiallyPaid') paid = total * 0.5;
+    
+    return {
+      id: inv._id,
+      _id: inv._id,
+      customer: inv.client?.name || '',
+      number: inv.invoiceMeta?.invoiceNo || '',
+      date: inv.invoiceMeta?.invoiceDate 
+        ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString('en-GB') 
+        : '',
+      dueDate: inv.invoiceMeta?.dueDate 
+        ? new Date(inv.invoiceMeta.dueDate).toLocaleDateString('en-GB') 
+        : '',
+      paid: paid,
+      total: total,
+      paymentStatus: inv.paymentStatus || 'unpaid',
+      logo: inv.business?.logo ? `${getUploadsUrl()}/uploads/${inv.business.logo}` : null,
+      companyName: inv.business?.name || '',
+      companyAddress: `${inv.business?.address || ''}\n${inv.business?.phone || ''}, ${inv.business?.email || ''}`,
+      billTo: {
+        name: inv.client?.name || '',
+        address: `${inv.client?.address || ''}\n${inv.client?.email || ''}`,
+        email: inv.client?.email || '',
+      },
+      shipTo: inv.shipTo?.shippingAddress ? {
+        name: '',
+        address: inv.shipTo.shippingAddress,
+      } : null,
+      invoiceNumber: inv.invoiceMeta?.invoiceNo || '',
+      invoiceDate: inv.invoiceMeta?.invoiceDate 
+        ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString('en-GB') 
+        : '',
+      items: (inv.items || []).map(item => ({
+        qty: item.quantity || 1,
+        description: item.description || '',
+        unitPrice: item.rate || 0,
+        amount: item.amount || 0,
+      })),
+      terms: (inv.terms || []).map(t => t.text || t),
+      subtotal: inv.totals?.subtotal || 0,
+      taxAmount: inv.totals?.taxTotal || 0,
+      paymentInfo: {
+        bankName: inv.payment?.bankName || '',
+        accountNo: inv.payment?.accountNo || '',
+        ifscCode: inv.payment?.ifscCode || '',
+      },
+      signature: inv.signature ? `${getUploadsUrl()}/uploads/${inv.signature}` : null,
+      qrCode: inv.payment?.qrCode ? `${getUploadsUrl()}/uploads/${inv.payment.qrCode}` : null,
+    };
+  };
+
+  const handleInvoiceClick = (doc) => {
+    if (onInvoiceClick) {
+      const transformedInvoice = transformInvoice(doc);
+      onInvoiceClick(transformedInvoice);
+    }
+  };
 
   const fetchDocuments = async () => {
+    if (!customerName || customerName === 'Customer') {
+      setError('Customer name not available.');
+      setDocuments([]);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     try {
-      const sampleData = customer ? [
-        { id: 1, customer: customer.customer, number: 'BFA-222', date: '06/01/2026', paid: customer.paidAmount || 0, total: customer.total || 10584.00 },
-      ] : [];
-      setDocuments(sampleData);
+      const response = await customerAPI.getInvoices(customerName);
+      if (response.success) {
+        setDocuments(response.data || []);
+        setSummary(response.summary || { totalAmount: 0, totalPaidAmount: 0, remainingAmount: 0 });
+      } else {
+        setError(response.message || 'Failed to fetch documents');
+      }
     } catch (err) {
-      setError('Failed to fetch documents');
+      console.error('Fetch documents error:', err);
+      setError(err.message || 'Failed to fetch documents');
     } finally {
       setLoading(false);
     }
@@ -31,11 +107,9 @@ const NewCustomer = ({ customer }) => {
 
   useEffect(() => {
     fetchDocuments();
-  }, [customer]);
+  }, [customerName]);
 
-  const totalAmount = documents.reduce((sum, d) => sum + d.total, 0);
-  const paidAmount = documents.reduce((sum, d) => sum + d.paid, 0);
-  const balanceDue = totalAmount - paidAmount;
+  const { totalAmount, totalPaidAmount, remainingAmount } = summary;
 
   const handleSearch = () => {
     fetchDocuments();
@@ -212,6 +286,7 @@ const NewCustomer = ({ customer }) => {
                       <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
                       <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Number</th>
                       <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
+                      <th className="p-4 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
                       <th className="p-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Paid</th>
                       <th className="p-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</th>
                     </tr>
@@ -219,24 +294,34 @@ const NewCustomer = ({ customer }) => {
                   <tbody>
                     {documents.map((doc, index) => (
                       <tr 
-                        key={doc.id} 
+                        key={doc._id} 
+                        onClick={() => handleInvoiceClick(doc)}
                         className={`border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${
                           index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
                         }`}
                       >
-                        <td className="p-4">
+                        <td className="p-4" onClick={(e) => e.stopPropagation()}>
                           <input type="checkbox" className="rounded border-slate-300" />
                         </td>
-                        <td className="p-4 text-sm text-slate-700 font-medium">{doc.customer || '—'}</td>
-                        <td className="p-4 text-sm text-slate-600">{doc.number}</td>
-                        <td className="p-4 text-sm text-slate-600">{doc.date}</td>
+                        <td className="p-4 text-sm text-slate-700 font-medium">{doc.client?.name || '—'}</td>
+                        <td className="p-4 text-sm text-slate-600">{doc.invoiceMeta?.invoiceNo || '—'}</td>
+                        <td className="p-4 text-sm text-slate-600">
+                          {doc.invoiceMeta?.invoiceDate 
+                            ? new Date(doc.invoiceMeta.invoiceDate).toLocaleDateString('en-GB') 
+                            : '—'}
+                        </td>
+                        <td className="p-4 text-sm text-center">
+                          {doc.paymentStatus === 'paid' && <span className="text-emerald-600 font-medium">Paid</span>}
+                          {doc.paymentStatus === 'unpaid' && <span className="text-orange-500 font-medium">Unpaid</span>}
+                          {doc.paymentStatus === 'partiallyPaid' && <span className="text-amber-500 font-medium">Partial</span>}
+                        </td>
                         <td className="p-4 text-sm text-right">
-                          <span className={doc.paid > 0 ? 'text-emerald-600 font-medium' : 'text-orange-500'}>
-                            ₹ {doc.paid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          <span className={(doc.paidAmount || 0) > 0 ? 'text-emerald-600 font-medium' : 'text-orange-500'}>
+                            ₹ {(doc.paidAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                           </span>
                         </td>
                         <td className="p-4 text-sm text-slate-700 text-right font-medium">
-                          ₹ {doc.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          ₹ {(doc.totals?.grandTotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </td>
                       </tr>
                     ))}
@@ -249,15 +334,15 @@ const NewCustomer = ({ customer }) => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="font-semibold text-slate-700 uppercase">Total</span>
-                    <span className="font-bold text-slate-800">{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR</span>
+                    <span className="font-bold text-slate-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="font-semibold text-slate-700 uppercase">Paid Amount</span>
-                    <span className="font-bold text-emerald-600">{paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR</span>
+                    <span className="font-bold text-emerald-600">₹ {totalPaidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="font-semibold text-slate-700 uppercase">Balance Due</span>
-                    <span className="font-bold text-orange-500">{balanceDue.toLocaleString('en-IN', { minimumFractionDigits: 2 })} INR</span>
+                    <span className="font-bold text-orange-500">₹ {remainingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>
