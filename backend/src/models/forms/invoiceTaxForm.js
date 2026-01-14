@@ -102,18 +102,6 @@ const invoiceSchema = new mongoose.Schema({
     grandTotal: Number
   },
 
-  paymentStatus: {
-    type: String,
-    enum: ["unpaid", "partiallyPaid", "paid", "overdue"],
-    default: "unpaid"
-  },
-
-  createdBy: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "Registration",
-  required: true
-},
-
   createdAt: {
     type: Date,
     default: Date.now
