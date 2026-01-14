@@ -117,9 +117,17 @@ const invoiceSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
 
-  
+  // Soft delete fields
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  }
 });
 
 export default mongoose.model("InvoiceTaxForm", invoiceSchema);

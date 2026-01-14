@@ -89,13 +89,13 @@ export const createInvoice = async (req, res) => {
 
 
 
-// get all invoices
+// get all invoices (excluding deleted)
 export const getAllInvoices = async (req, res) => {
   try {
     const userId = req.user.userId; // 👈 from token
 
     const invoices = await InvoiceTaxForm
-      .find({ createdBy: userId })
+      .find({ createdBy: userId, isDeleted: false })
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -115,7 +115,7 @@ export const getAllInvoices = async (req, res) => {
 };
 
 
-// get invoice by id
+// get invoice by id (excluding deleted)
 export const getInvoiceById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -123,7 +123,8 @@ export const getInvoiceById = async (req, res) => {
 
     const invoice = await InvoiceTaxForm.findOne({
       _id: id,
-      createdBy: userId
+      createdBy: userId,
+      isDeleted: false
     });
 
     if (!invoice) {
@@ -263,17 +264,18 @@ export const updateInvoice = async (req, res) => {
 };
 
 
-/* ---------------- DELETE INVOICE ---------------- */
+/* ---------------- SOFT DELETE INVOICE (Move to Trash) ---------------- */
 export const deleteInvoice = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId; // 👈 from token
 
-    /* ---------------- DELETE WITH OWNERSHIP CHECK ---------------- */
-    const invoice = await InvoiceTaxForm.findOneAndDelete({
-      _id: id,
-      createdBy: userId
-    });
+    /* ---------------- SOFT DELETE WITH OWNERSHIP CHECK ---------------- */
+    const invoice = await InvoiceTaxForm.findOneAndUpdate(
+      { _id: id, createdBy: userId, isDeleted: false },
+      { isDeleted: true, deletedAt: new Date() },
+      { new: true }
+    );
 
     if (!invoice) {
       return res.status(404).json({
@@ -284,11 +286,105 @@ export const deleteInvoice = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Invoice deleted successfully"
+      message: "Invoice moved to trash successfully"
     });
 
   } catch (error) {
     console.error("DELETE INVOICE ERROR 👉", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/* ---------------- GET TRASH INVOICES ---------------- */
+export const getTrashInvoices = async (req, res) => {
+  try {
+    const userId = req.user.userId; // 👈 from token
+
+    const invoices = await InvoiceTaxForm
+      .find({ createdBy: userId, isDeleted: true })
+      .sort({ deletedAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: invoices.length,
+      data: invoices
+    });
+
+  } catch (error) {
+    console.error("GET TRASH INVOICES ERROR 👉", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/* ---------------- RESTORE INVOICE FROM TRASH ---------------- */
+export const restoreInvoice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId; // 👈 from token
+
+    const invoice = await InvoiceTaxForm.findOneAndUpdate(
+      { _id: id, createdBy: userId, isDeleted: true },
+      { isDeleted: false, deletedAt: null },
+      { new: true }
+    );
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Invoice not found in trash or access denied"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Invoice restored successfully",
+      data: invoice
+    });
+
+  } catch (error) {
+    console.error("RESTORE INVOICE ERROR 👉", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/* ---------------- PERMANENT DELETE INVOICE ---------------- */
+export const permanentDeleteInvoice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId; // 👈 from token
+
+    const invoice = await InvoiceTaxForm.findOneAndDelete({
+      _id: id,
+      createdBy: userId,
+      isDeleted: true
+    });
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Invoice not found in trash or access denied"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Invoice permanently deleted"
+    });
+
+  } catch (error) {
+    console.error("PERMANENT DELETE INVOICE ERROR 👉", error);
 
     return res.status(500).json({
       success: false,

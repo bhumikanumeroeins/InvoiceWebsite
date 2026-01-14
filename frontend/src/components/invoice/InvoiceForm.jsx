@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus,
   Trash2,
@@ -21,7 +21,8 @@ import TaxModal from "./TaxModal";
 import SignatureModal from "./SignatureModal";
 import SavedItemsModal from "./SavedItemsModal";
 import FooterLabelModal from "./FooterLabelModal";
-import { invoiceAPI, isAuthenticated } from "../../services/api";
+import { invoiceAPI } from "../../services/invoiceService";
+import { isAuthenticated } from "../../services/authService";
 
 const documentConfig = {
   invoice: {
@@ -132,9 +133,11 @@ const InvoiceForm = ({
   documentType = "invoice",
   documentLabel = "Invoice",
   onSave,
+  editInvoice = null, 
 }) => {
+  const isEditMode = !!editInvoice;
   const config = documentConfig[documentType] || documentConfig["invoice"];
-  const [formMode, setFormMode] = useState('basic'); // 'basic' or 'advanced'
+  const [formMode, setFormMode] = useState(editInvoice?.formType || 'basic'); // 'basic' or 'advanced'
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -147,7 +150,6 @@ const InvoiceForm = ({
     invoiceDate: new Date().toISOString().split("T")[0],
     dueDate: "",
     currency: "INR",
-    // Payment Information
     bankName: "",
     accountNo: "",
     ifscCode: "",
@@ -209,6 +211,57 @@ const InvoiceForm = ({
   const [footerLabel, setFooterLabel] = useState('Terms & Conditions');
   const [hideFooterLabel, setHideFooterLabel] = useState(false);
 
+  useEffect(() => {
+    if (editInvoice) {
+      const parseDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '';
+        return date.toISOString().split('T')[0];
+      };
+
+      setFormMode(editInvoice.formType || 'basic');
+      setInvoiceData({
+        fromName: editInvoice.companyName || editInvoice.business?.name || '',
+        fromAddress: editInvoice.companyAddress || editInvoice.business?.address || '',
+        billTo: editInvoice.billTo?.name ? `${editInvoice.billTo.name}\n${editInvoice.billTo.address || ''}` : '',
+        shipTo: editInvoice.shipTo?.address || editInvoice.shipTo?.shippingAddress || '',
+        invoiceNumber: editInvoice.invoiceNumber || editInvoice.invoiceMeta?.invoiceNo || '',
+        invoiceDate: parseDate(editInvoice.invoiceDate || editInvoice.invoiceMeta?.invoiceDate),
+        dueDate: parseDate(editInvoice.dueDate || editInvoice.invoiceMeta?.dueDate),
+        currency: editInvoice.invoiceMeta?.currency || 'INR',
+        bankName: editInvoice.paymentInfo?.bankName || editInvoice.payment?.bankName || '',
+        accountNo: editInvoice.paymentInfo?.accountNo || editInvoice.payment?.accountNo || '',
+        ifscCode: editInvoice.paymentInfo?.ifscCode || editInvoice.payment?.ifscCode || '',
+      });
+
+      if (editInvoice.items && editInvoice.items.length > 0) {
+        setItems(editInvoice.items.map(item => ({
+          description: item.description || '',
+          quantity: item.qty || item.quantity || 1,
+          rate: item.unitPrice || item.rate || 0,
+          amount: item.amount || 0,
+          taxIds: [],
+          paymentMethod: 'Other',
+          paymentNote: '',
+        })));
+      }
+
+      if (editInvoice.terms && editInvoice.terms.length > 0) {
+        const termsArray = Array.isArray(editInvoice.terms) 
+          ? editInvoice.terms.map(t => typeof t === 'string' ? t : t.text)
+          : [];
+        if (termsArray.length > 0) {
+          setTerms(termsArray);
+        }
+      }
+
+      if (editInvoice.logo) setLogo(editInvoice.logo);
+      if (editInvoice.signature) setSignature(editInvoice.signature);
+      if (editInvoice.qrCode) setQrCode(editInvoice.qrCode);
+    }
+  }, [editInvoice]);
+
   const paymentMethods = [
     "Cash",
     "Check",
@@ -266,7 +319,6 @@ const InvoiceForm = ({
     if (items.length > 1) setItems(items.filter((_, i) => i !== index));
   };
   
-  // Saved Items functions
   const addSavedItemToInvoice = (savedItem) => {
     setItems([
       ...items,
@@ -307,16 +359,13 @@ const InvoiceForm = ({
   const handleSaveTax = (newTax) => {
     const updatedTaxes = [...savedTaxes, newTax];
     setSavedTaxes(updatedTaxes);
-    // Persist to localStorage (simulating backend save)
     localStorage.setItem('invoicePro_savedTaxes', JSON.stringify(updatedTaxes));
     return newTax;
   };
   const handleDeleteTax = (taxId) => {
     const updatedTaxes = savedTaxes.filter(t => t.id !== taxId);
     setSavedTaxes(updatedTaxes);
-    // Persist to localStorage (simulating backend delete)
     localStorage.setItem('invoicePro_savedTaxes', JSON.stringify(updatedTaxes));
-    // Also remove from all items
     setItems(items.map(item => ({
       ...item,
       taxIds: item.taxIds.filter(id => id !== taxId)
@@ -393,7 +442,6 @@ const InvoiceForm = ({
   );
   const total = subtotal + totalTax;
 
-  // Convert document type to backend format
   const getBackendDocType = () => {
     const typeMap = {
       'invoice': 'invoice',
@@ -412,14 +460,12 @@ const InvoiceForm = ({
     return typeMap[documentType] || 'invoice';
   };
 
-  // Format date to DD-MM-YYYY for backend
   const formatDateForBackend = (dateStr) => {
     if (!dateStr) return null;
     const [year, month, day] = dateStr.split('-');
     return `${day}-${month}-${year}`;
   };
 
-  // Parse business address into components
   const parseAddress = (addressStr) => {
     const lines = addressStr.split('\n').filter(l => l.trim());
     return {
@@ -432,7 +478,6 @@ const InvoiceForm = ({
     };
   };
 
-  // Parse client address
   const parseClientAddress = (addressStr) => {
     const lines = addressStr.split('\n').filter(l => l.trim());
     return {
@@ -445,9 +490,7 @@ const InvoiceForm = ({
     };
   };
 
-  // Handle save invoice
   const handleSaveInvoice = async () => {
-    // Check if user is logged in
     if (!isAuthenticated()) {
       setShowLoginPrompt(true);
       return;
@@ -458,7 +501,6 @@ const InvoiceForm = ({
     setShowLoginPrompt(false);
 
     try {
-      // Prepare items for backend
       const backendItems = items.map(item => {
         const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
         const itemTaxes = savedTaxes.filter(t => item.taxIds?.includes(t.id));
@@ -473,7 +515,6 @@ const InvoiceForm = ({
         };
       });
 
-      // Prepare invoice data for backend
       const businessInfo = parseAddress(invoiceData.fromAddress);
       const clientInfo = parseClientAddress(invoiceData.billTo);
 
@@ -511,7 +552,6 @@ const InvoiceForm = ({
         },
       };
 
-      // Create FormData for file uploads
       const formData = new FormData();
       formData.append('data', JSON.stringify(invoicePayload));
       
@@ -525,9 +565,13 @@ const InvoiceForm = ({
         formData.append('qrCode', qrCodeFile);
       }
 
-      const response = await invoiceAPI.create(formData);
+      let response;
+      if (isEditMode && editInvoice._id) {
+        response = await invoiceAPI.update(editInvoice._id, formData);
+      } else {
+        response = await invoiceAPI.create(formData);
+      }
       
-      // Call onSave callback with properly formatted data for preview
       if (onSave && response.data) {
         const savedInvoice = response.data;
         onSave({
@@ -537,7 +581,6 @@ const InvoiceForm = ({
           date: invoiceData.invoiceDate,
           dueDate: invoiceData.dueDate,
           total: config.showTax ? total : subtotal,
-          // Data for template preview
           logo: logo,
           companyName: invoiceData.fromName,
           companyAddress: invoiceData.fromAddress,
@@ -567,7 +610,7 @@ const InvoiceForm = ({
           },
           signature: signature,
           qrCode: qrCode,
-        });
+        }, isEditMode);
       }
     } catch (error) {
       console.error('Save invoice error:', error);
@@ -588,8 +631,8 @@ const InvoiceForm = ({
                 <Receipt className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-white font-semibold text-lg">{documentLabel} Builder</h2>
-                <p className="text-slate-400 text-sm">Create professional documents in minutes</p>
+                <h2 className="text-white font-semibold text-lg">{isEditMode ? 'Edit' : ''} {documentLabel} Builder</h2>
+                <p className="text-slate-400 text-sm">{isEditMode ? 'Update your document' : 'Create professional documents in minutes'}</p>
               </div>
             </div>
             <div className="flex bg-slate-700/50 rounded-lg p-1">
@@ -1234,7 +1277,7 @@ const InvoiceForm = ({
             ) : (
               <>
                 <FileText className="w-5 h-5 relative z-10" />
-                <span className="relative z-10">Save {documentLabel}, Print or Send</span>
+                <span className="relative z-10">{isEditMode ? 'Update' : 'Save'} {documentLabel}, Print or Send</span>
               </>
             )}
           </button>

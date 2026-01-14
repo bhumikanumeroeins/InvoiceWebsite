@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { FileText } from 'lucide-react';
-import { authAPI } from '../services/api';
+import { authAPI } from '../services/authService';
 
 const SignUp = () => {
     const navigate = useNavigate();

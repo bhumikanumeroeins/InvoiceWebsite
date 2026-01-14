@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ChevronDown, Settings, LogOut, Plus, FileText, Users, BarChart3, UserPlus, X, Receipt, CreditCard, FileCheck, Truck, ShoppingCart, Eye } from 'lucide-react';
+import { Search, ChevronDown, Settings, LogOut, Plus, FileText, Users, BarChart3, UserPlus, X, Receipt, CreditCard, FileCheck, Truck, ShoppingCart, Eye, Edit } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import InvoiceForm from '../components/invoice/InvoiceForm';
 import MyInvoices from '../components/dashboard/MyInvoices';
@@ -7,7 +7,7 @@ import MyCustomers from '../components/dashboard/MyCustomers';
 import MyReports from '../components/dashboard/MyReports';
 import NewCustomer from '../components/dashboard/NewCustomer';
 import InvoicePreview from '../components/dashboard/InvoicePreview';
-import { getCurrentUser, authAPI } from '../services/api';
+import { getCurrentUser, authAPI } from '../services/authService';
 
 const documentTypes = [
   { id: 'invoice', label: 'Invoice', icon: FileText },
@@ -33,6 +33,7 @@ const Dashboard = () => {
   const [showExtraTabs, setShowExtraTabs] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [editingInvoice, setEditingInvoice] = useState(null);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -73,7 +74,12 @@ const Dashboard = () => {
       });
     }
     if (activeTab === 'newInvoice' || showExtraTabs) {
-      tabs.push({ id: 'newInvoice', label: `New ${currentDoc.label}`, icon: Plus, closable: true });
+      tabs.push({ 
+        id: 'newInvoice', 
+        label: editingInvoice ? `Edit ${editingInvoice.number || currentDoc.label}` : `New ${currentDoc.label}`, 
+        icon: editingInvoice ? Edit : Plus, 
+        closable: true 
+      });
     }
     return tabs;
   };
@@ -107,6 +113,7 @@ const Dashboard = () => {
       setActiveTab('myCustomers');
     } else if (tabId === 'newInvoice') {
       setShowExtraTabs(false);
+      setEditingInvoice(null);
       setActiveTab('myInvoices');
     } else if (tabId === 'invoicePreview') {
       setSelectedInvoice(null);
@@ -114,10 +121,11 @@ const Dashboard = () => {
     }
   };
 
-  const handleInvoiceSaved = (invoiceData) => {
+  const handleInvoiceSaved = (invoiceData, isUpdate = false) => {
     setSelectedInvoice(invoiceData);
     setActiveTab('invoicePreview');
     setShowExtraTabs(false);
+    setEditingInvoice(null);
   };
 
   return (
@@ -238,10 +246,11 @@ const Dashboard = () => {
         {activeTab === 'newInvoice' && (
           <div className="bg-white rounded-lg shadow p-6">
             <InvoiceForm 
-              key={selectedDocType} 
+              key={editingInvoice ? editingInvoice._id : selectedDocType} 
               documentType={selectedDocType} 
               documentLabel={currentDoc.label}
               onSave={handleInvoiceSaved}
+              editInvoice={editingInvoice}
             />
           </div>
         )}
@@ -258,9 +267,8 @@ const Dashboard = () => {
           <InvoicePreview 
             invoice={selectedInvoice} 
             onClose={() => handleCloseTab('invoicePreview')}
-            onEdit={(invoice) => {
-              setShowExtraTabs(true);
-              setActiveTab('newInvoice');
+            onInvoiceUpdated={(updatedInvoice) => {
+              setSelectedInvoice(updatedInvoice);
             }}
           />
         )}
