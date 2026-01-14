@@ -6,6 +6,7 @@ import {
   getInvoiceById,
   updateInvoice,
   deleteInvoice,
+  copyInvoice,
   updatePaymentStatus,
   getTrashInvoices,
   restoreInvoice,
@@ -43,6 +44,7 @@ router.patch(
   "/invoices/:invoiceId/payment-status",
   updatePaymentStatus
 );
+router.post("/copy/:id", authenticateUser, copyInvoice);
 
 /* ---------------- TRASH ROUTES ---------------- */
 router.get("/trash", authenticateUser, getTrashInvoices);
