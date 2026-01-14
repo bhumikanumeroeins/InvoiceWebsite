@@ -1,16 +1,17 @@
 import mongoose from "mongoose";
 
-const itemSchema = new mongoose.Schema({
-  description: String,
-  quantity: {
-    type: Number,
-    default: 1
+const itemSchema = new mongoose.Schema(
+  {
+    description: String,
+    quantity: {
+      type: Number,
+      default: 1
+    },
+    rate: Number,
+    amount: Number,
+    tax: Number
   },
-  rate: Number,
-  amount: Number,
-  tax: Number
-},
- { _id: false }
+  { _id: false }
 );
 
 const invoiceSchema = new mongoose.Schema({
@@ -40,6 +41,19 @@ const invoiceSchema = new mongoose.Schema({
     required: true
   },
 
+  // 🔹 CREATED BY (USER REFERENCE)
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Registration",
+    required: true
+  },
+
+  // 🔹 SOFT DELETE FLAG
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+
   // 🔹 BUSINESS
   business: {
     name: String,
@@ -62,7 +76,7 @@ const invoiceSchema = new mongoose.Schema({
     email: String
   },
 
-  // 🔹 SHIP TO (ADVANCED ONLY)
+  // 🔹 SHIP TO
   shipTo: {
     shippingAddress: String,
     shippingCity: String,
@@ -97,7 +111,7 @@ const invoiceSchema = new mongoose.Schema({
 
   signature: String,
 
-  // 🔹 TOTALS (CALCULATED)
+  // 🔹 TOTALS
   totals: {
     subtotal: Number,
     taxTotal: Number,

@@ -1,22 +1,24 @@
 import InvoiceTaxForm from "../../models/forms/invoiceTaxForm.js";
 import mongoose from "mongoose";
 
+
 export const getCustomersList = async (req, res) => {
   try {
     const userId = req.user.userId;
 
     const result = await InvoiceTaxForm.aggregate([
-      /* ---------------- MATCH USER ---------------- */
+      /* ---------------- MATCH USER + NOT DELETED ---------------- */
       {
         $match: {
-          createdBy: new mongoose.Types.ObjectId(userId)
+          createdBy: new mongoose.Types.ObjectId(userId),
+          isDeleted: false
         }
       },
 
-      /* ---------------- GROUP BY CLIENT EMAIL ---------------- */
+      /* ---------------- GROUP BY CLIENT NAME ---------------- */
       {
         $group: {
-          _id: "$client.email",
+          _id: "$client.name",
 
           client: { $first: "$client" },
 
@@ -74,7 +76,7 @@ export const getCustomersList = async (req, res) => {
         $sort: { "client.name": 1 }
       },
 
-      /* ---------------- FINAL GROUP (FOOTER TOTALS) ---------------- */
+      /* ---------------- FINAL GROUP (SUMMARY) ---------------- */
       {
         $group: {
           _id: null,
@@ -137,23 +139,23 @@ export const getCustomersList = async (req, res) => {
 
 
 
-
-export const getInvoicesByClientEmail = async (req, res) => {
+export const getInvoicesByClientName = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const email = decodeURIComponent(req.params.email);
+    const clientName = decodeURIComponent(req.params.name);
 
-    if (!email) {
+    if (!clientName) {
       return res.status(400).json({
         success: false,
-        message: "Client email is required"
+        message: "Client name is required"
       });
     }
 
     /* ---------------- FETCH INVOICES ---------------- */
     const invoices = await InvoiceTaxForm.find({
       createdBy: userId,
-      "client.email": email
+      "client.name": clientName,
+      isDeleted: false
     }).sort({ createdAt: -1 });
 
     /* ---------------- CALCULATIONS ---------------- */
@@ -188,4 +190,3 @@ export const getInvoicesByClientEmail = async (req, res) => {
     });
   }
 };
-
