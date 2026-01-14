@@ -137,7 +137,7 @@ export const getAllInvoices = async (req, res) => {
     const invoices = await InvoiceTaxForm
       .find({
         createdBy: userId,
-        isDeleted: false
+        $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }]
       })
       .sort({ createdAt: -1 });
 
@@ -166,7 +166,7 @@ export const getInvoiceById = async (req, res) => {
     const invoice = await InvoiceTaxForm.findOne({
       _id: id,
       createdBy: userId,
-      isDeleted: false
+      $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }]
     });
 
     if (!invoice) {
