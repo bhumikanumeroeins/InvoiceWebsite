@@ -308,16 +308,26 @@ export const updateInvoice = async (req, res) => {
 
 
 /* ---------------- DELETE INVOICE ---------------- */
+// soft delete invoice
 export const deleteInvoice = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId; // 👈 from token
 
-    /* ---------------- DELETE WITH OWNERSHIP CHECK ---------------- */
-    const invoice = await InvoiceTaxForm.findOneAndDelete({
-      _id: id,
-      createdBy: userId
-    });
+    /* ---------------- SOFT DELETE WITH OWNERSHIP CHECK ---------------- */
+    const invoice = await InvoiceTaxForm.findOneAndUpdate(
+      {
+        _id: id,
+        createdBy: userId,
+        isDeleted: false
+      },
+      {
+        $set: { isDeleted: true }
+      },
+      {
+        new: true
+      }
+    );
 
     if (!invoice) {
       return res.status(404).json({
@@ -392,6 +402,63 @@ export const updatePaymentStatus = async (req, res) => {
   } catch (error) {
     console.error("UPDATE PAYMENT STATUS ERROR 👉", error);
 
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+
+
+
+export const copyInvoice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    /* ---------------- FIND ORIGINAL INVOICE ---------------- */
+    const originalInvoice = await InvoiceTaxForm.findOne({
+      _id: id,
+      createdBy: userId,
+      isDeleted: false
+    });
+
+    if (!originalInvoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Invoice not found or access denied"
+      });
+    }
+
+    /* ---------------- CLONE DATA ---------------- */
+    const invoiceData = originalInvoice.toObject();
+
+    // Remove fields that must be unique
+    delete invoiceData._id;
+    delete invoiceData.createdAt;
+    delete invoiceData.__v;
+
+    /* ---------------- RESET / ADJUST FIELDS ---------------- */
+    invoiceData.invoiceMeta.invoiceNo = undefined; // frontend or backend will generate
+    invoiceData.invoiceMeta.invoiceDate = new Date();
+    invoiceData.invoiceMeta.dueDate = undefined;
+
+    invoiceData.isDeleted = false;
+    invoiceData.createdBy = new mongoose.Types.ObjectId(userId);
+
+    /* ---------------- SAVE NEW INVOICE ---------------- */
+    const newInvoice = await InvoiceTaxForm.create(invoiceData);
+
+    return res.status(201).json({
+      success: true,
+      message: "Invoice copied successfully",
+      data: newInvoice
+    });
+
+  } catch (error) {
+    console.error("COPY INVOICE ERROR 👉", error);
     return res.status(500).json({
       success: false,
       message: error.message

@@ -6,6 +6,7 @@ import {
   getInvoiceById,
   updateInvoice,
   deleteInvoice,
+  copyInvoice,
   updatePaymentStatus
 } from "../../controller/forms/invoiceTaxForm.js";
 
@@ -40,5 +41,6 @@ router.patch(
   "/invoices/:invoiceId/payment-status",
   updatePaymentStatus
 );
+router.post("/copy/:id", authenticateUser, copyInvoice);
 
 export default router;
