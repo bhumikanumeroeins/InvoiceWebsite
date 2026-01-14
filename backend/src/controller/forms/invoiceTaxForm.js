@@ -3,6 +3,9 @@ import InvoiceTaxForm from "../../models/forms/invoiceTaxForm.js";
 import { parseDDMMYYYY } from "../../utils/utils.js";
 
 
+
+import ItemMaster from "../../models/items/items.js";
+
 // create invoice
 
 
@@ -21,32 +24,24 @@ export const createInvoice = async (req, res) => {
 
     /* ---------------- DATE VALIDATION ---------------- */
     if (data.invoiceMeta?.invoiceDate) {
-      const parsedInvoiceDate = parseDDMMYYYY(
-        data.invoiceMeta.invoiceDate
-      );
-
+      const parsedInvoiceDate = parseDDMMYYYY(data.invoiceMeta.invoiceDate);
       if (!parsedInvoiceDate) {
         return res.status(400).json({
           success: false,
           message: "invoiceDate must be in DD-MM-YYYY format"
         });
       }
-
       data.invoiceMeta.invoiceDate = parsedInvoiceDate;
     }
 
     if (data.invoiceMeta?.dueDate) {
-      const parsedDueDate = parseDDMMYYYY(
-        data.invoiceMeta.dueDate
-      );
-
+      const parsedDueDate = parseDDMMYYYY(data.invoiceMeta.dueDate);
       if (!parsedDueDate) {
         return res.status(400).json({
           success: false,
           message: "dueDate must be in DD-MM-YYYY format"
         });
       }
-
       data.invoiceMeta.dueDate = parsedDueDate;
     }
 
@@ -65,11 +60,51 @@ export const createInvoice = async (req, res) => {
       data.payment.qrCode = req.files.qrCode[0].filename;
     }
 
+    /* ---------------- HANDLE ITEMS (IMPORTANT PART) ---------------- */
+    /**
+     * Expected frontend format:
+     * items: [ "itemId1", "itemId2" ]
+     * OR
+     * items: [{ itemId, quantity }]
+     */
+
+    if (!Array.isArray(data.items) || data.items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one item is required"
+      });
+    }
+
+    // Extract item IDs
+    const itemIds = data.items.map(i => i.itemId || i);
+
+    // Fetch from ItemMaster
+    const masterItems = await ItemMaster.find({
+      _id: { $in: itemIds },
+      createdBy: req.user.userId
+    });
+
+    if (!masterItems.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid items selected"
+      });
+    }
+
+    // Convert to embedded invoice items
+    data.items = masterItems.map(item => ({
+      description: item.description,
+      quantity: item.quantity,
+      rate: item.rate,
+      amount: item.amount,
+      tax: item.tax
+    }));
+
     /* ---------------- FORCE DEFAULTS ---------------- */
     data.paymentStatus = "unpaid";
-    data.createdBy = req.user.userId; // 👈 from token
+    data.createdBy = req.user.userId;
 
-    /* ---------------- SAVE ---------------- */
+    /* ---------------- SAVE INVOICE ---------------- */
     const invoice = await InvoiceTaxForm.create(data);
 
     return res.status(201).json({
@@ -86,6 +121,7 @@ export const createInvoice = async (req, res) => {
     });
   }
 };
+
 
 
 

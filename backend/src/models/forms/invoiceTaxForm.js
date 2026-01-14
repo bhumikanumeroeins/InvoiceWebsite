@@ -9,7 +9,9 @@ const itemSchema = new mongoose.Schema({
   rate: Number,
   amount: Number,
   tax: Number
-});
+},
+ { _id: false }
+);
 
 const invoiceSchema = new mongoose.Schema({
   // 🔹 FORM META
