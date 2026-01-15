@@ -46,6 +46,10 @@ export const invoiceAPI = {
     method: 'DELETE',
   }),
 
+  copy: (id) => apiCall(`/invoiceForms/copy/${id}`, {
+    method: 'POST',
+  }),
+
   updatePaymentStatus: (invoiceId, paymentStatus) => apiCall(`/invoiceForms/invoices/${invoiceId}/payment-status`, {
     method: 'PATCH',
     body: JSON.stringify({ paymentStatus }),

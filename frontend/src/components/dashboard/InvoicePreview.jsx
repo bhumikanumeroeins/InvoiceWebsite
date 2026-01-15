@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X } from 'lucide-react';
+import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X, Copy, ArrowRight, Loader2, Trash2 } from 'lucide-react';
 import Template1 from '../templates/Template1';
 import Template2 from '../templates/Template2';
 import Template3 from '../templates/Template3';
@@ -69,6 +69,8 @@ Best regards`,
     attachments: [],
   });
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const paymentMethods = ['Cash', 'Check', 'Credit Card', 'Debit Card', 'Bank Transfer', 'UPI', 'Other'];
   
@@ -84,24 +86,12 @@ Best regards`,
 
   const handleTabChange = async (actionId) => {
     if (actionId === 'delete') {
-      if (confirm('Are you sure you want to move this invoice to trash?')) {
-        setLoading(true);
-        setLoadingAction('delete');
-        try {
-          await invoiceAPI.delete(currentInvoice._id || currentInvoice.id);
-          onClose && onClose();
-        } catch (err) {
-          alert('Failed to delete invoice: ' + err.message);
-        } finally {
-          setLoading(false);
-          setLoadingAction(null);
-        }
-      }
+      setActiveAction('delete');
       return;
     }
     
     if (actionId === 'copy') {
-      alert('Invoice copied! (Backend integration pending)');
+      setActiveAction('copy');
       return;
     }
     
@@ -111,6 +101,17 @@ Best regards`,
     }
     
     setActiveAction(actionId);
+  };
+
+  const handleDeleteInvoice = async () => {
+    setDeleting(true);
+    try {
+      await invoiceAPI.delete(currentInvoice._id || currentInvoice.id);
+      onClose && onClose();
+    } catch (err) {
+      alert('Failed to delete invoice: ' + err.message);
+      setDeleting(false);
+    }
   };
 
   const handleInvoiceSaved = (updatedInvoice) => {
@@ -809,6 +810,128 @@ Best regards`,
               <Mail className="w-5 h-5" />
               {sendingEmail ? 'Sending...' : 'Send Email'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Copy View */}
+      {activeAction === 'copy' && (
+        <div className="p-6">
+          <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-12 text-center">
+            <h3 className="text-xl font-semibold text-slate-800 mb-2">
+              Duplicate this invoice to create a new one
+            </h3>
+            <p className="text-slate-500 mb-8">
+              Change the customer or items afterwards
+            </p>
+            
+            {/* Document Icons */}
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <div className="w-16 h-20 bg-white border-2 border-slate-300 rounded-lg shadow-sm flex items-center justify-center">
+                <FileText className="w-8 h-8 text-slate-400" />
+              </div>
+              <ArrowRight className="w-6 h-6 text-slate-400" />
+              <div className="w-16 h-20 bg-white border-2 border-indigo-500 rounded-lg shadow-md flex items-center justify-center relative">
+                <FileText className="w-8 h-8 text-indigo-500" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">+</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={async () => {
+                  setCopying(true);
+                  try {
+                    const response = await invoiceAPI.copy(currentInvoice._id || currentInvoice.id);
+                    if (response.success) {
+                      alert('Invoice copied successfully! You can find it in My Invoices.');
+                      onClose && onClose();
+                    }
+                  } catch (err) {
+                    alert('Failed to copy invoice: ' + err.message);
+                  } finally {
+                    setCopying(false);
+                  }
+                }}
+                disabled={copying}
+                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
+              >
+                {copying ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Copying...
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-5 h-5" />
+                    Copy Now
+                  </>
+                )}
+              </button>
+              <span className="text-slate-400">or</span>
+              <button
+                onClick={() => setActiveAction('invoice')}
+                className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete View */}
+      {activeAction === 'delete' && (
+        <div className="p-6">
+          <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-12 text-center">
+            <h3 className="text-xl font-semibold text-slate-800 mb-2">
+              Delete this invoice
+            </h3>
+            <p className="text-slate-500 mb-8">
+              Invoice will be moved to the Trash, okay?
+            </p>
+            
+            {/* Document to Trash Icons */}
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <div className="w-16 h-20 bg-white border-2 border-red-300 rounded-lg shadow-sm flex items-center justify-center">
+                <FileText className="w-8 h-8 text-red-400" />
+              </div>
+              <ArrowRight className="w-6 h-6 text-slate-400" />
+              <div className="w-16 h-20 bg-white border-2 border-slate-300 rounded-lg shadow-sm flex items-center justify-center">
+                <Trash2 className="w-8 h-8 text-slate-400" />
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={handleDeleteInvoice}
+                disabled={deleting}
+                className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-5 h-5" />
+                    Delete Now
+                  </>
+                )}
+              </button>
+              <span className="text-slate-400">or</span>
+              <button
+                onClick={() => setActiveAction('invoice')}
+                className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
