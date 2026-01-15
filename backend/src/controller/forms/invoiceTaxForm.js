@@ -507,6 +507,27 @@ export const updatePaymentStatus = async (req, res) => {
 
 
 
+/* ---------------- GENERATE NEXT INVOICE NO ---------------- */
+const generateNextInvoiceNo = async (userId) => {
+  const lastInvoice = await InvoiceTaxForm.findOne({
+    createdBy: userId,
+    isDeleted: false,
+    "invoiceMeta.invoiceNo": { $regex: /^INV-\d+$/ }
+  })
+    .sort({ "invoiceMeta.invoiceNo": -1 }) // 👈 KEY FIX
+    .select("invoiceMeta.invoiceNo");
+
+  if (!lastInvoice) {
+    return "INV-001";
+  }
+
+  const lastNo = lastInvoice.invoiceMeta.invoiceNo; // INV-009
+  const number = parseInt(lastNo.split("-")[1], 10) + 1;
+
+  return `INV-${String(number).padStart(3, "0")}`;
+};
+
+/* ================= COPY INVOICE ================= */
 export const copyInvoice = async (req, res) => {
   try {
     const { id } = req.params;
@@ -526,21 +547,23 @@ export const copyInvoice = async (req, res) => {
       });
     }
 
-    /* ---------------- CLONE DATA ---------------- */
+    /* ---------------- GENERATE NEW INVOICE NO ---------------- */
+    const newInvoiceNo = await generateNextInvoiceNo(userId);
+
+    /* ---------------- CLONE INVOICE ---------------- */
     const invoiceData = originalInvoice.toObject();
 
-    // Remove fields that must be unique
     delete invoiceData._id;
     delete invoiceData.createdAt;
     delete invoiceData.__v;
 
-    /* ---------------- RESET / ADJUST FIELDS ---------------- */
-    invoiceData.invoiceMeta.invoiceNo = undefined; // frontend or backend will generate
+    /* ---------------- RESET FIELDS ---------------- */
+    invoiceData.createdBy = new mongoose.Types.ObjectId(userId);
+    invoiceData.isDeleted = false;
+
+    invoiceData.invoiceMeta.invoiceNo = newInvoiceNo;
     invoiceData.invoiceMeta.invoiceDate = new Date();
     invoiceData.invoiceMeta.dueDate = undefined;
-
-    invoiceData.isDeleted = false;
-    invoiceData.createdBy = new mongoose.Types.ObjectId(userId);
 
     /* ---------------- SAVE NEW INVOICE ---------------- */
     const newInvoice = await InvoiceTaxForm.create(invoiceData);
@@ -553,6 +576,7 @@ export const copyInvoice = async (req, res) => {
 
   } catch (error) {
     console.error("COPY INVOICE ERROR 👉", error);
+
     return res.status(500).json({
       success: false,
       message: error.message

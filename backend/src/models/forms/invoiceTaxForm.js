@@ -125,4 +125,10 @@ const invoiceSchema = new mongoose.Schema({
 
 });
 
+// 🔐 UNIQUE INVOICE NO PER USER
+invoiceSchema.index(
+  { createdBy: 1, "invoiceMeta.invoiceNo": 1 },
+  { unique: true }
+);
+
 export default mongoose.model("InvoiceTaxForm", invoiceSchema);
