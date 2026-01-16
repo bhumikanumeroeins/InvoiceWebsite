@@ -5,6 +5,11 @@ import SignUp from './pages/SignUp';
 import CreateInvoice from './pages/CreateInvoice';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
+import Template12 from './components/templates/Template12';
+import Template1 from './components/templates/Template1';
+import Template2 from './components/templates/Template2';
+
+
 
 function App() {
   return (
@@ -16,6 +21,7 @@ function App() {
         <Route path="/create/:type" element={<CreateInvoice />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path='/template' element={<Template2 />} />
       </Routes>
     </BrowserRouter>
   );
