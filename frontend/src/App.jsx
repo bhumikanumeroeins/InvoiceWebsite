@@ -10,6 +10,7 @@ import Template1 from './components/templates/Template1';
 import Template2 from './components/templates/Template2';
 
 
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/contact" element={<Contact />} />
         <Route path='/template' element={<Template2 />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   );

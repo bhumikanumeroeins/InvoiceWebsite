@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { FileText } from 'lucide-react';
+import { authAPI, setAuthData } from '../services/authService';
 
 const SignIn = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -20,7 +22,10 @@ const SignIn = () => {
         setError('');
 
         try {
-            console.log('Sign in:', formData);
+            const response = await authAPI.login(formData);
+            // Backend now returns { token, email, userId }
+            setAuthData(response.token, { email: response.email, userId: response.userId });
+            navigate('/dashboard');
         } catch (err) {
             setError(err.message || 'Something went wrong');
         } finally {
