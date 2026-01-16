@@ -34,20 +34,20 @@ const Template3 = ({ data = {} }) => {
         {/* Company Info - positioned next to background logo box */}
         <div style={{ marginLeft: '130px' }}>
           <h1 style={{ color: navy, fontSize: '28px', fontWeight: '700', margin: '0 0 2px 0', fontFamily: "'Syne', sans-serif" }}>LOGO</h1>
-          <p style={{ color: navy, fontSize: '14px', fontWeight: '600', margin: '0 0 2px 0',fontFamily: "'Orbitron', sans-serif", }}>{companyName}</p>
-          <p style={{ color: navy, fontSize: '11px', margin: 0, whiteSpace: 'pre-line', lineHeight: '1.4' }}>{companyAddress}</p>
+          <p style={{ color: navy, fontSize: '15px', fontWeight: '800', margin: '0 0 2px 0',fontFamily: "'Orbitron', sans-serif", }}>{companyName}</p>
+          <p style={{ color: navy, fontSize: '14px', margin: 0, whiteSpace: 'pre-line', lineHeight: '1.4' }}>{companyAddress}</p>
         </div>
       </div>
 
       {/* INVOICE TO & SHIP TO */}
       <div style={{ padding: '50px 50px 0', display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ width: '45%' }}>
-          <p style={{ color: navy, fontWeight: '700', fontSize: '14px', margin: '0 0 8px 0', fontFamily: "'Orbitron', sans-serif", }}>INVOICE TO</p>
-          <p style={{ color: navy, fontSize: '12px', margin: 0, lineHeight: '1.6' }}>{billToName}<br />{billToAddress.replace('\n', ' ')}</p>
+          <p style={{ color: navy, fontWeight: '800', fontSize: '15px', margin: '0 0 8px 0', fontFamily: "'Orbitron', sans-serif", }}>INVOICE TO</p>
+          <p style={{ color: navy, fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{billToName}<br />{billToAddress.replace('\n', ' ')}</p>
         </div>
         <div style={{ width: '45%' }}>
-          <p style={{ color: navy, fontWeight: '700', fontSize: '14px', margin: '0 0 8px 0', fontFamily: "'Orbitron', sans-serif", }}>Ship To</p>
-          <p style={{ color: navy, fontSize: '12px', margin: 0, lineHeight: '1.6' }}>{shipToName}<br />{shipToAddress.replace('\n', ' ')}</p>
+          <p style={{ color: navy, fontWeight: '800', fontSize: '15px', margin: '0 0 8px 0', fontFamily: "'Orbitron', sans-serif", }}>Ship To</p>
+          <p style={{ color: navy, fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{shipToName}<br />{shipToAddress.replace('\n', ' ')}</p>
         </div>
       </div>
 
@@ -61,45 +61,45 @@ const Template3 = ({ data = {} }) => {
         {/* Row 1: INVOICE# and P.O# */}
         <div style={{ display: 'flex', marginBottom: '8px' }}>
           <div style={{ display: 'flex', width: '50%' }}>
-            <span style={{ color: coral, fontWeight: '700', fontSize: '14px', fontFamily: "'Orbitron', sans-serif", width: '100px' }}>INVOICE#</span>
-            <span style={{ color: navy, fontSize: '13px' }}>{invoiceNumber}</span>
+            <span style={{ color: coral, fontWeight: '600', fontSize: '15px', fontFamily: "'Orbitron', sans-serif", width: '100px' }}>INVOICE#</span>
+            <span style={{ color: navy, fontSize: '15px' }}>{invoiceNumber}</span>
           </div>
           <div style={{ display: 'flex', width: '50%' }}>
-            <span style={{ color: navy, fontSize: '14px', width: '80px' }}>P.O#</span>
-            <span style={{ color: navy, fontSize: '12px' }}>{poNumber}</span>
+            <span style={{ color: navy, fontWeight: '600',  fontSize: '15px', width: '80px' }}>P.O#</span>
+            <span style={{ color: navy, fontSize: '15px' }}>{poNumber}</span>
           </div>
         </div>
         {/* Row 2: Invoice Date and Due Date */}
         <div style={{ display: 'flex' }}>
           <div style={{ display: 'flex', width: '50%' }}>
-            <span style={{ color: navy, fontSize: '14px', width: '100px' }}>Invoice Date</span>
-            <span style={{ color: navy, fontSize: '12px' }}>{invoiceDate}</span>
+            <span style={{ color: navy, fontWeight: '600', fontSize: '15px', width: '100px' }}>Invoice Date</span>
+            <span style={{ color: navy, fontSize: '15px' }}>{invoiceDate}</span>
           </div>
           <div style={{ display: 'flex', width: '50%' }}>
-            <span style={{ color: navy, fontSize: '14px', width: '80px' }}>Due Date</span>
-            <span style={{ color: navy, fontSize: '12px' }}>{dueDate}</span>
+            <span style={{ color: navy, fontWeight: '600', fontSize: '15px', width: '80px' }}>Due Date</span>
+            <span style={{ color: navy, fontSize: '15px' }}>{dueDate}</span>
           </div>
         </div>
       </div>
 
       {/* ITEMS TABLE */}
-      <div style={{ padding: '35px 50px 0' }}>
+      <div style={{ padding: '25px 50px 0' }}>
         {/* Table Header - light skin/cream background */}
         <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#feffeb', padding: '12px 15px' }}>
-          <div style={{ width: '10%', color: navy, fontSize: '14px', fontWeight: '700', fontFamily: "'Orbitron', sans-serif" }}>Qty</div>
-          <div style={{ width: '40%', color: navy, fontSize: '14px', fontWeight: '700', fontFamily: "'Orbitron', sans-serif" }}>Description</div>
-          <div style={{ width: '25%', color: navy, fontSize: '14px', fontWeight: '700', textAlign: 'center', fontFamily: "'Orbitron', sans-serif" }}>Unit Price</div>
-          <div style={{ width: '25%', color: navy, fontSize: '14px', fontWeight: '700', textAlign: 'right', fontFamily: "'Orbitron', sans-serif" }}>Total</div>
+          <div style={{ width: '10%', color: navy, fontSize: '15px', fontWeight: '800', fontFamily: "'Orbitron', sans-serif" }}>Qty</div>
+          <div style={{ width: '40%', color: navy, fontSize: '15px', fontWeight: '800', fontFamily: "'Orbitron', sans-serif" }}>Description</div>
+          <div style={{ width: '25%', color: navy, fontSize: '15px', fontWeight: '800', textAlign: 'center', fontFamily: "'Orbitron', sans-serif" }}>Unit Price</div>
+          <div style={{ width: '25%', color: navy, fontSize: '15px', fontWeight: '800', textAlign: 'right', fontFamily: "'Orbitron', sans-serif" }}>Total</div>
         </div>
 
         {/* Table Rows - light skin/cream background with gap from header */}
         <div style={{ backgroundColor: '#feffeb', marginTop: '10px' }}>
           {items.map((item, index) => (
             <div key={index} style={{ display: 'flex', alignItems: 'center', padding: '15px 15px' }}>
-              <div style={{ width: '10%', color: navy, fontSize: '13px' }}>{item.qty}</div>
-              <div style={{ width: '40%', color: navy, fontSize: '13px' }}>{item.description}</div>
-              <div style={{ width: '25%', color: navy, fontSize: '13px', textAlign: 'center' }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-              <div style={{ width: '25%', color: navy, fontSize: '13px', textAlign: 'right' }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '10%', color: navy, fontSize: '14px' }}>{item.qty}</div>
+              <div style={{ width: '40%', color: navy, fontSize: '14px' }}>{item.description}</div>
+              <div style={{ width: '25%', color: navy, fontSize: '14px', textAlign: 'center' }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '25%', color: navy, fontSize: '14px', textAlign: 'right' }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
             </div>
           ))}
         </div>
@@ -111,18 +111,18 @@ const Template3 = ({ data = {} }) => {
         <div style={{ width: '45%' }}>
           {/* Terms */}
           <div style={{ marginBottom: '20px' }}>
-            <p style={{ color: navy, fontWeight: '900', fontSize: '14px', margin: '0 0 8px 0', fontFamily: "'Orbitron', sans-serif" }}>Terms and Conditions</p>
+            <p style={{ color: navy, fontWeight: '900', fontSize: '16px', margin: '0 0 8px 0', fontFamily: "'Orbitron', sans-serif" }}>Terms and Conditions</p>
             {terms.map((term, index) => (
-              <p key={index} style={{ color: coral, fontSize: '12px', margin: '0 0 3px 0', lineHeight: '1.5' }}>{term}</p>
+              <p key={index} style={{ color: coral, fontSize: '14px', margin: '0 0 3px 0', lineHeight: '1.5' }}>{term}</p>
             ))}
           </div>
           
           {/* Payment Info */}
           <div style={{ marginBottom: '20px' }}>
-            <p style={{ color: navy, fontWeight: '900', fontSize: '14px', margin: '0 0 8px 0', fontFamily: "'Orbitron', sans-serif" }}>Payment Info</p>
-            <p style={{ color: '#000000', fontSize: '12px', margin: '0 0 3px 0' }}><span style={{ fontWeight: '600' }}>Bank Info:</span> <span style={{ color: coral }}>{bankName}</span></p>
-            <p style={{ color: '#000000', fontSize: '12px', margin: '0 0 3px 0' }}><span style={{ fontWeight: '600' }}>Account No:</span> <span style={{ color: coral }}>{accountNo}</span></p>
-            <p style={{ color: '#000000', fontSize: '12px', margin: 0 }}><span style={{ fontWeight: '600' }}>IFSC Code:</span> <span style={{ color: coral }}>{ifscCode}</span></p>
+            <p style={{ color: navy, fontWeight: '900', fontSize: '16px', margin: '0 0 8px 0', fontFamily: "'Orbitron', sans-serif" }}>Payment Info</p>
+            <p style={{ color: '#000000', fontSize: '14px', margin: '0 0 3px 0' }}><span style={{ fontWeight: '600' }}>Bank Info:</span> <span style={{ color: coral }}>{bankName}</span></p>
+            <p style={{ color: '#000000', fontSize: '14px', margin: '0 0 3px 0' }}><span style={{ fontWeight: '600' }}>Account No:</span> <span style={{ color: coral }}>{accountNo}</span></p>
+            <p style={{ color: '#000000', fontSize: '14px', margin: 0 }}><span style={{ fontWeight: '600' }}>IFSC Code:</span> <span style={{ color: coral }}>{ifscCode}</span></p>
           </div>
           
           {/* Signature */}
@@ -143,12 +143,12 @@ const Template3 = ({ data = {} }) => {
           {/* Totals */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: navy, fontSize: '13px' }}>Sub Total</span>
-              <span style={{ color: coral, fontSize: '13px', fontWeight: '700' }}>{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span style={{ color: navy, fontSize: '16px' }}>Sub Total</span>
+              <span style={{ color: coral, fontSize: '16px', fontWeight: '700' }}>{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ color: navy, fontSize: '13px' }}>Tax</span>
-              <span style={{ color: coral, fontSize: '13px', fontWeight: '700' }}>{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
+              <span style={{ color: navy, fontSize: '16px' }}>Tax</span>
+              <span style={{ color: coral, fontSize: '16px', fontWeight: '700' }}>{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
             </div>
             
             {/* Total */}

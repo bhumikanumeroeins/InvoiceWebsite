@@ -56,7 +56,7 @@ const Template1 = ({ data = {} }) => {
             fontSize: '28px', 
             fontFamily: "'Orbitron', sans-serif",
             letterSpacing: '4px',
-            fontWeight: '400'
+            fontWeight: '600'
           }}>
             INVOICE
           </span>
@@ -67,14 +67,15 @@ const Template1 = ({ data = {} }) => {
           <p style={{ 
             color: '#000000',
             fontWeight: '700', 
-            fontSize: '13px', 
+            fontSize: '14px', 
             letterSpacing: '1px', 
             margin: '0 0 4px 0',
-            fontFamily: "'Orbitron', sans-serif"
+            fontFamily: "'Orbitron', sans-serif",
+            textTransform: "uppercase"
           }}>{companyName}</p>
           <p style={{ 
             color: '#4b5563', 
-            fontSize: '12px', 
+            fontSize: '14px', 
             margin: 0, 
             whiteSpace: 'pre-line', 
             lineHeight: '1.5',
@@ -89,21 +90,21 @@ const Template1 = ({ data = {} }) => {
             <p style={{ 
               color: '#000000', 
               fontWeight: '700', 
-              fontSize: '13px', 
+              fontSize: '14px', 
               letterSpacing: '1px', 
               margin: '0 0 4px 0',
               fontFamily: "'Orbitron', sans-serif"
             }}>BILL TO:</p>
             <p style={{ 
               color: '#4b5563', 
-              fontSize: '12px', 
+              fontSize: '14px', 
               margin: 0,
               lineHeight: '1.5',
               fontFamily: "'Montserrat', sans-serif"
             }}>{billToName}</p>
             <p style={{ 
               color: '#4b5563', 
-              fontSize: '12px', 
+              fontSize: '14px', 
               margin: 0, 
               whiteSpace: 'pre-line', 
               lineHeight: '1.5',
@@ -119,21 +120,21 @@ const Template1 = ({ data = {} }) => {
             <p style={{ 
               color: '#000000', 
               fontWeight: '700', 
-              fontSize: '13px', 
+              fontSize: '14px', 
               letterSpacing: '1px', 
               margin: '0 0 4px 0',
               fontFamily: "'Orbitron', sans-serif"
             }}>SHIP TO</p>
             <p style={{ 
               color: '#4b5563', 
-              fontSize: '12px', 
+              fontSize: '14px', 
               margin: 0,
               lineHeight: '1.5',
               fontFamily: "'Montserrat', sans-serif"
             }}>{shipToName}</p>
             <p style={{ 
               color: '#4b5563', 
-              fontSize: '12px', 
+              fontSize: '14px', 
               margin: 0, 
               whiteSpace: 'pre-line', 
               lineHeight: '1.5',
@@ -147,43 +148,43 @@ const Template1 = ({ data = {} }) => {
           {/* Invoice Details */}
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#000000', fontWeight: '700', fontSize: '11px', letterSpacing: '1px', fontFamily: "'Orbitron', sans-serif" }}>INVOICE#</span>
-              <span style={{ color: '#000000', fontSize: '11px', fontFamily: "'Montserrat', sans-serif" }}>{invoiceNumber}</span>
+              <span style={{ color: '#000000', fontWeight: '700', fontSize: '13px', letterSpacing: '1px', fontFamily: "'Orbitron', sans-serif" }}>INVOICE#</span>
+              <span style={{ color: '#000000', fontSize: '13px', fontFamily: "'Montserrat', sans-serif" }}>{invoiceNumber}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#000000', fontWeight: '700', fontSize: '11px', letterSpacing: '1px', fontFamily: "'Orbitron', sans-serif" }}>INVOICE DATE</span>
-              <span style={{ color: '#000000', fontSize: '11px', fontFamily: "'Montserrat', sans-serif" }}>{invoiceDate}</span>
+              <span style={{ color: '#000000', fontWeight: '700', fontSize: '13px', letterSpacing: '1px', fontFamily: "'Orbitron', sans-serif" }}>INVOICE DATE</span>
+              <span style={{ color: '#000000', fontSize: '13px', fontFamily: "'Montserrat', sans-serif" }}>{invoiceDate}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#000000', fontWeight: '700', fontSize: '11px', letterSpacing: '1px', fontFamily: "'Orbitron', sans-serif" }}>P.O#</span>
-              <span style={{ color: '#000000', fontSize: '11px', fontFamily: "'Montserrat', sans-serif" }}>{poNumber}</span>
+              <span style={{ color: '#000000', fontWeight: '700', fontSize: '13px', letterSpacing: '1px', fontFamily: "'Orbitron', sans-serif" }}>P.O#</span>
+              <span style={{ color: '#000000', fontSize: '13px', fontFamily: "'Montserrat', sans-serif" }}>{poNumber}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#000000', fontWeight: '700', fontSize: '11px', letterSpacing: '1px', fontFamily: "'Orbitron', sans-serif" }}>DUE DATE</span>
-              <span style={{ color: '#000000', fontSize: '11px', fontFamily: "'Montserrat', sans-serif" }}>{dueDate}</span>
+              <span style={{ color: '#000000', fontWeight: '700', fontSize: '13px', letterSpacing: '1px', fontFamily: "'Orbitron', sans-serif" }}>DUE DATE</span>
+              <span style={{ color: '#000000', fontSize: '13px', fontFamily: "'Montserrat', sans-serif" }}>{dueDate}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* ITEMS TABLE */}
-      <div style={{ padding: '0 50px', marginTop: '30px' }}>
+      <div style={{ padding: '0 50px', marginTop: '10px' }}>
         {/* Table Header */}
         <div style={{ backgroundColor:'#ff0f7c', display: 'flex', padding: '14px 35px', alignItems: 'center' }}>
-          <div style={{ width: '12%', color: '#ffffff', fontSize: '10px', fontWeight: '600', letterSpacing: '2px', fontFamily: "'Orbitron', sans-serif" }}>QTY</div>
-          <div style={{ width: '38%', color: '#ffffff', fontSize: '10px', fontWeight: '600', letterSpacing: '2px', fontFamily: "'Orbitron', sans-serif" }}>DESCRIPTION</div>
-          <div style={{ width: '25%', color: '#ffffff', fontSize: '10px', fontWeight: '600', letterSpacing: '2px', textAlign: 'center', fontFamily: "'Orbitron', sans-serif" }}>UNIT PRICE</div>
-          <div style={{ width: '25%', color: '#ffffff', fontSize: '10px', fontWeight: '600', letterSpacing: '2px', textAlign: 'right', fontFamily: "'Orbitron', sans-serif" }}>AMOUNT</div>
+          <div style={{ width: '12%', color: '#ffffff', fontSize: '14px', fontWeight: '700', letterSpacing: '2px', fontFamily: "'Orbitron', sans-serif" }}>QTY</div>
+          <div style={{ width: '38%', color: '#ffffff', fontSize: '14px', fontWeight: '700', letterSpacing: '2px', fontFamily: "'Orbitron', sans-serif" }}>DESCRIPTION</div>
+          <div style={{ width: '25%', color: '#ffffff', fontSize: '14px', fontWeight: '700', letterSpacing: '2px', textAlign: 'center', fontFamily: "'Orbitron', sans-serif" }}>UNIT PRICE</div>
+          <div style={{ width: '25%', color: '#ffffff', fontSize: '14px', fontWeight: '700', letterSpacing: '2px', textAlign: 'right', fontFamily: "'Orbitron', sans-serif" }}>AMOUNT</div>
         </div>
 
         {/* Table Rows */}
         <div style={{ backgroundColor: '#ffffff' }}>
           {items.map((item, index) => (
             <div key={index} style={{ display: 'flex', padding: '16px 35px', borderBottom: '1px solid #f1f5f9', alignItems: 'center' }}>
-              <div style={{ width: '12%', color: '#52525b', fontSize: '13px', fontFamily: "'Montserrat', sans-serif" }}>{item.qty}</div>
-              <div style={{ width: '38%', color: '#52525b', fontSize: '13px', fontFamily: "'Montserrat', sans-serif" }}>{item.description}</div>
-              <div style={{ width: '25%', color: '#52525b', fontSize: '13px', textAlign: 'center', fontFamily: "'Montserrat', sans-serif" }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-              <div style={{ width: '25%', color: '#52525b', fontSize: '13px', textAlign: 'right', fontFamily: "'Montserrat', sans-serif" }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '12%', color: '#52525b', fontSize: '14px', fontFamily: "'Montserrat', sans-serif" }}>{item.qty}</div>
+              <div style={{ width: '38%', color: '#52525b', fontSize: '14px', fontFamily: "'Montserrat', sans-serif" }}>{item.description}</div>
+              <div style={{ width: '25%', color: '#52525b', fontSize: '14px', textAlign: 'center', fontFamily: "'Montserrat', sans-serif" }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '25%', color: '#52525b', fontSize: '14px', textAlign: 'right', fontFamily: "'Montserrat', sans-serif" }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
             </div>
           ))}
         </div>
@@ -193,52 +194,139 @@ const Template1 = ({ data = {} }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '40px 50px 0' }}>
         {/* Terms */}
         <div style={{ width: '45%' }}>
-          <p style={{ color: '#27272a', fontWeight: '700', fontSize: '13px', letterSpacing: '2px', margin: '4px', fontFamily: "'Orbitron', sans-serif" }}>TERMS AND CONDITIONS</p>
+          <p style={{ color: '#27272a', fontWeight: '700', fontSize: '14px', letterSpacing: '2px', margin: '4px', fontFamily: "'Orbitron', sans-serif" }}>TERMS AND CONDITIONS</p>
           {terms.map((term, index) => (
-            <p key={index} style={{ color: '#71717a', fontSize: '11px', margin: '0 0 7px 0', display: 'flex', alignItems: 'flex-start', gap: '6px', fontFamily: "'Montserrat', sans-serif" }}>
-              <span style={{ color: '#000000', fontSize: '10px', marginTop: '3px' }}>◆</span>
-              <span style={{ color: '#52525b', fontSize: '12px'}}>{term}</span>
+            <p key={index} style={{ color: '#71717a', fontSize: '11px', margin: '0 0 7px 0', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Montserrat', sans-serif" }}>
+              <span style={{ color: '#000000', fontSize: '13px' }}>◆</span>
+              <span style={{ color: '#52525b', fontSize: '13px'}}>{term}</span>
             </p>
           ))}
         </div>
 
         {/* Totals */}
-        <div style={{ width: '40%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', marginTop: '25px' }}>
-            <span style={{ color: '#27272a', letterSpacing: '2px', fontWeight: '700',fontSize: '12px', fontFamily: "'Orbitron', sans-serif" }}>SUBTOTAL</span>
-            <span style={{ color: '#27272a', fontSize: '11px', fontWeight: '700', fontFamily: "'Montserrat', sans-serif" }}>{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+        <div style={{ width: "40%" }}>
+
+          {/* GRID-LIKE TWO COLUMN LAYOUT */}
+          <div style={{ display: "flex", flexDirection: "column", marginTop: "25px" }}>
+
+            {/* SUBTOTAL */}
+            <div style={{ display: "flex", marginBottom: "10px", alignItems: "center" }}>
+
+              {/* LABEL COLUMN — FIXED WIDTH */}
+              <span style={{ 
+                width: "160px",
+                color: "#27272a",
+                letterSpacing: "2px",
+                fontWeight: "700",
+                fontSize: "14px",
+                fontFamily: "'Orbitron', sans-serif",
+                textAlign: "right"
+              }}>
+                SUBTOTAL
+              </span>
+
+              {/* VALUE COLUMN — FIXED WIDTH + RIGHT ALIGN */}
+              <span style={{ 
+                width: "140px",
+                textAlign: "right",
+                color: "#27272a",
+                fontSize: "14px",
+                fontWeight: "700",
+                fontFamily: "'Montserrat', sans-serif"
+              }}>
+                {subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </span>
+
+            </div>
+
+            {/* TAX */}
+            <div style={{ display: "flex", marginBottom: "14px", alignItems: "center" }}>
+
+              <span style={{ 
+                width: "160px",
+                color: "#27272a",
+                letterSpacing: "2px",
+                fontWeight: "700",
+                fontSize: "14px",
+                fontFamily: "'Orbitron', sans-serif",
+                textAlign: "right"
+              }}>
+                TAX%
+              </span>
+
+              <span style={{ 
+                width: "140px",
+                textAlign: "right",
+                color: "#27272a",
+                fontSize: "14px",
+                fontWeight: "700",
+                fontFamily: "'Montserrat', sans-serif"
+              }}>
+                {taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 0 })}
+              </span>
+
+            </div>
+
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <span style={{ color: '#27272a', letterSpacing: '2px',fontWeight: '700', fontSize: '12px', fontFamily: "'Orbitron', sans-serif" }}>TAX%</span>
-            <span style={{ color: '#27272a', fontSize: '11px', fontWeight: '700', fontFamily: "'Montserrat', sans-serif" }}>{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
-          </div>
-          
+
           {/* TOTAL with cut corners */}
-          <div style={{
-            backgroundColor: '#ff0f7c',
-            padding: '10px 14px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
-          }}>
-            <span style={{ color: '#ffffff', fontWeight: '700', letterSpacing: '3px', fontSize: '10px', fontFamily: "'Orbitron', sans-serif" }}>TOTAL</span>
-            <span style={{ color: '#ffffff', fontWeight: '500', fontSize: '16px', fontFamily: "'Montserrat', sans-serif" }}>{total.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
+          <div
+            style={{
+              width: "100%",
+              backgroundColor: "#ff0f7c",
+              padding: "12px 18px 12px 28px",   // extra left padding for tilt look
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+
+              /* 👉 THIS CREATES LEFT TILT + RIGHT CUT */
+              clipPath:
+                "polygon(22px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)"
+            }}
+          >
+            <span
+              style={{
+                width: "160px",
+                color: "#ffffff",
+                fontWeight: "700",
+                letterSpacing: "3px",
+                fontSize: "14px",
+                fontFamily: "'Orbitron', sans-serif"
+              }}
+            >
+              TOTAL
+            </span>
+
+            <span
+              style={{
+                width: "140px",
+                textAlign: "right",
+                color: "#ffffff",
+                fontWeight: "500",
+                fontSize: "16px",
+                fontFamily: "'Montserrat', sans-serif"
+              }}
+            >
+              {total.toLocaleString("en-IN", { minimumFractionDigits: 0 })}
+            </span>
           </div>
+
         </div>
+
+
       </div>
 
       {/* THANK YOU */}
       <div style={{ padding: '35px 50px 0' }}>
-        <p style={{ color: '#27272a', fontWeight: '700', fontSize: '12px', letterSpacing: '2px', margin: 0, fontFamily: "'Orbitron', sans-serif" }}>THANK YOU FOR YOUR BUSINESS</p>
+        <p style={{ color: '#27272a', fontWeight: '800', fontSize: '18px', letterSpacing: '2px', margin: 0, fontFamily: "'Orbitron', sans-serif" }}>THANK YOU FOR YOUR BUSINESS</p>
       </div>
 
       {/* PAYMENT, SIGNATURE, QR */}
-      <div style={{ display: 'flex', gap: '20px', padding: '30px 50px', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: '20px', padding: '0px 50px', alignItems: 'flex-end' }}>
         {/* Payment Info */}
         <div style={{ width: '220px', position: 'relative' }}>
           <img src={paymentBoxImg} alt="Payment Box" style={{ width: '100%', height: 'auto' }} />
-          <p style={{ position: 'absolute', top: '20px', left: '12px', color: darkBg, fontWeight: '700', fontSize: '11px', letterSpacing: '1px', margin: 0, fontFamily: "'Orbitron', sans-serif" }}>PAYMENT INFORMATION</p>
+          <p style={{ position: 'absolute', top: '20px', left: '12px', color: darkBg, fontWeight: '800', fontSize: '13px', letterSpacing: '1px', margin: 0, fontFamily: "'Orbitron', sans-serif" }}>PAYMENT INFORMATION</p>
           <div style={{ position: 'absolute', top: '45px', left: '12px', right: '12px' }}>
             <div style={{ display: 'flex', marginBottom: '2px', fontSize: '11px' }}>
               <span style={{ color: '#71717a', width: '75px', fontFamily: "'Montserrat', sans-serif" }}>Bank Name:</span>
@@ -271,8 +359,8 @@ const Template1 = ({ data = {} }) => {
         <div style={{ width: '160px', textAlign: 'center' }}>
           <div style={{ position: 'relative' }}>
             <img src={scanBoxImg} alt="Scan Box" style={{ width: '100%', height: 'auto' }} />
-            <p style={{ position: 'absolute', top: '20px', left: '55%', transform: 'translateX(-50%)', color: magenta, fontWeight: '800', fontSize: '11px', letterSpacing: '1px', margin: 0, fontFamily: "'Orbitron', sans-serif", whiteSpace: 'nowrap' }}>SCAN TO PAY</p>
-            <div style={{ position: 'absolute', top: '42px', left: '50%', transform: 'translateX(-50%)' }}>
+            <p style={{ position: 'absolute', top: '20px', left: '58%', transform: 'translateX(-50%)', color: magenta, fontWeight: '800', fontSize: '11px', letterSpacing: '1px', margin: 0, fontFamily: "'Orbitron', sans-serif", whiteSpace: 'nowrap' }}>SCAN TO PAY</p>
+            <div style={{ position: 'absolute', top: '42px', left: '77%', transform: 'translateX(-50%)', width: '100%' }}>
               {qrCode ? (
                 <img src={qrCode} alt="QR Code" style={{ width: '75px', height: '75px' }} />
               ) : (
@@ -287,18 +375,18 @@ const Template1 = ({ data = {} }) => {
       </div>
 
       {/* FOOTER */}
-      <div style={{ position: 'absolute', bottom: '0', left: 0, right: 0, padding: '25px 50px', display: 'flex', justifyContent: 'space-between' }}>
+      <div style={{ position: 'absolute', bottom: '0', left: 0, right: 0, padding: '10px 50px', display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ textAlign: 'left' }}>
-          <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '10px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>EMAIL</p>
-          <p style={{ color: '#ffffff', fontSize: '10px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{email}</p>
+          <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '14px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>EMAIL</p>
+          <p style={{ color: '#ffffff', fontSize: '14px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{email}</p>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '10px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>PHONE NO.</p>
-          <p style={{ color: '#ffffff', fontSize: '10px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{phone}</p>
+          <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '14px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>PHONE NO.</p>
+          <p style={{ color: '#ffffff', fontSize: '14px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{phone}</p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '10px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>WEBSITE</p>
-          <p style={{ color: '#ffffff', fontSize: '10px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{website}</p>
+          <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '14px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>WEBSITE</p>
+          <p style={{ color: '#ffffff', fontSize: '14px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{website}</p>
         </div>
       </div>
     </div>

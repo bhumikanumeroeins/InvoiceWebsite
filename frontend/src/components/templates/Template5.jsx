@@ -28,52 +28,52 @@ const Template5 = ({ data = {} }) => {
       }}
     >
       {/* HEADER - Purple section */}
-      <div style={{ padding: '40px 100px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '38px 100px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {/* Left - Logo & Company */}
         <div>
           <p style={{ color: '#fff', fontSize: '28px', fontWeight: '400', margin: '0 0 0 0', fontFamily: "'Albert Sans', sans-serif" }}>LOGO</p>
           <p style={{ color: orange, fontSize: '32px', fontWeight: '400', margin: '0 0 0 0', fontFamily: "'Passion One', cursive" }}>{companyName}</p>
-          <p style={{ color: '#fff', fontSize: '12px', margin: 0, whiteSpace: 'pre-line', lineHeight: '1.6' }}>{companyAddress}</p>
+          <p style={{ color: '#fff', fontSize: '14px', margin: 0, whiteSpace: 'pre-line', lineHeight: '1.6' }}>{companyAddress}</p>
         </div>
 
         {/* Right - Bill To & Ship To */}
         <div style={{ textAlign: 'right' }}>
           <div style={{ marginBottom: '20px' }}>
-            <p style={{ color: '#fff', fontSize: '15px', fontWeight: '700', margin: '0 0 5px 0' }}>Bill To</p>
-            <p style={{ color: '#fff', fontSize: '11px', margin: 0, lineHeight: '1.6' }}>{billToName}<br />{billToAddress.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}</p>
+            <p style={{ color: '#fff', fontSize: '14px', fontWeight: '800', margin: '0 0 5px 0' }}>Bill To</p>
+            <p style={{ color: '#fff', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{billToName}<br />{billToAddress.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}</p>
           </div>
           <div>
-            <p style={{ color: '#fff', fontSize: '15px', fontWeight: '700', margin: '0 0 5px 0' }}>Ship To</p>
-            <p style={{ color: '#fff', fontSize: '11px', margin: 0, lineHeight: '1.6' }}>{shipToName}<br />{shipToAddress.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}</p>
+            <p style={{ color: '#fff', fontSize: '14px', fontWeight: '800', margin: '0 0 5px 0' }}>Ship To</p>
+            <p style={{ color: '#fff', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{shipToName}<br />{shipToAddress.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}</p>
           </div>
         </div>
       </div>
 
       {/* INVOICE DETAILS & INVOICE text */}
-      <div style={{ padding: '100px 80px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div style={{ padding: '25px 80px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         {/* Left - Invoice Details */}
         <div>
           <div style={{ display: 'flex', marginBottom: '5px' }}>
-            <span style={{ color: purple, fontSize: '12px', fontWeight: '600', width: '100px' }}>Invoice#:</span>
-            <span style={{ color: gray, fontSize: '12px' }}>{invoiceNumber}</span>
+            <span style={{ color: purple, fontSize: '16px', fontWeight: '600', width: '100px' }}>Invoice#:</span>
+            <span style={{ color: gray, fontSize: '16px' }}>{invoiceNumber}</span>
           </div>
           <div style={{ display: 'flex', marginBottom: '5px' }}>
-            <span style={{ color: purple, fontSize: '12px', fontWeight: '600', width: '100px' }}>Invoice Date:</span>
-            <span style={{ color: gray, fontSize: '12px' }}>{invoiceDate}</span>
+            <span style={{ color: purple, fontSize: '16px', fontWeight: '600', width: '100px' }}>Invoice Date:</span>
+            <span style={{ color: gray, fontSize: '16px' }}>{invoiceDate}</span>
           </div>
           <div style={{ display: 'flex', marginBottom: '5px' }}>
-            <span style={{ color: purple, fontSize: '12px', fontWeight: '600', width: '100px' }}>P.O#:</span>
-            <span style={{ color: gray, fontSize: '12px' }}>{poNumber}</span>
+            <span style={{ color: purple, fontSize: '16px', fontWeight: '600', width: '100px' }}>P.O#:</span>
+            <span style={{ color: gray, fontSize: '16px' }}>{poNumber}</span>
           </div>
           <div style={{ display: 'flex' }}>
-            <span style={{ color: purple, fontSize: '12px', fontWeight: '600', width: '100px' }}>Due Date:</span>
-            <span style={{ color: gray, fontSize: '12px' }}>{dueDate}</span>
+            <span style={{ color: purple, fontSize: '16px', fontWeight: '600', width: '100px' }}>Due Date:</span>
+            <span style={{ color: gray, fontSize: '16px' }}>{dueDate}</span>
           </div>
         </div>
 
         {/* Right - INVOICE text */}
         <div>
-          <p style={{ color: '#b374fe', fontSize: '36px', fontWeight: '400', margin: 0, fontFamily: "'Passion One', cursive", letterSpacing: '1px' }}>INVOICE</p>
+          <p style={{ color: '#b374fe', fontSize: '50px', fontWeight: '400', margin: 0, fontFamily: "'Passion One', cursive", letterSpacing: '1px' }}>INVOICE</p>
         </div>
       </div>
 
@@ -81,20 +81,20 @@ const Template5 = ({ data = {} }) => {
       <div style={{ padding: '30px 80px 0' }}>
         {/* Table Header - light purple background with rounded corners */}
         <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f1e4fe', padding: '12px 15px', borderRadius: '25px' }}>
-          <div style={{ width: '10%', color: purple, fontSize: '13px', fontWeight: '700', fontFamily: "'Passion One', cursive" }}>Qty</div>
-          <div style={{ width: '45%', color: purple, fontSize: '13px', fontWeight: '700', fontFamily: "'Passion One', cursive" }}>Description</div>
-          <div style={{ width: '22%', color: purple, fontSize: '13px', fontWeight: '700', textAlign: 'center',fontFamily: "'Passion One', cursive" }}>Unit Price</div>
-          <div style={{ width: '23%', color: purple, fontSize: '13px', fontWeight: '700', textAlign: 'right', fontFamily: "'Passion One', cursive" }}>Amount</div>
+          <div style={{ width: '10%', color: purple, fontSize: '17px', fontWeight: '500', fontFamily: "'Passion One', cursive" }}>Qty</div>
+          <div style={{ width: '45%', color: purple, fontSize: '17px', fontWeight: '500', fontFamily: "'Passion One', cursive" }}>Description</div>
+          <div style={{ width: '22%', color: purple, fontSize: '17px', fontWeight: '500', textAlign: 'center',fontFamily: "'Passion One', cursive" }}>Unit Price</div>
+          <div style={{ width: '23%', color: purple, fontSize: '17px', fontWeight: '500', textAlign: 'right', fontFamily: "'Passion One', cursive" }}>Amount</div>
         </div>
 
         {/* Table Rows - alternating light purple and white with rounded corners */}
         <div>
           {items.map((item, index) => (
             <div key={index} style={{ display: 'flex', alignItems: 'center', padding: '15px 15px', backgroundColor: index % 2 === 0 ? '#fff' : '#f1e4fe', borderRadius: index % 2 === 0 ? '0' : '25px', marginTop: '5px' }}>
-              <div style={{ width: '10%', color: purple, fontSize: '13px', fontFamily: "'Passion One', cursive" }}>{item.qty}</div>
-              <div style={{ width: '45%', color: purple, fontSize: '13px' }}>{item.description}</div>
-              <div style={{ width: '22%', color: purple, fontSize: '13px', textAlign: 'center' }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-              <div style={{ width: '23%', color: purple, fontSize: '13px', textAlign: 'right' }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '10%', color: purple, fontSize: '15px', fontFamily: "'Passion One', cursive" }}>{item.qty}</div>
+              <div style={{ width: '45%', color: purple, fontSize: '15px' }}>{item.description}</div>
+              <div style={{ width: '22%', color: purple, fontSize: '15px', textAlign: 'center' }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '23%', color: purple, fontSize: '15px', textAlign: 'right' }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
             </div>
           ))}
         </div>
@@ -104,11 +104,11 @@ const Template5 = ({ data = {} }) => {
       <div style={{ padding: '25px 80px 0', display: 'flex', justifyContent: 'space-between' }}>
         {/* Left - Terms */}
         <div style={{ width: '40%' }}>
-          <p style={{ color: gray, fontWeight: '700', fontSize: '13px', margin: '0 0 10px 0' }}>Terms and Conditions</p>
+          <p style={{ color: gray, fontWeight: '700', fontSize: '16px', margin: '0 0 10px 0' }}>Terms and Conditions</p>
           {terms.map((term, index) => (
             <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '3px' }}>
-              <span style={{ color: orange, fontSize: '10px', marginTop: '3px' }}>◆</span>
-              <span style={{ color: gray, fontSize: '11px', lineHeight: '1.5' }}>{term}</span>
+              <span style={{ color: orange, fontSize: '14px', marginTop: '3px' }}>◆</span>
+              <span style={{ color: gray, fontSize: '14px', lineHeight: '1.5' }}>{term}</span>
             </div>
           ))}
         </div>
@@ -116,22 +116,22 @@ const Template5 = ({ data = {} }) => {
         {/* Right - Totals */}
         <div style={{ width: '40%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: gray, fontSize: '12px', fontWeight: '600' }}>Sub total</span>
-            <span style={{ color: gray, fontSize: '12px' }}>{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <span style={{ color: gray, fontSize: '15px', fontWeight: '600' }}>Sub total</span>
+            <span style={{ color: gray, fontSize: '15px' }}>{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: gray, fontSize: '12px', fontWeight: '600' }}>Tax</span>
-            <span style={{ color: gray, fontSize: '12px' }}>{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
+            <span style={{ color: gray, fontSize: '15px', fontWeight: '600' }}>Tax</span>
+            <span style={{ color: gray, fontSize: '15px' }}>{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: gray, fontSize: '14px', fontWeight: '700' }}>Total</span>
-            <span style={{ color: gray, fontSize: '14px', fontWeight: '700' }}>{total.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
+            <span style={{ color: gray, fontSize: '15px', fontWeight: '700' }}>Total</span>
+            <span style={{ color: gray, fontSize: '15px', fontWeight: '700' }}>{total.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
           </div>
         </div>
       </div>
 
       {/* PAYMENT INFO & QR CODE */}
-      <div style={{ padding: '25px 80px 0', display: 'flex', justifyContent: 'space-between' }}>
+      <div style={{ padding: '15px 80px 0', display: 'flex', justifyContent: 'space-between' }}>
         {/* Left - Payment Info */}
         <div style={{ width: '50%' }}>
           <p style={{ color: gray, fontWeight: '700', fontSize: '13px', margin: '0 0 10px 0' }}>Payment Info</p>
