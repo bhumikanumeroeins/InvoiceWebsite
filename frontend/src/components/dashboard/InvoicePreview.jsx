@@ -1,13 +1,23 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X, Copy, ArrowRight, Loader2, Trash2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import Template1 from '../templates/Template1';
 import Template2 from '../templates/Template2';
 import Template3 from '../templates/Template3';
 import Template4 from '../templates/Template4';
 import Template5 from '../templates/Template5';
+import Template6 from '../templates/Template6';
+import Template7 from '../templates/Template7';
+import Template8 from '../templates/Template8';
+import Template9 from '../templates/Template9';
+import Template10 from '../templates/Template10';
+import Template11 from '../templates/Template11';
+import Template12 from '../templates/Template12';
 import InvoiceForm from '../invoice/InvoiceForm';
 import InvoiceActionTabs from '../invoice/InvoiceActionTabs';
 import { invoiceAPI } from '../../services/invoiceService';
+import { getCurrentUser } from '../../services/authService';
 
 const templates = {
   1: Template1,
@@ -15,6 +25,13 @@ const templates = {
   3: Template3,
   4: Template4,
   5: Template5,
+  6: Template6,
+  7: Template7,
+  8: Template8,
+  9: Template9,
+  10: Template10,
+  11: Template11,
+  12: Template12,
 };
 
 const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
@@ -23,6 +40,7 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
   const [currentInvoice, setCurrentInvoice] = useState(invoice);
   const [loading, setLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
+  const templateRef = useRef(null);
   
   // Payment state
   const [paymentTab, setPaymentTab] = useState('manual'); // 'manual' or 'cards'
@@ -54,11 +72,18 @@ If you need assistance or have any questions, please email: support@invoicepro.c
   });
   const [savingRecurring, setSavingRecurring] = useState(false);
 
+  const currentUser = getCurrentUser();
+  const userEmail = currentUser?.email || '';
+
+  const clientEmail = currentInvoice?.billTo?.email || currentInvoice?.client?.email || '';
+  
+  const invoiceNum = currentInvoice?.invoiceNumber || currentInvoice?.invoiceMeta?.invoiceNo || currentInvoice?.number || '';
+
   const [emailData, setEmailData] = useState({
-    from: 'user@example.com', 
-    to: currentInvoice?.billTo?.email || '',
+    from: userEmail, 
+    to: clientEmail,
     sendCopy: false,
-    subject: `Invoice ${currentInvoice?.invoiceNumber || currentInvoice?.number || ''}`,
+    subject: `Invoice ${invoiceNum}`,
     message: `Dear Customer,
 
 Please find the attached invoice for your reference.
@@ -111,6 +136,83 @@ Best regards`,
     } catch (err) {
       alert('Failed to delete invoice: ' + err.message);
       setDeleting(false);
+    }
+  };
+
+  const generatePDF = async () => {
+    if (!templateRef.current) return null;
+    
+    try {
+      const canvas = await html2canvas(templateRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 0;
+      
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      
+      return pdf.output('datauristring');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      return null;
+    }
+  };
+
+  const handleSendEmail = async () => {
+    const invoiceId = currentInvoice?._id || currentInvoice?.id || invoice?._id || invoice?.id;
+    
+    if (!invoiceId) {
+      alert('Invoice not found. Please try again.');
+      return;
+    }
+
+    if (!emailData.to) {
+      alert('Please enter recipient email address.');
+      return;
+    }
+
+    setSendingEmail(true);
+    
+    try {
+      let pdfBase64 = null;
+      try {
+        const pdfDataUri = await generatePDF();
+        if (pdfDataUri) {
+          pdfBase64 = `data:application/pdf;base64,${pdfDataUri.split(',')[1]}`;
+        }
+      } catch (pdfError) {
+        console.warn('PDF generation failed, sending without attachment:', pdfError);
+      }
+      
+      const response = await invoiceAPI.sendEmail(invoiceId, {
+        to: emailData.to,
+        subject: emailData.subject,
+        message: emailData.message,
+        sendCopy: emailData.sendCopy,
+        pdfBase64,
+      });
+      
+      if (response && response.success) {
+        setActiveAction('invoice');
+      } else {
+        alert('Failed to send email: ' + (response?.message || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Send email error:', err);
+      alert('Failed to send email: ' + (err?.message || 'Unknown error'));
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -206,29 +308,48 @@ Best regards`,
       {activeAction === 'template' && (
         <div className="p-6">
           <h3 className="text-lg font-semibold text-slate-800 mb-4">Select a Template</h3>
-          <div className="grid grid-cols-5 gap-4">
-            {[1, 2, 3, 4, 5].map((num) => (
-              <div 
-                key={num}
-                onClick={() => {
-                  setSelectedTemplate(num);
-                  setActiveAction('invoice');
-                }}
-                className={`border-2 rounded-lg p-2 cursor-pointer transition-all hover:shadow-lg ${
-                  selectedTemplate === num ? 'border-indigo-500 shadow-md' : 'border-slate-200 hover:border-indigo-300'
-                }`}
-              >
-                <div className="aspect-[3/4] bg-slate-100 rounded overflow-hidden">
-                  <div className="transform scale-[0.15] origin-top-left w-[667%] h-[667%]">
-                    {(() => {
-                      const TemplateComponent = templates[num];
-                      return <TemplateComponent data={previewData} />;
-                    })()}
+          <div className="grid grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => {
+              const TemplateComponent = templates[num];
+              return (
+                <div 
+                  key={num}
+                  onClick={() => {
+                    setSelectedTemplate(num);
+                    setActiveAction('invoice');
+                  }}
+                  className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl bg-white ${
+                    selectedTemplate === num 
+                      ? 'ring-3 ring-indigo-500 shadow-lg' 
+                      : 'shadow-md hover:ring-2 hover:ring-indigo-300'
+                  }`}
+                  style={{ width: '220px', height: '340px' }}
+                >
+                  <div 
+                    className="overflow-hidden"
+                    style={{ width: '220px', height: '311px' }}
+                  >
+                    <div 
+                      style={{ 
+                        transform: 'scale(0.277)', 
+                        transformOrigin: 'top left', 
+                        width: '794px', 
+                        height: '1123px' 
+                      }}
+                    >
+                      <TemplateComponent data={previewData} />
+                    </div>
                   </div>
+                  <p className={`text-center text-sm py-2 font-medium ${
+                    selectedTemplate === num 
+                      ? 'bg-indigo-500 text-white' 
+                      : 'bg-slate-50 text-slate-600'
+                  }`}>
+                    Template {num} {selectedTemplate === num && '(Current)'}
+                  </p>
                 </div>
-                <p className="text-center text-sm text-slate-600 mt-2">Template {num}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -797,18 +918,21 @@ Best regards`,
 
             {/* Send Button */}
             <button
-              onClick={() => {
-                setSendingEmail(true);
-                setTimeout(() => {
-                  alert('Email sent successfully! (API integration pending)');
-                  setSendingEmail(false);
-                }, 1000);
-              }}
+              onClick={handleSendEmail}
               disabled={sendingEmail || !emailData.to}
               className="w-full py-4 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <Mail className="w-5 h-5" />
-              {sendingEmail ? 'Sending...' : 'Send Email'}
+              {sendingEmail ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="w-5 h-5" />
+                  Send Email
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -935,6 +1059,16 @@ Best regards`,
           </div>
         </div>
       )}
+
+      {/* Hidden Template for PDF Generation */}
+      <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        <div ref={templateRef}>
+          {(() => {
+            const TemplateComponent = templates[selectedTemplate];
+            return <TemplateComponent data={previewData} />;
+          })()}
+        </div>
+      </div>
     </div>
   );
 };

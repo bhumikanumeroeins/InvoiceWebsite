@@ -10,7 +10,8 @@ import {
   updatePaymentStatus,
   getTrashInvoices,
   restoreInvoice,
-  permanentDeleteInvoice
+  permanentDeleteInvoice,
+  sendInvoiceEmailController
 } from "../../controller/forms/invoiceTaxForm.js";
 
 import { authenticateUser } from "../../middleware/auth.middleware.js";
@@ -45,6 +46,7 @@ router.patch(
   updatePaymentStatus
 );
 router.post("/copy/:id", authenticateUser, copyInvoice);
+router.post("/send-email/:id", authenticateUser, sendInvoiceEmailController);
 
 /* ---------------- TRASH ROUTES ---------------- */
 router.get("/trash", authenticateUser, getTrashInvoices);

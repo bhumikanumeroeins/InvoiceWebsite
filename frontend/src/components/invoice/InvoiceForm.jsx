@@ -525,15 +525,35 @@ const InvoiceForm = ({
     }
     return sum + item.amount;
   }, 0);
-  const totalTax = items.reduce(
+  
+  // Calculate simple taxes first (non-compound)
+  const simpleTaxTotal = items.reduce(
     (sum, item) => {
       const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
       if (!item.taxIds || item.taxIds.length === 0) return sum;
-      const taxes = savedTaxes.filter(t => item.taxIds.includes(t.id));
-      return sum + taxes.reduce((taxSum, t) => taxSum + (itemAmount * t.rate / 100), 0);
+      const simpleTaxes = savedTaxes.filter(t => item.taxIds.includes(t.id) && !t.isCompound);
+      return sum + simpleTaxes.reduce((taxSum, t) => taxSum + (itemAmount * t.rate / 100), 0);
     },
     0
   );
+  
+  // Calculate compound taxes (applied on subtotal + simple taxes)
+  const compoundTaxTotal = items.reduce(
+    (sum, item) => {
+      const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
+      if (!item.taxIds || item.taxIds.length === 0) return sum;
+      const compoundTaxes = savedTaxes.filter(t => item.taxIds.includes(t.id) && t.isCompound);
+      // Get simple taxes for this item
+      const itemSimpleTaxes = savedTaxes.filter(t => item.taxIds.includes(t.id) && !t.isCompound);
+      const itemSimpleTaxAmount = itemSimpleTaxes.reduce((taxSum, t) => taxSum + (itemAmount * t.rate / 100), 0);
+      // Compound tax is calculated on (item amount + simple taxes)
+      const baseForCompound = itemAmount + itemSimpleTaxAmount;
+      return sum + compoundTaxes.reduce((taxSum, t) => taxSum + (baseForCompound * t.rate / 100), 0);
+    },
+    0
+  );
+  
+  const totalTax = simpleTaxTotal + compoundTaxTotal;
   const total = subtotal + totalTax;
 
   const getBackendDocType = () => {
