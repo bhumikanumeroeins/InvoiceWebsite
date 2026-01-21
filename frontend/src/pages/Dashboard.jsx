@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, ChevronDown, Settings, LogOut, Plus, FileText, Users, BarChart3, UserPlus, X, Receipt, CreditCard, FileCheck, Truck, ShoppingCart, Eye, Edit } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import InvoiceForm from '../components/invoice/InvoiceForm';
 import MyInvoices from '../components/dashboard/MyInvoices';
 import MyCustomers from '../components/dashboard/MyCustomers';
@@ -26,7 +26,15 @@ const documentTypes = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('myInvoices');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const getInitialTab = () => {
+    const tabFromUrl = searchParams.get('tab');
+    const validTabs = ['myInvoices', 'myCustomers', 'myReports', 'newCustomer', 'invoicePreview', 'newInvoice'];
+    return validTabs.includes(tabFromUrl) ? tabFromUrl : 'myInvoices';
+  };
+  
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [selectedDocType, setSelectedDocType] = useState('invoice');
@@ -36,6 +44,21 @@ const Dashboard = () => {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [invoiceRefreshKey, setInvoiceRefreshKey] = useState(0);
   const [customerRefreshKey, setCustomerRefreshKey] = useState(0);
+
+  const updateTab = (tabId) => {
+    setActiveTab(tabId);
+    setSearchParams({ tab: tabId });
+  };
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      const validTabs = ['myInvoices', 'myCustomers', 'myReports', 'newCustomer', 'invoicePreview', 'newInvoice'];
+      if (validTabs.includes(tabFromUrl)) {
+        setActiveTab(tabFromUrl);
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -92,12 +115,11 @@ const Dashboard = () => {
   const handleDocTypeClick = (docId) => {
     setSelectedDocType(docId);
     setShowExtraTabs(true);
-    setActiveTab('newInvoice');
+    updateTab('newInvoice');
   };
 
   const handleBaseTabClick = (tabId) => {
-    setActiveTab(tabId);
-    // Trigger refresh when switching to myInvoices or myCustomers
+    updateTab(tabId);
     if (tabId === 'myInvoices') {
       setInvoiceRefreshKey(prev => prev + 1);
     } else if (tabId === 'myCustomers') {
@@ -107,34 +129,33 @@ const Dashboard = () => {
 
   const handleCustomerClick = (customer) => {
     setSelectedCustomer(customer);
-    setActiveTab('newCustomer');
+    updateTab('newCustomer');
   };
 
   const handleInvoiceClick = (invoice) => {
     setSelectedInvoice(invoice);
-    setActiveTab('invoicePreview');
+    updateTab('invoicePreview');
   };
 
   const handleCloseTab = (tabId) => {
     if (tabId === 'newCustomer') {
       setSelectedCustomer(null);
-      setActiveTab('myCustomers');
+      updateTab('myCustomers');
     } else if (tabId === 'newInvoice') {
       setShowExtraTabs(false);
       setEditingInvoice(null);
-      setActiveTab('myInvoices');
+      updateTab('myInvoices');
     } else if (tabId === 'invoicePreview') {
       setSelectedInvoice(null);
-      setActiveTab('myInvoices');
+      updateTab('myInvoices');
     }
   };
 
   const handleInvoiceSaved = (invoiceData, isUpdate = false) => {
     setSelectedInvoice(invoiceData);
-    setActiveTab('invoicePreview');
+    updateTab('invoicePreview');
     setShowExtraTabs(false);
     setEditingInvoice(null);
-    // Trigger refresh for invoices and customers after save
     setInvoiceRefreshKey(prev => prev + 1);
     setCustomerRefreshKey(prev => prev + 1);
   };
@@ -205,7 +226,7 @@ const Dashboard = () => {
               <span key={doc.id} className="flex items-center">
                 <button 
                   onClick={() => handleDocTypeClick(doc.id)}
-                  className={`text-sm ${selectedDocType === doc.id && showExtraTabs ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-blue-600'}`}
+                  className={`text-sm cursor-pointer hover:underline transition-all ${selectedDocType === doc.id && showExtraTabs ? 'text-blue-600 font-medium underline' : 'text-gray-600 hover:text-blue-600'}`}
                 >
                   {doc.label}
                 </button>
@@ -218,7 +239,7 @@ const Dashboard = () => {
               <span key={doc.id} className="flex items-center">
                 <button 
                   onClick={() => handleDocTypeClick(doc.id)}
-                  className={`text-sm ${selectedDocType === doc.id && showExtraTabs ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-blue-600'}`}
+                  className={`text-sm cursor-pointer hover:underline transition-all ${selectedDocType === doc.id && showExtraTabs ? 'text-blue-600 font-medium underline' : 'text-gray-600 hover:text-blue-600'}`}
                 >
                   {doc.label}
                 </button>

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import InvoiceTaxForm from "../../models/forms/invoiceTaxForm.js";
 
 import { parseDDMMYYYY } from "../../utils/utils.js";
+import { sendInvoiceEmail } from "../../utils/emailService.js";
 
 
 
@@ -580,6 +581,79 @@ export const copyInvoice = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+};
+
+
+/* ================= SEND INVOICE EMAIL ================= */
+export const sendInvoiceEmailController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const { to, subject, message, sendCopy, pdfBase64 } = req.body;
+
+    /* ---------------- VALIDATION ---------------- */
+    if (!to || !subject) {
+      return res.status(400).json({
+        success: false,
+        message: "Recipient email and subject are required"
+      });
+    }
+
+    /* ---------------- FIND INVOICE ---------------- */
+    const invoice = await InvoiceTaxForm.findOne({
+      _id: id,
+      createdBy: userId,
+      isDeleted: false
+    }).populate("createdBy", "email");
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Invoice not found or access denied"
+      });
+    }
+
+    /* ---------------- PREPARE PDF BUFFER ---------------- */
+    let pdfBuffer = null;
+    if (pdfBase64) {
+      // Remove data URL prefix if present
+      const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
+      pdfBuffer = Buffer.from(base64Data, 'base64');
+    }
+
+    /* ---------------- SEND EMAIL ASYNCHRONOUSLY ---------------- */
+    const invoiceNo = invoice.invoiceMeta?.invoiceNo || 'Invoice';
+    const copyToEmail = sendCopy ? invoice.createdBy?.email : null;
+    
+    // Send response immediately, email will be sent in background
+    res.status(200).json({
+      success: true,
+      message: "Email is being sent"
+    });
+
+    // Send email in background (don't await)
+    sendInvoiceEmail({
+      to,
+      subject,
+      message: message || `Please find the attached invoice ${invoiceNo}.`,
+      pdfBuffer,
+      pdfFilename: `${invoiceNo}.pdf`,
+      sendCopy: sendCopy || false,
+      copyTo: copyToEmail,
+    }).then(() => {
+      console.log(`✅ Email sent successfully to ${to}`);
+    }).catch((err) => {
+      console.error(`❌ Failed to send email to ${to}:`, err.message);
+    });
+
+  } catch (error) {
+    console.error("SEND EMAIL ERROR 👉", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to send email"
     });
   }
 };

@@ -50,6 +50,11 @@ export const invoiceAPI = {
     method: 'POST',
   }),
 
+  sendEmail: (invoiceId, emailData) => apiCall(`/invoiceForms/send-email/${invoiceId}`, {
+    method: 'POST',
+    body: JSON.stringify(emailData),
+  }),
+
   updatePaymentStatus: (invoiceId, paymentStatus) => apiCall(`/invoiceForms/invoices/${invoiceId}/payment-status`, {
     method: 'PATCH',
     body: JSON.stringify({ paymentStatus }),
