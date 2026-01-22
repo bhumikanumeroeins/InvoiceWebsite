@@ -1,24 +1,31 @@
-import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Template1 from '../templates/Template1';
-import Template2 from '../templates/Template2';
-import Template3 from '../templates/Template3';
-import Template4 from '../templates/Template4';
-import Template5 from '../templates/Template5';
+
+import img1 from '../../assets/templates/images/1.jpg';
+import img2 from '../../assets/templates/images/2.jpg';
+import img3 from '../../assets/templates/images/3.png';
+import img4 from '../../assets/templates/images/4.jpg';
+import img5 from '../../assets/templates/images/5.jpg';
+import img6 from '../../assets/templates/images/6.jpg';
+import img7 from '../../assets/templates/images/7.png';
+import img8 from '../../assets/templates/images/8.jpg';
+import img9 from '../../assets/templates/images/9.jpg';
+import img10 from '../../assets/templates/images/10.jpg';
+import img11 from '../../assets/templates/images/11.jpg';
+import img12 from '../../assets/templates/images/12.png';
 
 const templates = [
-  { id: 165, title: 'In Neat', src: 'https://templates.invoicehome.com/invoice-template-in-neat-750px.png' },
-  { id: 1, title: 'Classic White', src: 'https://templates.invoicehome.com/invoice-template-in-classic-white-750px.png' },
-  { id: 88, title: 'Band Blue', src: 'https://templates.invoicehome.com/invoice-template-in-band-blue-750px.png' },
-  { id: 164, title: 'Military Orange', src: 'https://templates.invoicehome.com/invoice-template-in-military-orange-750px.png' },
-  { id: 178, title: 'Flag Of India', src: 'https://templates.invoicehome.com/invoice-template-in-flag-of-india-750px.png' },
-  { id: 3, title: 'Modern Red', src: 'https://templates.invoicehome.com/invoice-template-in-modern-red-750px.png' },
-  { id: 206, title: 'Cool Waves', src: 'https://templates.invoicehome.com/invoice-template-in-cool-waves-750px.png' },
-  { id: 297, title: 'Dexter', src: 'https://templates.invoicehome.com/invoice-template-in-dexter-750px.png' },
-  { id: 87, title: 'Mono Black', src: 'https://templates.invoicehome.com/invoice-template-in-mono-black-750px.png' },
-  { id: 39, title: 'Oldie', src: 'https://templates.invoicehome.com/invoice-template-in-oldie-750px.png' },
-  { id: 4, title: 'Classic Blue', src: 'https://templates.invoicehome.com/invoice-template-in-classic-blue-750px.png' },
-  { id: 215, title: 'Connect Rbw', src: 'https://templates.invoicehome.com/invoice-template-in-connect-rbw-750px.png' },
+  { id: 1, title: 'Template 1', src: img1 },
+  { id: 2, title: 'Template 2', src: img2 },
+  { id: 3, title: 'Template 3', src: img3 },
+  { id: 4, title: 'Template 4', src: img4 },
+  { id: 5, title: 'Template 5', src: img5 },
+  { id: 6, title: 'Template 6', src: img6 },
+  { id: 7, title: 'Template 7', src: img7 },
+  { id: 8, title: 'Template 8', src: img8 },
+  { id: 9, title: 'Template 9', src: img9 },
+  { id: 10, title: 'Template 10', src: img10 },
+  { id: 11, title: 'Template 11', src: img11 },
+  { id: 12, title: 'Template 12', src: img12 },
 ];
 
 const Templates = () => {
@@ -67,71 +74,8 @@ const Templates = () => {
         </motion.p>
       </div>
 
-      {/* Custom Templates Grid */}
-      <motion.div
-        className="flex justify-center gap-6 px-6 mb-12"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-      >
-        {/* Template 1 - Cyber Pink */}
-        <motion.div
-          className="shadow-lg rounded-xl overflow-hidden hover:shadow-2xl transition-transform transform hover:scale-[1.02] cursor-pointer bg-white"
-          style={{ width: '220px', height: '311px' }}
-          variants={fadeUp}
-        >
-          <div style={{ transform: 'scale(0.278)', transformOrigin: 'top left', width: '210mm', height: '297mm' }}>
-            <Template1 />
-          </div>
-        </motion.div>
+      {/* Custom preview removed — using local image grid below */}
 
-        {/* Template 2 - Colorful Modern */}
-        <motion.div
-          className="shadow-lg rounded-xl overflow-hidden hover:shadow-2xl transition-transform transform hover:scale-[1.02] cursor-pointer bg-white"
-          style={{ width: '220px', height: '311px' }}
-          variants={fadeUp}
-        >
-          <div style={{ transform: 'scale(0.278)', transformOrigin: 'top left', width: '210mm', height: '297mm' }}>
-            <Template2 />
-          </div>
-        </motion.div>
-
-        {/* Template 3 - Geometric */}
-        <motion.div
-          className="shadow-lg rounded-xl overflow-hidden hover:shadow-2xl transition-transform transform hover:scale-[1.02] cursor-pointer bg-white"
-          style={{ width: '220px', height: '311px' }}
-          variants={fadeUp}
-        >
-          <div style={{ transform: 'scale(0.278)', transformOrigin: 'top left', width: '210mm', height: '297mm' }}>
-            <Template3 />
-          </div>
-        </motion.div>
-
-        {/* Template 4 - Colorful Circles */}
-        <motion.div
-          className="shadow-lg rounded-xl overflow-hidden hover:shadow-2xl transition-transform transform hover:scale-[1.02] cursor-pointer bg-white"
-          style={{ width: '220px', height: '311px' }}
-          variants={fadeUp}
-        >
-          <div style={{ transform: 'scale(0.278)', transformOrigin: 'top left', width: '210mm', height: '297mm' }}>
-            <Template4 />
-          </div>
-        </motion.div>
-
-        {/* Template 5 - Purple Wave */}
-        <motion.div
-          className="shadow-lg rounded-xl overflow-hidden hover:shadow-2xl transition-transform transform hover:scale-[1.02] cursor-pointer bg-white"
-          style={{ width: '220px', height: '311px' }}
-          variants={fadeUp}
-        >
-          <div style={{ transform: 'scale(0.278)', transformOrigin: 'top left', width: '210mm', height: '297mm' }}>
-            <Template5 />
-          </div>
-        </motion.div>
-      </motion.div>
-
-      {/* External Templates Grid – 4 per row */}
       <motion.div
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-6"
         variants={staggerContainer}
@@ -143,15 +87,18 @@ const Templates = () => {
           <motion.a
             key={template.id}
             href={`/invoice/new?invoice_template_id=${template.id}`}
-            className="block shadow-lg rounded-xl overflow-hidden hover:shadow-2xl transition-transform transform hover:scale-105"
-            title={`Invoice Template In ${template.title}`}
-            variants={fadeUp} // fade and scale in each template sequentially
+            className="block shadow-lg rounded-xl overflow-hidden hover:shadow-2xl transition-transform transform hover:scale-105 bg-white"
+            title={template.title}
+            variants={fadeUp}
           >
-            <img
-              src={template.src}
-              alt={`Invoice Template In ${template.title}`}
-              className="w-full h-auto object-contain"
-            />
+            <div className="w-full aspect-[3/4] bg-slate-100 flex items-center justify-center">
+              <img
+                src={template.src}
+                alt={template.title}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+
           </motion.a>
         ))}
       </motion.div>

@@ -11,7 +11,7 @@ import {
   Wallet
 } from 'lucide-react';
 
-import invoiceImage from '../../assets/templates/11487180.png';
+import invoiceImage from '../../assets/templates/images/5.jpg';
 import { motion } from 'framer-motion';
 
 const features = [

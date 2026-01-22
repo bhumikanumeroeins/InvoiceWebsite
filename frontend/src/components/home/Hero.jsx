@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import invoiceImage from '../../assets/templates/11487180.png';
+import invoiceImage from '../../assets/templates/images/11.jpg';
 
 const benefits = [
   'GST & Tax compliant',
