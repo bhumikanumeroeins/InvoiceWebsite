@@ -73,9 +73,9 @@ const Template4 = ({ data = {} }) => {
         <div>
           {items.map((item, index) => (
             <div key={index} style={{ display: 'flex', alignItems: 'center', padding: '18px 0', borderBottom: '1px solid #6b7280' }}>
-              <div style={{ width: '10%', color: gray, fontSize: '14px' }}>{item.qty}</div>
+              <div style={{ width: '10%', color: gray, fontSize: '14px' }}>{item.quantity}</div>
               <div style={{ width: '45%', color: gray, fontSize: '14px' }}>{item.description}</div>
-              <div style={{ width: '22%', color: gray, fontSize: '14px', textAlign: 'center' }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '22%', color: gray, fontSize: '14px', textAlign: 'center' }}>{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
               <div style={{ width: '23%', color: gray, fontSize: '14px', textAlign: 'right' }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
             </div>
           ))}

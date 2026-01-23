@@ -21,6 +21,7 @@ export const getCustomersList = async (req, res) => {
           _id: "$client.name",
 
           client: { $first: "$client" },
+          currency: { $first: "$invoiceMeta.currency" },
 
           documents: { $sum: 1 },
 
@@ -62,6 +63,7 @@ export const getCustomersList = async (req, res) => {
         $project: {
           _id: 0,
           client: 1,
+          currency: 1,
           documents: 1,
           paymentStatus: 1,
           paidAmount: 1,

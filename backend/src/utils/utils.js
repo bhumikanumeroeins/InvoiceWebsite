@@ -9,7 +9,19 @@ export const createError = (error) => {
   return { status: "error", error };
 };
 
-/* ---------------- DATE HELPER (DD-MM-YYYY ONLY) ---------------- */
+/* ---------------- DATE HELPER (YYYY-MM-DD ISO FORMAT) ---------------- */
+export const parseISODate = (value) => {
+  if (!value) return null;
+
+  // Accept YYYY-MM-DD format (ISO standard)
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!regex.test(value)) return null;
+
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+/* ---------------- LEGACY DATE HELPER (DEPRECATED) ---------------- */
 export const parseDDMMYYYY = (value) => {
   if (!value) return null;
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { currencyService } from '../../services/currencyService';
 import {
   Plus,
   Trash2,
@@ -141,6 +142,8 @@ const InvoiceForm = ({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [currencies, setCurrencies] = useState([]);
+  const [loadingCurrencies, setLoadingCurrencies] = useState(true);
   const [invoiceData, setInvoiceData] = useState({
     fromName: "",
     fromAddress: "",
@@ -188,6 +191,25 @@ const InvoiceForm = ({
   const [footerLabel, setFooterLabel] = useState('Terms & Conditions');
   const [hideFooterLabel, setHideFooterLabel] = useState(false);
 
+  // Load currencies on component mount
+  useEffect(() => {
+    const loadCurrencies = async () => {
+      try {
+        setLoadingCurrencies(true);
+        const response = await currencyService.getAll();
+        if (response.success) {
+          setCurrencies(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load currencies:', error);
+      } finally {
+        setLoadingCurrencies(false);
+      }
+    };
+
+    loadCurrencies();
+  }, []);
+
   useEffect(() => {
     if (editInvoice) {
       const parseDate = (dateStr) => {
@@ -207,16 +229,16 @@ const InvoiceForm = ({
         invoiceDate: parseDate(editInvoice.invoiceDate || editInvoice.invoiceMeta?.invoiceDate),
         dueDate: parseDate(editInvoice.dueDate || editInvoice.invoiceMeta?.dueDate),
         currency: editInvoice.invoiceMeta?.currency || 'INR',
-        bankName: editInvoice.paymentInfo?.bankName || editInvoice.payment?.bankName || '',
-        accountNo: editInvoice.paymentInfo?.accountNo || editInvoice.payment?.accountNo || '',
-        ifscCode: editInvoice.paymentInfo?.ifscCode || editInvoice.payment?.ifscCode || '',
+        bankName: editInvoice.payment?.bankName || '',
+        accountNo: editInvoice.payment?.accountNo || '',
+        ifscCode: editInvoice.payment?.ifscCode || '',
       });
 
       if (editInvoice.items && editInvoice.items.length > 0) {
         setItems(editInvoice.items.map(item => ({
           description: item.description || '',
-          quantity: item.qty || item.quantity || 1,
-          rate: item.unitPrice || item.rate || 0,
+          quantity: item.quantity || 1,
+          rate: item.rate || 0,
           amount: item.amount || 0,
           taxIds: [],
           paymentMethod: 'Other',
@@ -239,7 +261,6 @@ const InvoiceForm = ({
     }
   }, [editInvoice]);
 
-  // Fetch taxes from API
   useEffect(() => {
     const fetchTaxes = async () => {
       if (!isAuthenticated()) return;
@@ -307,19 +328,14 @@ const InvoiceForm = ({
     "Other",
   ];
   
-  const currencySymbols = {
-    INR: '₹',
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    AUD: '$',
-    CAD: '$',
-    SGD: '$',
-    AED: 'د.إ',
-    JPY: '¥',
-    CNY: '¥',
+  const getCurrencySymbol = () => {
+    const currency = currencies.find(c => c.code === invoiceData.currency);
+    if (currency) {
+      return currency.symbol;
+    }
+    
+    return currencyService.getSymbol(invoiceData.currency);
   };
-  const getCurrencySymbol = () => currencySymbols[invoiceData.currency] || '₹';
   
   const handleInputChange = (e) =>
     setInvoiceData({ ...invoiceData, [e.target.name]: e.target.value });
@@ -366,7 +382,7 @@ const InvoiceForm = ({
         taxIds: [],
         paymentMethod: "Other",
         paymentNote: "",
-        itemId: savedItem._id || savedItem.id, // Track ItemMaster reference
+        itemId: savedItem._id || savedItem.id, 
       },
     ]);
     setShowSavedItemsModal(false);
@@ -395,7 +411,6 @@ const InvoiceForm = ({
           };
           setSavedItems(prev => [...prev, newSavedItem]);
           
-          // Update the current item with the new itemId
           const newItems = [...items];
           newItems[index].itemId = response.data._id;
           setItems(newItems);
@@ -574,12 +589,6 @@ const InvoiceForm = ({
     return typeMap[documentType] || 'invoice';
   };
 
-  const formatDateForBackend = (dateStr) => {
-    if (!dateStr) return null;
-    const [year, month, day] = dateStr.split('-');
-    return `${day}-${month}-${year}`;
-  };
-
   const parseAddress = (addressStr) => {
     const lines = addressStr.split('\n').filter(l => l.trim());
     return {
@@ -681,8 +690,8 @@ const InvoiceForm = ({
         } : undefined,
         invoiceMeta: {
           invoiceNo: invoiceData.invoiceNumber,
-          invoiceDate: formatDateForBackend(invoiceData.invoiceDate),
-          dueDate: formatDateForBackend(invoiceData.dueDate),
+          invoiceDate: invoiceData.invoiceDate, // Send YYYY-MM-DD directly
+          dueDate: invoiceData.dueDate, // Send YYYY-MM-DD directly
           currency: invoiceData.currency,
         },
         items: itemIds, // Send itemIds instead of full item objects
@@ -744,9 +753,9 @@ const InvoiceForm = ({
           invoiceNumber: invoiceData.invoiceNumber,
           invoiceDate: invoiceData.invoiceDate,
           items: items.map(item => ({
-            qty: item.quantity || 1,
+            quantity: item.quantity || 1,
             description: item.description,
-            unitPrice: formMode === 'advanced' ? item.rate : item.amount,
+            rate: formMode === 'advanced' ? item.rate : item.amount,
             amount: formMode === 'advanced' ? (item.quantity * item.rate) : item.amount,
           })),
           terms: terms.filter(t => t.trim()),
@@ -965,17 +974,31 @@ const InvoiceForm = ({
                     value={invoiceData.currency}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                    disabled={loadingCurrencies}
                   >
-                    <option value="INR">₹ INR - Indian Rupee</option>
-                    <option value="USD">$ USD - US Dollar</option>
-                    <option value="EUR">€ EUR - Euro</option>
-                    <option value="GBP">£ GBP - British Pound</option>
-                    <option value="AUD">$ AUD - Australian Dollar</option>
-                    <option value="CAD">$ CAD - Canadian Dollar</option>
-                    <option value="SGD">$ SGD - Singapore Dollar</option>
-                    <option value="AED">د.إ AED - UAE Dirham</option>
-                    <option value="JPY">¥ JPY - Japanese Yen</option>
-                    <option value="CNY">¥ CNY - Chinese Yuan</option>
+                    {loadingCurrencies ? (
+                      <option>Loading currencies...</option>
+                    ) : currencies.length > 0 ? (
+                      currencies.map(currency => (
+                        <option key={currency.code} value={currency.code}>
+                          {currency.symbol} {currency.code} - {currency.name}
+                        </option>
+                      ))
+                    ) : (
+                      // Fallback to hardcoded options if API fails
+                      <>
+                        <option value="INR">₹ INR - Indian Rupee</option>
+                        <option value="USD">$ USD - US Dollar</option>
+                        <option value="EUR">€ EUR - Euro</option>
+                        <option value="GBP">£ GBP - British Pound</option>
+                        <option value="AUD">A$ AUD - Australian Dollar</option>
+                        <option value="CAD">C$ CAD - Canadian Dollar</option>
+                        <option value="SGD">S$ SGD - Singapore Dollar</option>
+                        <option value="AED">د.إ AED - UAE Dirham</option>
+                        <option value="JPY">¥ JPY - Japanese Yen</option>
+                        <option value="CNY">¥ CNY - Chinese Yuan</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>

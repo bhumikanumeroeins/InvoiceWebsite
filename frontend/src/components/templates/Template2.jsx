@@ -96,9 +96,9 @@ const Template2 = ({ data = {} }) => {
         <div style={{ backgroundColor: '#ffffff' }}>
           {items.map((item, index) => (
             <div key={index} style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #535457ff' }}>
-              <div style={{ width: '12%', fontWeight: '500', padding: '12px 15px', color: '#374151', fontSize: '15px', textAlign: 'center' }}>{item.qty}</div>
+              <div style={{ width: '12%', fontWeight: '500', padding: '12px 15px', color: '#374151', fontSize: '15px', textAlign: 'center' }}>{item.quantity}</div>
               <div style={{ width: '38%', fontWeight: '500', padding: '12px 15px', color: '#374151', fontSize: '15px' }}>{item.description}</div>
-              <div style={{ width: '25%', fontWeight: '500', padding: '12px 15px', color: '#374151', fontSize: '15px', textAlign: 'center' }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '25%', fontWeight: '500', padding: '12px 15px', color: '#374151', fontSize: '15px', textAlign: 'center' }}>{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
               <div style={{ width: '25%', fontWeight: '500', padding: '12px 15px', color: '#374151', fontSize: '15px', textAlign: 'center' }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
             </div>
           ))}

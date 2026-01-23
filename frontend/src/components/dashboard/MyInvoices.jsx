@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { currencyService } from '../../services/currencyService';
 import { FileText, Filter, Loader2, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
 import { invoiceAPI } from '../../services/invoiceService';
 import { getUploadsUrl } from '../../services/apiConfig';
@@ -9,6 +10,13 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [invoiceFilter, setInvoiceFilter] = useState('all');
+
+  // Helper function to format currency amount
+  const formatCurrency = (amount, currencyCode) => {
+    const symbol = currencyService.getSymbol(currencyCode || 'INR');
+    const locale = currencyCode === 'USD' ? 'en-US' : 'en-IN';
+    return `${symbol} ${amount.toLocaleString(locale, { minimumFractionDigits: 2 })}`;
+  };
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleting, setDeleting] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -43,6 +51,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
         : '',
       paid: paid,
       total: total,
+      currency: inv.invoiceMeta?.currency || 'INR',
       status: status,
       paymentStatus: inv.paymentStatus || 'unpaid',
       logo: inv.business?.logo ? `${getUploadsUrl()}/uploads/${inv.business.logo}` : null,
@@ -61,9 +70,9 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
         ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString('en-GB') 
         : '',
       items: (inv.items || []).map(item => ({
-        qty: item.quantity || 1,
+        quantity: item.quantity || 1,
         description: item.description || '',
-        unitPrice: item.rate || 0,
+        rate: item.rate || 0,
         amount: item.amount || 0,
       })),
       terms: (inv.terms || []).map(t => t.text),
@@ -75,7 +84,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
         ifscCode: inv.payment?.ifscCode || '',
       },
       signature: inv.signature ? `${getUploadsUrl()}/uploads/${inv.signature}` : null,
-      qrCode: inv.payment?.qrCode ? `${getUploadsUrl()}/uploads/${inv.payment.qrCode}` : null,
+      qrCode: inv.qrCode ? `${getUploadsUrl()}/uploads/${inv.qrCode}` : null,
     };
   };
 
@@ -407,12 +416,12 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
                     {!isTrashView && (
                       <td className="p-4 text-sm">
                         <span className={`font-medium ${invoice.paid > 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
-                          ₹ {invoice.paid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          {formatCurrency(invoice.paid, invoice.currency)}
                         </span>
                       </td>
                     )}
                     <td className="p-4 text-sm text-slate-700 text-right font-medium">
-                      ₹ {invoice.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      {formatCurrency(invoice.total, invoice.currency)}
                     </td>
                   </tr>
                 ))}
@@ -426,15 +435,15 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
               <div className="grid grid-cols-3 gap-6">
                 <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Total</p>
-                  <p className="text-xl font-bold text-slate-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-xl font-bold text-slate-800">{formatCurrency(totalAmount, 'INR')}</p>
                 </div>
                 <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Paid Amount</p>
-                  <p className="text-xl font-bold text-emerald-600">₹ {paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-xl font-bold text-emerald-600">{formatCurrency(paidAmount, 'INR')}</p>
                 </div>
                 <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Balance Due</p>
-                  <p className="text-xl font-bold text-orange-500">₹ {balanceDue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-xl font-bold text-orange-500">{formatCurrency(balanceDue, 'INR')}</p>
                 </div>
               </div>
             </div>

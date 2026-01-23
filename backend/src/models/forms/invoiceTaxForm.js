@@ -111,12 +111,29 @@ const invoiceSchema = new mongoose.Schema({
 
   signature: String,
 
+  qrCode: String,
+
   // 🔹 TOTALS
   totals: {
     subtotal: Number,
     taxTotal: Number,
     grandTotal: Number
   },
+
+  // 🔹 PAYMENT STATUS
+  paymentStatus: {
+    type: String,
+    enum: ['unpaid', 'partiallyPaid', 'paid'],
+    default: 'unpaid'
+  },
+  paidAmount: {
+    type: Number,
+    default: 0
+  },
+  paidDate: Date,
+  paymentMethod: String,
+  paymentNote: String,
+  balanceDue: Number,
 
   createdAt: {
     type: Date,

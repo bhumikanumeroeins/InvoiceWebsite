@@ -291,7 +291,7 @@ const Dashboard = () => {
 
         {activeTab === 'myCustomers' && <MyCustomers onCustomerClick={handleCustomerClick} refreshKey={customerRefreshKey} />}
 
-        {activeTab === 'myReports' && <MyReports />}
+        {activeTab === 'myReports' && <MyReports onInvoiceClick={handleInvoiceClick} />}
 
         {activeTab === 'newCustomer' && <NewCustomer customer={selectedCustomer} onInvoiceClick={handleInvoiceClick} />}
 

@@ -100,7 +100,7 @@ const Template10 = ({ data = {} }) => {
             >
                 {/* Qty */}
                 <div style={{ width: "10%", padding: "14px", background: "#f3f3f3", fontWeight: "700" }}>
-                {item.qty}
+                {item.quantity}
                 </div>
 
                 {/* Description */}
@@ -110,7 +110,7 @@ const Template10 = ({ data = {} }) => {
 
                 {/* Unit Price */}
                 <div style={{ width: "20%", padding: "14px", background: "#f3f3f3", textAlign: "center" }}>
-                {item.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                {item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </div>
 
                 {/* Amount */}

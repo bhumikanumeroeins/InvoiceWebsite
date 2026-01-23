@@ -181,9 +181,9 @@ const Template1 = ({ data = {} }) => {
         <div style={{ backgroundColor: '#ffffff' }}>
           {items.map((item, index) => (
             <div key={index} style={{ display: 'flex', padding: '16px 35px', borderBottom: '1px solid #f1f5f9', alignItems: 'center' }}>
-              <div style={{ width: '12%', color: '#52525b', fontSize: '14px', fontFamily: "'Montserrat', sans-serif" }}>{item.qty}</div>
+              <div style={{ width: '12%', color: '#52525b', fontSize: '14px', fontFamily: "'Montserrat', sans-serif" }}>{item.quantity}</div>
               <div style={{ width: '38%', color: '#52525b', fontSize: '14px', fontFamily: "'Montserrat', sans-serif" }}>{item.description}</div>
-              <div style={{ width: '25%', color: '#52525b', fontSize: '14px', textAlign: 'center', fontFamily: "'Montserrat', sans-serif" }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '25%', color: '#52525b', fontSize: '14px', textAlign: 'center', fontFamily: "'Montserrat', sans-serif" }}>{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
               <div style={{ width: '25%', color: '#52525b', fontSize: '14px', textAlign: 'right', fontFamily: "'Montserrat', sans-serif" }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
             </div>
           ))}

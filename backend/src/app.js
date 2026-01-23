@@ -7,6 +7,11 @@ import invoiceRoutes from "./routes/forms/invoiceTaxForm.js";
 import customers from "./routes/customers/customers.js";
 import tax from "./routes/taxes/tax.js";
 import items from "./routes/items/items.js";
+import reports from "./routes/reports/reports.js";
+import payments from "./routes/payments/payments.js";
+import contact from "./routes/contact/contact.js";
+import currency from "./routes/currency/currency.js";
+import recurring from "./routes/recurring/recurringInvoice.js";
 
 import path from "path";
 
@@ -26,6 +31,11 @@ app.use("/api/invoiceForms", invoiceRoutes);
 app.use("/api/customers", customers);
 app.use("/api/tax", tax);
 app.use("/api/item", items);
+app.use("/api/reports", reports);
+app.use("/api/payments", payments);
+app.use("/api/contact", contact);
+app.use("/api/currencies", currency);
+app.use("/api/recurring", recurring);
 
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));

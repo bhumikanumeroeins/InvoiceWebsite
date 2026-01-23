@@ -42,10 +42,12 @@ export const sendInvoiceEmail = async ({
       </div>
       <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
         <p style="color: #374151; font-size: 16px; line-height: 1.6; white-space: pre-line;">${message}</p>
+        ${pdfBuffer ? `
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
         <p style="color: #9ca3af; font-size: 12px; margin: 0;">
           📎 Invoice PDF attached
         </p>
+        ` : ''}
       </div>
       <div style="background: #f9fafb; padding: 15px 20px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none;">
         <p style="color: #6b7280; font-size: 12px; margin: 0; text-align: center;">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { currencyService } from '../../services/currencyService';
 import { Users, Filter, Loader2 } from 'lucide-react';
 import { customerAPI } from '../../services/invoiceService';
 
@@ -8,6 +9,13 @@ const MyCustomers = ({ onCustomerClick, refreshKey }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [customerFilter, setCustomerFilter] = useState('all');
+
+  // Helper function to format currency amount
+  const formatCurrency = (amount, currencyCode) => {
+    const symbol = currencyService.getSymbol(currencyCode || 'INR');
+    const locale = currencyCode === 'USD' ? 'en-US' : 'en-IN';
+    return `${symbol} ${amount.toLocaleString(locale, { minimumFractionDigits: 2 })}`;
+  };
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -173,11 +181,11 @@ const MyCustomers = ({ onCustomerClick, refreshKey }) => {
                     <td className="p-4 text-sm text-center">{getPaymentBadge(customer.paymentStatus)}</td>
                     <td className="p-4 text-sm text-right">
                       <span className={customer.paidAmount > 0 ? 'text-emerald-600 font-medium' : 'text-slate-600'}>
-                        ₹ {(customer.paidAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        {formatCurrency(customer.paidAmount || 0, customer.currency)}
                       </span>
                     </td>
                     <td className="p-4 text-sm text-slate-700 text-right font-medium">
-                      ₹ {(customer.totals?.grandTotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      {formatCurrency(customer.totals?.grandTotal || 0, customer.currency)}
                     </td>
                   </tr>
                 ))}
@@ -190,15 +198,15 @@ const MyCustomers = ({ onCustomerClick, refreshKey }) => {
             <div className="grid grid-cols-3 gap-6">
               <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Total</p>
-                <p className="text-xl font-bold text-slate-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                <p className="text-xl font-bold text-slate-800">{formatCurrency(totalAmount, 'INR')}</p>
               </div>
               <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Paid Amount</p>
-                <p className="text-xl font-bold text-emerald-600">₹ {paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                <p className="text-xl font-bold text-emerald-600">{formatCurrency(paidAmount, 'INR')}</p>
               </div>
               <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Balance Due</p>
-                <p className="text-xl font-bold text-orange-500">₹ {balanceDue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                <p className="text-xl font-bold text-orange-500">{formatCurrency(balanceDue, 'INR')}</p>
               </div>
             </div>
           </div>

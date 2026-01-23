@@ -96,9 +96,9 @@ const Template3 = ({ data = {} }) => {
         <div style={{ backgroundColor: '#feffeb', marginTop: '10px' }}>
           {items.map((item, index) => (
             <div key={index} style={{ display: 'flex', alignItems: 'center', padding: '15px 15px' }}>
-              <div style={{ width: '10%', color: navy, fontSize: '14px' }}>{item.qty}</div>
+              <div style={{ width: '10%', color: navy, fontSize: '14px' }}>{item.quantity}</div>
               <div style={{ width: '40%', color: navy, fontSize: '14px' }}>{item.description}</div>
-              <div style={{ width: '25%', color: navy, fontSize: '14px', textAlign: 'center' }}>{item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '25%', color: navy, fontSize: '14px', textAlign: 'center' }}>{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
               <div style={{ width: '25%', color: navy, fontSize: '14px', textAlign: 'right' }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
             </div>
           ))}

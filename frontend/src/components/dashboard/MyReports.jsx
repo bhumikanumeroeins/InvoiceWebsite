@@ -1,30 +1,60 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, Filter, Loader2, Calendar, FileText, Download, Printer, Search } from 'lucide-react';
+import { currencyService } from '../../services/currencyService';
+import { BarChart3, Filter, Loader2, Calendar, FileText, Printer, Search } from 'lucide-react';
+import { reportsAPI } from '../../services/reportsService';
 
-const MyReports = () => {
+const MyReports = ({ onInvoiceClick }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [reportFilter, setReportFilter] = useState('all');
+
+  // Helper function to get currency symbol
+  const getCurrencySymbol = (currencyCode) => {
+    return currencyService.getSymbol(currencyCode || 'INR');
+  };
+
+  // Helper function to format currency amount
+  const formatCurrency = (amount, currencyCode) => {
+    const symbol = getCurrencySymbol(currencyCode);
+    const locale = currencyCode === 'USD' ? 'en-US' : 'en-IN';
+    return `${symbol} ${amount.toLocaleString(locale, { minimumFractionDigits: 2 })}`;
+  };
+  const [totals, setTotals] = useState({
+    subtotal: 0,
+    tax: 0,
+    paidAmount: 0,
+    total: 0,
+    count: 0
+  });
   
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [status, setStatus] = useState('all');
   const [documentType, setDocumentType] = useState('all');
 
-  const fetchReports = async () => {
+  const fetchReports = async (filters = {}) => {
     setLoading(true);
     setError(null);
     try {
-     
-      const sampleData = [
-        { id: 1, customer: 'infrabuild pvt ltd andheri easr, mumbai 400069', document: 'Invoice', number: 'BFA-221', date: '06/01/2026', subtotal: 9450.00, tax: 1134.00, paidAmount: 0.00, total: 10584.00 },
-        { id: 2, customer: 'infrabuild pvt ltd andheri easr, mumbai 400069', document: 'Invoice', number: 'BFA-220', date: '06/01/2026', subtotal: 9450.00, tax: 1134.00, paidAmount: 0.00, total: 10584.00 },
-        { id: 3, customer: '', document: 'Invoice', number: 'BFA-222', date: '06/01/2026', subtotal: 9450.00, tax: 1134.00, paidAmount: 10584.00, total: 10584.00 },
-      ];
-      setReports(sampleData);
+      const response = await reportsAPI.getReports({
+        dateFrom: filters.dateFrom || dateFrom,
+        dateTo: filters.dateTo || dateTo,
+        status: filters.status || status,
+        documentType: filters.documentType || documentType,
+        page: 1,
+        limit: 50
+      });
+
+      if (response.success) {
+        setReports(response.data.reports);
+        setTotals(response.data.totals);
+      } else {
+        throw new Error(response.message || 'Failed to fetch reports');
+      }
     } catch (err) {
-      setError('Failed to fetch reports');
+      console.error('Fetch reports error:', err);
+      setError(err.message || 'Failed to fetch reports');
     } finally {
       setLoading(false);
     }
@@ -35,40 +65,87 @@ const MyReports = () => {
   }, []);
 
   const getFilteredReports = () => {
-    let filtered = reports;
-    
+    // Apply predefined filters
+    const dateRanges = reportsAPI.getDateRanges();
+    let filterParams = {};
+
     if (reportFilter === 'lastMonth') {
-      filtered = reports; 
+      filterParams = {
+        dateFrom: dateRanges.lastMonth.from,
+        dateTo: dateRanges.lastMonth.to
+      };
     } else if (reportFilter === 'lastQuarter') {
-      filtered = reports;
+      filterParams = {
+        dateFrom: dateRanges.lastQuarter.from,
+        dateTo: dateRanges.lastQuarter.to
+      };
+    }
+
+    if (Object.keys(filterParams).length > 0) {
+      fetchReports(filterParams);
     }
     
-    return filtered;
+    return reports;
   };
 
   const filteredReports = getFilteredReports();
 
-  const totalSubtotal = reports.reduce((sum, r) => sum + r.subtotal, 0);
-  const totalTax = reports.reduce((sum, r) => sum + r.tax, 0);
-  const totalPaidAmount = reports.reduce((sum, r) => sum + r.paidAmount, 0);
-  const totalAmount = reports.reduce((sum, r) => sum + r.total, 0);
+  const totalSubtotal = totals.subtotal || 0;
+  const totalTax = totals.tax || 0;
+  const totalPaidAmount = totals.paidAmount || 0;
+  const totalAmount = totals.total || 0;
 
   const reportFilters = [
-    { id: 'all', label: 'All Invoices', count: reports.length },
+    { id: 'all', label: 'All Invoices', count: totals.count },
     { id: 'lastMonth', label: 'Last Month' },
     { id: 'lastQuarter', label: 'Last Quarter' },
   ];
 
   const handleSearch = () => {
-    fetchReports();
+    fetchReports({
+      dateFrom,
+      dateTo,
+      status,
+      documentType
+    });
   };
 
-  const handleExportPDF = () => {
-    alert('Export to PDF - Coming soon!');
+  const handleExportPDF = async () => {
+    try {
+      const response = await reportsAPI.exportReports({
+        dateFrom,
+        dateTo,
+        status,
+        documentType
+      }, 'json');
+
+      if (response.success) {
+        // For PDF export, you might want to generate PDF on frontend
+        // or implement PDF generation on backend
+        alert('PDF export functionality - Coming soon!');
+      }
+    } catch (error) {
+      alert('Failed to export PDF: ' + error.message);
+    }
   };
 
-  const handleExportExcel = () => {
-    alert('Export to Excel - Coming soon!');
+  const handleExportExcel = async () => {
+    try {
+      const response = await reportsAPI.exportReports({
+        dateFrom,
+        dateTo,
+        status,
+        documentType
+      }, 'csv');
+
+      if (response.success) {
+        const csvContent = reportsAPI.convertToCSV(response.data);
+        const filename = `reports_${new Date().toISOString().split('T')[0]}.csv`;
+        reportsAPI.downloadCSV(csvContent, filename);
+      }
+    } catch (error) {
+      alert('Failed to export Excel: ' + error.message);
+    }
   };
 
   const handlePrint = () => {
@@ -133,7 +210,7 @@ const MyReports = () => {
               <option value="all">--All--</option>
               <option value="paid">Paid</option>
               <option value="unpaid">Unpaid</option>
-              <option value="partial">Partially Paid</option>
+              <option value="partiallyPaid">Partially Paid</option>
               <option value="overdue">Overdue</option>
             </select>
           </div>
@@ -146,9 +223,17 @@ const MyReports = () => {
             >
               <option value="all">--All--</option>
               <option value="invoice">Invoice</option>
-              <option value="tax-invoice">Tax Invoice</option>
+              <option value="taxInvoice">Tax Invoice</option>
+              <option value="proforma">Proforma Invoice</option>
               <option value="quote">Quote</option>
               <option value="receipt">Receipt</option>
+              <option value="salesReceipt">Sales Receipt</option>
+              <option value="cashReceipt">Cash Receipt</option>
+              <option value="estimate">Estimate</option>
+              <option value="creditMemo">Credit Memo</option>
+              <option value="creditNote">Credit Note</option>
+              <option value="purchaseOrder">Purchase Order</option>
+              <option value="deliveryNote">Delivery Note</option>
             </select>
           </div>
           <div className="flex items-end">
@@ -256,53 +341,57 @@ const MyReports = () => {
                 {filteredReports.map((report, index) => (
                   <tr 
                     key={report.id} 
-                    className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${
+                    onClick={() => onInvoiceClick && onInvoiceClick(report)}
+                    className={`border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${
                       index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
                     }`}
                   >
-                    <td className="p-4 text-sm text-slate-700 font-medium max-w-[200px]">{report.customer || '—'}</td>
-                    <td className="p-4 text-sm text-slate-600">{report.document}</td>
+                    <td className="p-4 text-sm text-slate-700 font-medium max-w-[200px]">
+                      {report.customerName ? `${report.customerName}${report.customerAddress ? `, ${report.customerAddress}` : ''}` : '—'}
+                    </td>
+                    <td className="p-4 text-sm text-slate-600">{report.documentType}</td>
                     <td className="p-4 text-sm text-slate-600">{report.number}</td>
-                    <td className="p-4 text-sm text-slate-600">{report.date}</td>
-                    <td className="p-4 text-sm text-slate-700 text-right">
-                      {report.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    <td className="p-4 text-sm text-slate-600">
+                      {report.date ? new Date(report.date).toLocaleDateString('en-GB') : '—'}
                     </td>
                     <td className="p-4 text-sm text-slate-700 text-right">
-                      {report.tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      {formatCurrency(report.subtotal, report.currency)}
+                    </td>
+                    <td className="p-4 text-sm text-slate-700 text-right">
+                      {formatCurrency(report.tax, report.currency)}
                     </td>
                     <td className="p-4 text-sm text-right">
                       <span className={report.paidAmount > 0 ? 'text-emerald-600 font-medium' : 'text-slate-600'}>
-                        {report.paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        {formatCurrency(report.paidAmount, report.currency)}
                       </span>
                     </td>
                     <td className="p-4 text-sm text-slate-700 text-right font-medium">
-                      {report.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      {formatCurrency(report.total, report.currency)}
                     </td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="bg-gradient-to-br from-slate-50 to-white border-t-2 border-slate-300">
+                  <td className="p-4 text-sm font-bold text-slate-700 uppercase">Total</td>
+                  <td className="p-4"></td>
+                  <td className="p-4"></td>
+                  <td className="p-4"></td>
+                  <td className="p-4 text-sm font-bold text-slate-700 text-right">
+                    {formatCurrency(totalSubtotal, 'INR')}
+                  </td>
+                  <td className="p-4 text-sm font-bold text-slate-700 text-right">
+                    {formatCurrency(totalTax, 'INR')}
+                  </td>
+                  <td className="p-4 text-sm font-bold text-emerald-600 text-right">
+                    {formatCurrency(totalPaidAmount, 'INR')}
+                  </td>
+                  <td className="p-4 text-sm font-bold text-slate-800 text-right">
+                    {formatCurrency(totalAmount, 'INR')}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
-          </div>
-
-          {/* Total Row */}
-          <div className="bg-gradient-to-br from-slate-50 to-white p-4 border-t-2 border-slate-300">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-700 uppercase">Total INR</span>
-              <div className="flex items-center gap-8">
-                <span className="text-sm font-bold text-slate-700">
-                  {totalSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </span>
-                <span className="text-sm font-bold text-slate-700">
-                  {totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </span>
-                <span className="text-sm font-bold text-emerald-600">
-                  {totalPaidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </span>
-                <span className="text-sm font-bold text-slate-800">
-                  {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
           </div>
         </>
       )}

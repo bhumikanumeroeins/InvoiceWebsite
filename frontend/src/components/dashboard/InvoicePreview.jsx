@@ -1,7 +1,22 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X, Copy, ArrowRight, Loader2, Trash2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+const getCurrencySymbol = (currency = 'INR') => {
+  return currencyService.getSymbol(currency);
+};
+
+const formatAmount = (amount, currency = 'INR') => {
+  // Use basic formatting since we don't have locale config
+  return Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+};
+
+const formatCurrency = (amount, currency = 'INR') => {
+  const symbol = getCurrencySymbol(currency);
+  const formattedAmount = formatAmount(amount, currency);
+  return `${symbol}${formattedAmount}`;
+};
+
 import Template1 from '../templates/Template1';
 import Template2 from '../templates/Template2';
 import Template3 from '../templates/Template3';
@@ -17,7 +32,10 @@ import Template12 from '../templates/Template12';
 import InvoiceForm from '../invoice/InvoiceForm';
 import InvoiceActionTabs from '../invoice/InvoiceActionTabs';
 import { invoiceAPI } from '../../services/invoiceService';
+import { paymentAPI } from '../../services/paymentService';
 import { getCurrentUser } from '../../services/authService';
+import { createRecurringInvoice, getRecurringInvoice } from '../../services/recurringService';
+import { currencyService } from '../../services/currencyService';
 
 const templates = {
   1: Template1,
@@ -42,6 +60,11 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
   const [loadingAction, setLoadingAction] = useState(null);
   const templateRef = useRef(null);
   
+  // Update currentInvoice when invoice prop changes
+  useEffect(() => {
+    setCurrentInvoice(invoice);
+  }, [invoice]);
+  
   // Payment state
   const [paymentTab, setPaymentTab] = useState('manual'); // 'manual' or 'cards'
   const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -61,7 +84,7 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
     stopDate: '',
     emailTo: '',
     sendCopy: false,
-    emailSubject: 'Invoice #number',
+    emailSubject: 'Invoice',
     emailText: `Dear Customer,
 
 Please find the attached invoice.
@@ -71,11 +94,158 @@ Thank you!
 If you need assistance or have any questions, please email: support@invoicepro.com`,
   });
   const [savingRecurring, setSavingRecurring] = useState(false);
+  const [hasExistingRecurring, setHasExistingRecurring] = useState(false);
+  const [loadingRecurringData, setLoadingRecurringData] = useState(false);
 
   const currentUser = getCurrentUser();
   const userEmail = currentUser?.email || '';
 
   const clientEmail = currentInvoice?.billTo?.email || currentInvoice?.client?.email || '';
+
+  // Load existing recurring data when invoice changes
+  useEffect(() => {
+    // Temporarily disabled to prevent multiple calls
+    // if (currentInvoice?._id) {
+    //   loadRecurringData();
+    // }
+  }, [currentInvoice?._id]);
+
+  // Set default email to client email if available and no email is set
+  useEffect(() => {
+    if (clientEmail && !recurringData.emailTo) {
+      setRecurringData(prev => ({ ...prev, emailTo: clientEmail }));
+    }
+  }, [clientEmail, recurringData.emailTo]);
+
+  // Update email subject with actual invoice number when invoice changes
+  useEffect(() => {
+    if (currentInvoice && currentInvoice._id) {
+      const invoiceNumber = currentInvoice?.invoiceNumber || 
+                           currentInvoice?.invoiceMeta?.invoiceNo || 
+                           currentInvoice?.number || 
+                           currentInvoice?.invoiceMeta?.number ||
+                           'INV-001';
+      
+      setRecurringData(prev => ({
+        ...prev,
+        emailSubject: `Invoice ${invoiceNumber}`
+      }));
+    }
+  }, [currentInvoice?._id]); // Only depend on _id to avoid multiple calls
+
+  // Load existing recurring data
+  const loadRecurringData = async () => {
+    const invoiceToUse = currentInvoice || invoice;
+    const invoiceId = invoiceToUse?._id || invoiceToUse?.id;
+    
+    if (!invoiceId || loadingRecurringData) {
+      return;
+    }
+    
+    setLoadingRecurringData(true);
+    try {
+      const response = await getRecurringInvoice(invoiceId);
+      if (response.success && response.data) {
+        const recurringInvoice = response.data;
+        setRecurringData({
+          frequency: recurringInvoice.frequency,
+          startDate: new Date(recurringInvoice.startDate).toISOString().split('T')[0],
+          startOption: recurringInvoice.startOption,
+          stopOption: recurringInvoice.stopOption,
+          stopDate: recurringInvoice.stopDate ? new Date(recurringInvoice.stopDate).toISOString().split('T')[0] : '',
+          emailTo: recurringInvoice.emailTo,
+          sendCopy: recurringInvoice.sendCopy,
+          emailSubject: recurringInvoice.emailSubject,
+          emailText: recurringInvoice.emailText
+        });
+        setHasExistingRecurring(true);
+      } else {
+        setHasExistingRecurring(false);
+      }
+    } catch (error) {
+      console.error('Failed to load recurring data:', error);
+      setHasExistingRecurring(false);
+    } finally {
+      setLoadingRecurringData(false);
+    }
+  };
+
+  // Handle recurring invoice save
+  const handleSaveRecurring = async () => {
+    const invoiceToUse = currentInvoice || invoice;
+    const invoiceId = invoiceToUse?._id || invoiceToUse?.id;
+    
+    if (!invoiceId) {
+      alert('Invoice not found. Please try again.');
+      return;
+    }
+    
+    if (!recurringData.emailTo.trim()) {
+      alert('Please enter an email address');
+      return;
+    }
+
+    if (recurringData.frequency === 'never') {
+      // Just save the "never" setting to disable recurring
+      setSavingRecurring(true);
+      try {
+        await createRecurringInvoice(invoiceId, { frequency: 'never' });
+        alert('Recurring invoice disabled successfully');
+        // Refresh the recurring data to update status
+        await loadRecurringData();
+      } catch (error) {
+        console.error('Failed to disable recurring:', error);
+        alert('Failed to disable recurring invoice: ' + error.message);
+      } finally {
+        setSavingRecurring(false);
+      }
+      return;
+    }
+
+    // Validate required fields for active recurring
+    if (!recurringData.startDate) {
+      alert('Please select a start date');
+      return;
+    }
+
+    if (!recurringData.emailSubject.trim()) {
+      alert('Please enter an email subject');
+      return;
+    }
+
+    if (!recurringData.emailText.trim()) {
+      alert('Please enter an email message');
+      return;
+    }
+
+    if (recurringData.stopOption === 'onDate' && !recurringData.stopDate) {
+      alert('Please select a stop date');
+      return;
+    }
+
+    if (recurringData.stopOption === 'onDate' && 
+        new Date(recurringData.stopDate) <= new Date(recurringData.startDate)) {
+      alert('Stop date must be after start date');
+      return;
+    }
+
+    setSavingRecurring(true);
+    try {
+      const response = await createRecurringInvoice(invoiceId, recurringData);
+      if (response.success) {
+        alert('Recurring invoice settings saved successfully!');
+        // Refresh the recurring data to update status
+        await loadRecurringData();
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('Failed to save recurring settings:', error);
+      alert('Failed to save recurring settings: ' + error.message);
+    } finally {
+      setSavingRecurring(false);
+    }
+  };
   
   const invoiceNum = currentInvoice?.invoiceNumber || currentInvoice?.invoiceMeta?.invoiceNo || currentInvoice?.number || '';
 
@@ -121,11 +291,45 @@ Best regards`,
     }
     
     if (actionId === 'download') {
-      alert('PDF download will start (Backend integration pending)');
+      setActiveAction('download');
+      return;
+    }
+    
+    if (actionId === 'payments') {
+      setActiveAction('payments');
+      await loadPaymentDetails();
       return;
     }
     
     setActiveAction(actionId);
+  };
+
+  const loadPaymentDetails = async () => {
+    const invoiceId = currentInvoice?._id || currentInvoice?.id;
+    if (!invoiceId) {
+      return;
+    }
+
+    try {
+      const response = await paymentAPI.getPaymentDetails(invoiceId);
+      
+      if (response && response.success) {
+        const paymentDetails = response.data;
+        
+        const updatedInvoice = {
+          ...currentInvoice,
+          paymentStatus: paymentDetails.paymentStatus,
+          paidAmount: paymentDetails.paidAmount,
+          paidDate: paymentDetails.paidDate,
+          paymentMethod: paymentDetails.paymentMethod,
+          paymentNote: paymentDetails.paymentNote,
+          balanceDue: paymentDetails.balanceDue
+        };
+        
+        setCurrentInvoice(updatedInvoice);
+      }
+    } catch (error) {
+    }
   };
 
   const handleDeleteInvoice = async () => {
@@ -139,7 +343,21 @@ Best regards`,
     }
   };
 
-  const generatePDF = async () => {
+  const handleDownloadPDF = async () => {
+    setLoading(true);
+    setLoadingAction('download');
+    
+    try {
+      await generatePDF(true);
+    } catch (error) {
+      alert('Failed to generate PDF: ' + error.message);
+    } finally {
+      setLoading(false);
+      setLoadingAction(null);
+    }
+  };
+
+  const generatePDF = async (forDownload = false) => {
     if (!templateRef.current) return null;
     
     try {
@@ -162,10 +380,17 @@ Best regards`,
       
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       
-      return pdf.output('datauristring');
+      if (forDownload) {
+        const invoiceNumber = previewData.number || previewData.invoiceNumber || 'INV-001';
+        const filename = `Invoice-${invoiceNumber}.pdf`;
+        
+        pdf.save(filename);
+        return true;
+      } else {
+        return pdf.output('datauristring');
+      }
     } catch (error) {
-      console.error('PDF generation error:', error);
-      return null;
+      throw error;
     }
   };
 
@@ -187,12 +412,11 @@ Best regards`,
     try {
       let pdfBase64 = null;
       try {
-        const pdfDataUri = await generatePDF();
+        const pdfDataUri = await generatePDF(false); // false = for email (base64)
         if (pdfDataUri) {
           pdfBase64 = `data:application/pdf;base64,${pdfDataUri.split(',')[1]}`;
         }
       } catch (pdfError) {
-        console.warn('PDF generation failed, sending without attachment:', pdfError);
       }
       
       const response = await invoiceAPI.sendEmail(invoiceId, {
@@ -209,7 +433,6 @@ Best regards`,
         alert('Failed to send email: ' + (response?.message || 'Unknown error'));
       }
     } catch (err) {
-      console.error('Send email error:', err);
       alert('Failed to send email: ' + (err?.message || 'Unknown error'));
     } finally {
       setSendingEmail(false);
@@ -220,6 +443,138 @@ Best regards`,
     setCurrentInvoice(updatedInvoice);
     setActiveAction('invoice');
     onInvoiceUpdated && onInvoiceUpdated(updatedInvoice);
+  };
+
+  const handleSavePayment = async () => {
+    if (!paymentData.paidAmount || parseFloat(paymentData.paidAmount) <= 0) {
+      alert('Please enter a valid payment amount.');
+      return;
+    }
+
+    const invoiceId = currentInvoice?._id || currentInvoice?.id;
+    if (!invoiceId) {
+      alert('Invoice not found. Please try again.');
+      return;
+    }
+
+    setSavingPayment(true);
+    
+    try {
+      const paidAmount = parseFloat(paymentData.paidAmount);
+      const totalAmount = currentInvoice?.total || currentInvoice?.totals?.grandTotal || 0;
+      
+      let paymentStatus = 'unpaid';
+      if (paidAmount >= totalAmount) {
+        paymentStatus = 'paid';
+      } else if (paidAmount > 0) {
+        paymentStatus = 'partiallyPaid';
+      }
+
+      const response = await paymentAPI.updatePaymentStatus(invoiceId, {
+        paymentStatus,
+        paidAmount,
+        paidDate: paymentData.paidDate,
+        paymentMethod: paymentData.paymentMethod,
+        paymentNote: paymentData.note
+      });
+
+      if (response && response.success) {
+        const updatedInvoice = {
+          ...currentInvoice,
+          paymentStatus: response.data.paymentStatus || paymentStatus,
+          paidAmount: response.data.paidAmount || paidAmount,
+          paidDate: paymentData.paidDate,
+          balanceDue: response.data.balanceDue || Math.max(0, totalAmount - paidAmount),
+          paymentMethod: paymentData.paymentMethod,
+          paymentNote: paymentData.note
+        };
+
+        setCurrentInvoice(updatedInvoice);
+        
+        if (onInvoiceUpdated) {
+          onInvoiceUpdated(updatedInvoice);
+        }
+
+        setShowPaymentForm(false);
+      } else {
+        throw new Error(response?.message || 'Failed to save payment');
+      }
+    } catch (error) {
+      if (error.message.includes('404') || error.message.includes('Not Found')) {
+        alert('Payment API not available. Please check if the server is running and try again.');
+      } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        alert('You are not authorized to perform this action. Please log in again.');
+      } else {
+        alert('Failed to save payment: ' + error.message);
+      }
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const handleEditPayment = () => {
+    setPaymentData({
+      paidDate: currentInvoice?.paidDate ? new Date(currentInvoice.paidDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      paidAmount: currentInvoice?.paidAmount?.toString() || '',
+      paymentMethod: currentInvoice?.paymentMethod || 'Other',
+      note: currentInvoice?.paymentNote || '',
+    });
+    setShowPaymentForm(true);
+  };
+
+  const handleSetAsUnpaid = async () => {
+    if (!confirm('Are you sure you want to set this invoice as unpaid? This will remove the payment record.')) {
+      return;
+    }
+
+    const invoiceId = currentInvoice?._id || currentInvoice?.id;
+    if (!invoiceId) {
+      alert('Invoice not found. Please try again.');
+      return;
+    }
+
+    try {
+      const response = await paymentAPI.updatePaymentStatus(invoiceId, {
+        paymentStatus: 'unpaid'
+      });
+
+      if (response && response.success) {
+        const updatedInvoice = {
+          ...currentInvoice,
+          paymentStatus: 'unpaid',
+          paidAmount: 0,
+          paidDate: null,
+          balanceDue: currentInvoice?.total || currentInvoice?.totals?.grandTotal || 0,
+          paymentMethod: null,
+          paymentNote: null
+        };
+
+        setCurrentInvoice(updatedInvoice);
+        
+        if (onInvoiceUpdated) {
+          onInvoiceUpdated(updatedInvoice);
+        }
+
+        setPaymentData({
+          paidDate: new Date().toISOString().split('T')[0],
+          paidAmount: '',
+          paymentMethod: 'Other',
+          note: '',
+        });
+        setShowPaymentForm(false);
+      } else {
+        throw new Error(response?.message || 'Failed to set as unpaid');
+      }
+    } catch (error) {
+      // Check if it's a network/server error
+      if (error.message.includes('404') || error.message.includes('Not Found')) {
+        alert('Payment API not available. Please check if the server is running and try again.');
+      } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        alert('You are not authorized to perform this action. Please log in again.');
+      } else {
+        alert('Failed to set as unpaid: ' + error.message);
+      }
+    }
   };
 
   const previewData = currentInvoice ? {
@@ -238,9 +593,9 @@ Best regards`,
     invoiceDate: currentInvoice.invoiceDate || currentInvoice.invoiceMeta?.invoiceDate || currentInvoice.date || '',
     dueDate: currentInvoice.dueDate || currentInvoice.invoiceMeta?.dueDate || '',
     items: (currentInvoice.items || []).map(item => ({
-      qty: item.qty || item.quantity || 1,
+      quantity: item.quantity || 1,
       description: item.description || '',
-      unitPrice: item.unitPrice || item.rate || 0,
+      rate: item.rate || 0,
       amount: item.amount || 0,
     })),
     terms: Array.isArray(currentInvoice.terms) 
@@ -249,11 +604,15 @@ Best regards`,
     subtotal: currentInvoice.subtotal || currentInvoice.totals?.subtotal || 0,
     taxAmount: currentInvoice.taxAmount || currentInvoice.totals?.taxTotal || 0,
     total: currentInvoice.total || currentInvoice.totals?.grandTotal || 0,
-    paymentInfo: currentInvoice.paymentInfo || currentInvoice.payment || {},
+    currency: currentInvoice.currency || currentInvoice.invoiceMeta?.currency || 'INR',
     signature: currentInvoice.signature,
-    qrCode: currentInvoice.qrCode || currentInvoice.payment?.qrCode,
+    qrCode: currentInvoice.qrCode,
     number: currentInvoice.number || currentInvoice.invoiceMeta?.invoiceNo || currentInvoice.invoiceNumber || '',
     date: currentInvoice.date || currentInvoice.invoiceMeta?.invoiceDate || currentInvoice.invoiceDate || '',
+    
+    // Currency utilities
+    formatAmount: (amount) => formatAmount(amount, currentInvoice.currency || currentInvoice.invoiceMeta?.currency || 'INR'),
+    getCurrencySymbol: () => getCurrencySymbol(currentInvoice.currency || currentInvoice.invoiceMeta?.currency || 'INR'),
   } : {
     number: 'INV-001',
     date: new Date().toLocaleDateString('en-GB'),
@@ -404,22 +763,43 @@ Best regards`,
 
           {paymentTab === 'manual' ? (
             <div className="p-6">
-              {/* Invoice Status Card */}
-              <div className={`rounded-xl border p-6 mb-6 ${
-                currentInvoice?.paymentStatus === 'paid' 
-                  ? 'bg-emerald-50 border-emerald-200' 
-                  : 'bg-amber-50 border-amber-200'
-              }`}>
-                <p className={`text-lg font-medium text-center ${
-                  currentInvoice?.paymentStatus === 'paid' ? 'text-emerald-700' : 'text-amber-700'
+              {/* Payment Status Display */}
+              {currentInvoice?.paymentStatus === 'paid' ? (
+                <div className="text-center">
+                  <p className="text-lg font-medium text-emerald-700 mb-4">
+                    This invoice of {formatCurrency(currentInvoice?.total || currentInvoice?.totals?.grandTotal || 0, currentInvoice?.currency || currentInvoice?.invoiceMeta?.currency || 'INR')} was paid on {currentInvoice?.paidDate ? new Date(currentInvoice.paidDate).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB')}.
+                  </p>
+                  <div className="flex items-center justify-center gap-4">
+                    <button
+                      onClick={handleEditPayment}
+                      className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline transition-colors"
+                    >
+                      Edit Payment
+                    </button>
+                    <span className="text-slate-400">|</span>
+                    <button
+                      onClick={handleSetAsUnpaid}
+                      className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline transition-colors"
+                    >
+                      Set as Unpaid
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className={`rounded-xl border p-6 mb-6 ${
+                  currentInvoice?.paymentStatus === 'partiallyPaid' 
+                    ? 'bg-amber-50 border-amber-200' 
+                    : 'bg-slate-50 border-slate-200'
                 }`}>
-                  This invoice of ₹ {(currentInvoice?.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} is {currentInvoice?.paymentStatus || 'unpaid'}.
-                  {currentInvoice?.dueDate && currentInvoice?.paymentStatus !== 'paid' && (
-                    <span> It's due on {currentInvoice.dueDate}.</span>
-                  )}
-                </p>
-                
-                {currentInvoice?.paymentStatus !== 'paid' && (
+                  <p className={`text-lg font-medium text-center ${
+                    currentInvoice?.paymentStatus === 'partiallyPaid' ? 'text-amber-700' : 'text-slate-700'
+                  }`}>
+                    This invoice of {formatCurrency(currentInvoice?.total || currentInvoice?.totals?.grandTotal || 0, currentInvoice?.currency || currentInvoice?.invoiceMeta?.currency || 'INR')} is {currentInvoice?.paymentStatus || 'unpaid'}.
+                    {currentInvoice?.dueDate && (
+                      <span> It's due on {new Date(currentInvoice.dueDate).toLocaleDateString('en-GB')}.</span>
+                    )}
+                  </p>
+                  
                   <div className="text-center mt-4">
                     <button
                       onClick={() => setShowPaymentForm(!showPaymentForm)}
@@ -428,13 +808,24 @@ Best regards`,
                       {showPaymentForm ? 'Hide Form' : 'Set as Paid'}
                     </button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Payment Form Card */}
-              {showPaymentForm && currentInvoice?.paymentStatus !== 'paid' && (
+              {showPaymentForm && (
                 <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-6 mb-6">
-                  <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Record Payment</h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                      {currentInvoice?.paymentStatus === 'paid' ? 'Edit Payment' : 'Record Payment'}
+                    </h4>
+                    <button
+                      onClick={() => setShowPaymentForm(false)}
+                      className="text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
                   <div className="grid md:grid-cols-4 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Paid Date</label>
@@ -455,6 +846,8 @@ Best regards`,
                         value={paymentData.paidAmount}
                         onChange={(e) => setPaymentData({ ...paymentData, paidAmount: e.target.value })}
                         placeholder="0.00"
+                        step="0.01"
+                        min="0"
                         className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                       />
                     </div>
@@ -481,52 +874,24 @@ Best regards`,
                       />
                     </div>
                   </div>
-                  <div className="mt-4">
+                  
+                  <div className="flex items-center gap-3 mt-6">
                     <button
-                      onClick={() => {
-                        alert('Payment saved! (API integration pending)');
-                        setShowPaymentForm(false);
-                      }}
+                      onClick={handleSavePayment}
                       disabled={savingPayment || !paymentData.paidAmount}
                       className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-emerald-500 hover:shadow-lg disabled:opacity-50 text-white font-medium rounded-lg transition-all"
                     >
                       {savingPayment ? 'Saving...' : 'Save Payment'}
                     </button>
+                    <button
+                      onClick={() => setShowPaymentForm(false)}
+                      className="px-6 py-2.5 border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-all"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
               )}
-
-              {/* Payment History */}
-              <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-200">
-                  <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Payment History</h4>
-                </div>
-                {currentInvoice?.payments && currentInvoice.payments.length > 0 ? (
-                  <div className="divide-y divide-slate-100">
-                    {currentInvoice.payments.map((payment, index) => (
-                      <div key={index} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                            <CreditCard className="w-5 h-5 text-emerald-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-slate-700">{payment.paymentMethod}</p>
-                            <p className="text-xs text-slate-500">{payment.paidDate} {payment.note && `• ${payment.note}`}</p>
-                          </div>
-                        </div>
-                        <span className="text-sm font-bold text-emerald-600">
-                          + ₹ {payment.paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="px-6 py-12 text-center">
-                    <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500">No payments recorded yet</p>
-                  </div>
-                )}
-              </div>
             </div>
           ) : (
             <div className="p-6">
@@ -562,8 +927,12 @@ Best regards`,
                   <p className="text-slate-400 text-sm">Schedule automatic invoice generation</p>
                 </div>
               </div>
-              <div className="px-3 py-1 rounded-full bg-slate-700 text-slate-300 text-sm">
-                {recurringData.frequency === 'never' ? 'Inactive' : 'Active'}
+              <div className={`px-3 py-1 rounded-full text-sm ${
+                hasExistingRecurring && recurringData.frequency !== 'never' 
+                  ? 'bg-emerald-500 text-white' 
+                  : 'bg-slate-700 text-slate-300'
+              }`}>
+                {hasExistingRecurring && recurringData.frequency !== 'never' ? 'Active' : 'Inactive'}
               </div>
             </div>
           </div>
@@ -716,7 +1085,7 @@ Best regards`,
                         onChange={(e) => setRecurringData({ ...recurringData, emailSubject: e.target.value })}
                         className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                       />
-                      <p className="text-xs text-slate-400 mt-1">Tip: <span className="text-indigo-600">#number</span> will be replaced with invoice number</p>
+                      <p className="text-xs text-slate-400 mt-1">The invoice number is automatically included in the subject</p>
                     </div>
 
                     <div>
@@ -738,13 +1107,11 @@ Best regards`,
 
                 {/* Action Button */}
                 <button
-                  onClick={() => {
-                    alert('Recurring settings saved! (API integration pending)');
-                  }}
-                  disabled={savingRecurring || !recurringData.emailTo}
+                  onClick={handleSaveRecurring}
+                  disabled={savingRecurring || (recurringData.frequency !== 'never' && !recurringData.emailTo)}
                   className="w-full py-4 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
                 >
-                  {savingRecurring ? 'Saving...' : 'Set as Recurring'}
+                  {savingRecurring ? 'Saving...' : (recurringData.frequency === 'never' ? 'Disable Recurring' : 'Set as Recurring')}
                 </button>
               </>
             )}
@@ -1045,6 +1412,75 @@ Best regards`,
                   <>
                     <Trash2 className="w-5 h-5" />
                     Delete Now
+                  </>
+                )}
+              </button>
+              <span className="text-slate-400">or</span>
+              <button
+                onClick={() => setActiveAction('invoice')}
+                className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Download View */}
+      {activeAction === 'download' && (
+        <div className="p-6">
+          <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-12 text-center">
+            <h3 className="text-xl font-semibold text-slate-800 mb-2">
+              Download Invoice PDF
+            </h3>
+            <p className="text-slate-500 mb-8">
+              Generate and download a PDF copy of this invoice
+            </p>
+            
+            {/* Document to Download Icons */}
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <div className="w-16 h-20 bg-white border-2 border-slate-300 rounded-lg shadow-sm flex items-center justify-center">
+                <FileText className="w-8 h-8 text-slate-400" />
+              </div>
+              <ArrowRight className="w-6 h-6 text-slate-400" />
+              <div className="w-16 h-20 bg-white border-2 border-green-500 rounded-lg shadow-md flex items-center justify-center relative">
+                <FileText className="w-8 h-8 text-green-500" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Download className="w-2 h-2 text-white" />
+                </div>
+              </div>
+            </div>
+            
+            {/* File Info */}
+            <div className="bg-white rounded-lg border border-slate-200 p-4 mb-8 max-w-sm mx-auto">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-red-500" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-slate-800">Invoice-{previewData.number || 'INV-001'}.pdf</p>
+                  <p className="text-sm text-slate-500">PDF Document • A4 Size</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={handleDownloadPDF}
+                disabled={loading && loadingAction === 'download'}
+                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
+              >
+                {loading && loadingAction === 'download' ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-5 h-5" />
+                    Download PDF
                   </>
                 )}
               </button>

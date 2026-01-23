@@ -11,9 +11,9 @@ export const getInvoiceData = (data = {}) => ({
   poNumber: data.poNumber || 'PO-2025-7788',
   dueDate: data.dueDate || '21/01/2025',
   items: data.items || [
-    { qty: 1, description: 'Website Design Services', unitPrice: 8500.00, amount: 8500.00 },
-    { qty: 2, description: 'Premium Template Pack', unitPrice: 950.00, amount: 1900.00 },
-    { qty: 3, description: 'Annual Maintenance', unitPrice: 1200.00, amount: 3600.00 },
+    { quantity: 1, description: 'Website Design Services', rate: 8500.00, amount: 8500.00 },
+    { quantity: 2, description: 'Premium Template Pack', rate: 950.00, amount: 1900.00 },
+    { quantity: 3, description: 'Annual Maintenance', rate: 1200.00, amount: 3600.00 },
   ],
   terms: data.terms || [
     'Payment is due within 15 days',

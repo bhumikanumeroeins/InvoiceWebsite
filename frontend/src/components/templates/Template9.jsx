@@ -92,9 +92,9 @@ const Template9 = ({ data = {} }) => {
 
         {items.map((item, i) => (
           <div key={i} style={{ display: "flex", padding: "14px 14px 14px 50px", borderBottom: "1px solid #d1d5db" }}>
-            <div style={{ width: "10%", textAlign: "center" }}>{item.qty}</div>
+            <div style={{ width: "10%", textAlign: "center" }}>{item.quantity}</div>
             <div style={{ width: "45%" }}>{item.description}</div>
-            <div style={{ width: "20%", textAlign: "center" }}>{item.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+            <div style={{ width: "20%", textAlign: "center" }}>{item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
             <div style={{ width: "25%", textAlign: "right" }}>{item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
           </div>
         ))}

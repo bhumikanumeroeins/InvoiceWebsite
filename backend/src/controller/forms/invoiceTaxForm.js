@@ -1,12 +1,100 @@
 import mongoose from "mongoose";
 import InvoiceTaxForm from "../../models/forms/invoiceTaxForm.js";
 
-import { parseDDMMYYYY } from "../../utils/utils.js";
+import { parseISODate } from "../../utils/utils.js";
 import { sendInvoiceEmail } from "../../utils/emailService.js";
-
-
-
 import ItemMaster from "../../models/items/items.js";
+
+/* ---------------- ADDRESS PARSING HELPERS ---------------- */
+const parseAddress = (addressText) => {
+  if (!addressText || typeof addressText !== 'string') {
+    return { address: '', city: '', state: '', zip: '' };
+  }
+
+  const lines = addressText.trim().split('\n').map(line => line.trim()).filter(line => line);
+  
+  if (lines.length === 0) {
+    return { address: '', city: '', state: '', zip: '' };
+  }
+
+  // First line is always address
+  const address = lines[0] || '';
+  
+  // Try to parse city, state, zip from remaining lines
+  let city = '', state = '', zip = '';
+  
+  if (lines.length > 1) {
+    // Look for patterns like "City, State ZIP" or "City State ZIP"
+    const lastLine = lines[lines.length - 1];
+    const zipMatch = lastLine.match(/\b\d{5,6}\b$/); // 5-6 digit zip at end
+    
+    if (zipMatch) {
+      zip = zipMatch[0];
+      const beforeZip = lastLine.substring(0, lastLine.lastIndexOf(zip)).trim();
+      
+      // Split by comma or space for city, state
+      const parts = beforeZip.split(/[,\s]+/).filter(part => part);
+      if (parts.length >= 2) {
+        state = parts[parts.length - 1];
+        city = parts.slice(0, -1).join(' ');
+      } else if (parts.length === 1) {
+        city = parts[0];
+      }
+    } else {
+      // No zip found, try to split city and state
+      const parts = lastLine.split(/[,\s]+/).filter(part => part);
+      if (parts.length >= 2) {
+        city = parts.slice(0, -1).join(' ');
+        state = parts[parts.length - 1];
+      } else if (parts.length === 1) {
+        city = parts[0];
+      }
+    }
+  }
+
+  return { address, city, state, zip };
+};
+
+const parseShippingAddress = (shippingText) => {
+  if (!shippingText || typeof shippingText !== 'string') {
+    return { shippingAddress: '', shippingCity: '', shippingState: '', shippingZip: '' };
+  }
+
+  const parsed = parseAddress(shippingText);
+  return {
+    shippingAddress: parsed.address,
+    shippingCity: parsed.city,
+    shippingState: parsed.state,
+    shippingZip: parsed.zip
+  };
+};
+
+/* ---------------- QR CODE MIGRATION HELPER ---------------- */
+const migrateQRCodeIfNeeded = async (invoice) => {
+  if (invoice.payment?.qrCode && !invoice.qrCode) {
+    try {
+      await InvoiceTaxForm.updateOne(
+        { _id: invoice._id },
+        {
+          $set: { qrCode: invoice.payment.qrCode },
+          $unset: { "payment.qrCode": "" }
+        }
+      );
+      
+      // Update the current invoice object
+      invoice.qrCode = invoice.payment.qrCode;
+      if (invoice.payment) {
+        delete invoice.payment.qrCode;
+      }
+      
+      return true; // Migration successful
+    } catch (error) {
+      console.error(`❌ QR migration failed for invoice ${invoice._id}:`, error.message);
+      return false; // Migration failed but continue
+    }
+  }
+  return false; // No migration needed
+};
 
 // create invoice
 
@@ -35,25 +123,37 @@ export const createInvoice = async (req, res) => {
 
     /* ---------------- DATE VALIDATION ---------------- */
     if (data.invoiceMeta?.invoiceDate) {
-      const parsedInvoiceDate = parseDDMMYYYY(data.invoiceMeta.invoiceDate);
+      const parsedInvoiceDate = parseISODate(data.invoiceMeta.invoiceDate);
       if (!parsedInvoiceDate) {
         return res.status(400).json({
           success: false,
-          message: "invoiceDate must be in DD-MM-YYYY format"
+          message: "invoiceDate must be in YYYY-MM-DD format"
         });
       }
       data.invoiceMeta.invoiceDate = parsedInvoiceDate;
     }
 
     if (data.invoiceMeta?.dueDate) {
-      const parsedDueDate = parseDDMMYYYY(data.invoiceMeta.dueDate);
+      const parsedDueDate = parseISODate(data.invoiceMeta.dueDate);
       if (!parsedDueDate) {
         return res.status(400).json({
           success: false,
-          message: "dueDate must be in DD-MM-YYYY format"
+          message: "dueDate must be in YYYY-MM-DD format"
         });
       }
       data.invoiceMeta.dueDate = parsedDueDate;
+    }
+
+    /* ---------------- CURRENCY VALIDATION ---------------- */
+    if (data.invoiceMeta?.currency) {
+      const currencyRegex = /^[A-Z]{3}$/;
+      if (!currencyRegex.test(data.invoiceMeta.currency.toUpperCase())) {
+        return res.status(400).json({
+          success: false,
+          message: "Currency must be a valid 3-letter code (e.g., USD, INR)"
+        });
+      }
+      data.invoiceMeta.currency = data.invoiceMeta.currency.toUpperCase();
     }
 
     /* ---------------- FILE UPLOADS ---------------- */
@@ -67,8 +167,32 @@ export const createInvoice = async (req, res) => {
     }
 
     if (req.files?.qrCode?.[0]) {
-      data.payment = data.payment || {};
-      data.payment.qrCode = req.files.qrCode[0].filename;
+      data.qrCode = req.files.qrCode[0].filename;
+    }
+
+    /* ---------------- ADDRESS PARSING ---------------- */
+    if (data.business?.address && typeof data.business.address === 'string') {
+      const parsed = parseAddress(data.business.address);
+      data.business = {
+        ...data.business,
+        ...parsed
+      };
+    }
+
+    if (data.client?.address && typeof data.client.address === 'string') {
+      const parsed = parseAddress(data.client.address);
+      data.client = {
+        ...data.client,
+        ...parsed
+      };
+    }
+
+    if (data.shipTo?.shippingAddress && typeof data.shipTo.shippingAddress === 'string') {
+      const parsed = parseShippingAddress(data.shipTo.shippingAddress);
+      data.shipTo = {
+        ...data.shipTo,
+        ...parsed
+      };
     }
 
     /* ---------------- ITEMS VALIDATION ---------------- */
@@ -133,7 +257,7 @@ export const createInvoice = async (req, res) => {
 // get all invoices (only active ones)
 export const getAllInvoices = async (req, res) => {
   try {
-    const userId = req.user.userId; // 👈 from token
+    const userId = req.user.userId;
 
     const invoices = await InvoiceTaxForm
       .find({
@@ -141,6 +265,17 @@ export const getAllInvoices = async (req, res) => {
         $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }]
       })
       .sort({ createdAt: -1 });
+
+    /* ---------------- AUTO-MIGRATE QR CODES ---------------- */
+    let migratedCount = 0;
+    for (const invoice of invoices) {
+      const migrated = await migrateQRCodeIfNeeded(invoice);
+      if (migrated) migratedCount++;
+    }
+
+    if (migratedCount > 0) {
+      console.log(`✅ Auto-migrated ${migratedCount} QR codes`);
+    }
 
     return res.status(200).json({
       success: true,
@@ -150,7 +285,6 @@ export const getAllInvoices = async (req, res) => {
 
   } catch (error) {
     console.error("GET INVOICES ERROR 👉", error);
-
     return res.status(500).json({
       success: false,
       message: error.message
@@ -162,7 +296,7 @@ export const getAllInvoices = async (req, res) => {
 export const getInvoiceById = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.userId; // 👈 from token
+    const userId = req.user.userId;
 
     const invoice = await InvoiceTaxForm.findOne({
       _id: id,
@@ -177,6 +311,12 @@ export const getInvoiceById = async (req, res) => {
       });
     }
 
+    /* ---------------- AUTO-MIGRATE QR CODE ---------------- */
+    const migrated = await migrateQRCodeIfNeeded(invoice);
+    if (migrated) {
+      console.log(`✅ Auto-migrated QR code for invoice ${invoice._id}`);
+    }
+
     return res.status(200).json({
       success: true,
       data: invoice
@@ -184,7 +324,6 @@ export const getInvoiceById = async (req, res) => {
 
   } catch (error) {
     console.error("GET INVOICE BY ID ERROR 👉", error);
-
     return res.status(500).json({
       success: false,
       message: error.message
@@ -231,11 +370,11 @@ export const updateInvoice = async (req, res) => {
       const value = data.invoiceMeta.invoiceDate;
 
       if (value) {
-        const parsedInvoiceDate = parseDDMMYYYY(value);
+        const parsedInvoiceDate = parseISODate(value);
         if (!parsedInvoiceDate) {
           return res.status(400).json({
             success: false,
-            message: "invoiceDate must be in DD-MM-YYYY format"
+            message: "invoiceDate must be in YYYY-MM-DD format"
           });
         }
         data.invoiceMeta.invoiceDate = parsedInvoiceDate;
@@ -251,16 +390,38 @@ export const updateInvoice = async (req, res) => {
       const value = data.invoiceMeta.dueDate;
 
       if (value) {
-        const parsedDueDate = parseDDMMYYYY(value);
+        const parsedDueDate = parseISODate(value);
         if (!parsedDueDate) {
           return res.status(400).json({
             success: false,
-            message: "dueDate must be in DD-MM-YYYY format"
+            message: "dueDate must be in YYYY-MM-DD format"
           });
         }
         data.invoiceMeta.dueDate = parsedDueDate;
       } else {
         delete data.invoiceMeta.dueDate;
+      }
+    }
+
+    /* ---------------- CURRENCY VALIDATION ---------------- */
+    if (
+      data.invoiceMeta &&
+      Object.prototype.hasOwnProperty.call(data.invoiceMeta, "currency")
+    ) {
+      const value = data.invoiceMeta.currency;
+
+      if (value) {
+        // Basic currency code validation (3 characters, uppercase)
+        const currencyRegex = /^[A-Z]{3}$/;
+        if (!currencyRegex.test(value.toUpperCase())) {
+          return res.status(400).json({
+            success: false,
+            message: "Currency must be a valid 3-letter code (e.g., USD, INR)"
+          });
+        }
+        data.invoiceMeta.currency = value.toUpperCase();
+      } else {
+        delete data.invoiceMeta.currency;
       }
     }
 
@@ -275,8 +436,35 @@ export const updateInvoice = async (req, res) => {
     }
 
     if (req.files?.qrCode?.[0]) {
-      data.payment = data.payment || {};
-      data.payment.qrCode = req.files.qrCode[0].filename;
+      data.qrCode = req.files.qrCode[0].filename;
+    }
+
+    /* ---------------- ADDRESS PARSING ---------------- */
+    // Parse business address if it's a single string
+    if (data.business?.address && typeof data.business.address === 'string') {
+      const parsed = parseAddress(data.business.address);
+      data.business = {
+        ...data.business,
+        ...parsed
+      };
+    }
+
+    // Parse client address if it's a single string
+    if (data.client?.address && typeof data.client.address === 'string') {
+      const parsed = parseAddress(data.client.address);
+      data.client = {
+        ...data.client,
+        ...parsed
+      };
+    }
+
+    // Parse shipping address if it's a single string
+    if (data.shipTo?.shippingAddress && typeof data.shipTo.shippingAddress === 'string') {
+      const parsed = parseShippingAddress(data.shipTo.shippingAddress);
+      data.shipTo = {
+        ...data.shipTo,
+        ...parsed
+      };
     }
 
     /* ---------------- CLEAN EMPTY OBJECTS ---------------- */

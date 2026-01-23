@@ -90,10 +90,10 @@ const Template7 = ({ data = {} }) => {
                 padding: "12px 0"
                 }}
             >
-                <div style={{ width: "10%" }}>{item.qty}.</div>
+                <div style={{ width: "10%" }}>{item.quantity}.</div>
                 <div style={{ width: "45%" }}>{item.description}</div>
                 <div style={{ width: "20%", textAlign: "center" }}>
-                {item.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                {item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </div>
                 <div style={{ width: "25%", textAlign: "right" }}>
                 {item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}

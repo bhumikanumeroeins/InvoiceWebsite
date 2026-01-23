@@ -69,9 +69,9 @@ const Template6 = ({ data = {} }) => {
 
         {items.map((i, idx) => (
           <div key={idx} className="grid grid-cols-[80px_1fr_140px_140px] px-4 py-3 border-b text-sm">
-            <div> {i.qty}</div>
+            <div> {i.quantity}</div>
             <div> {i.description}</div>
-            <div className="text-center"> {i.unitPrice.toLocaleString("en-IN")}</div>
+            <div className="text-center"> {i.rate.toLocaleString("en-IN")}</div>
             <div className="text-right"> {i.amount.toLocaleString("en-IN")}</div>
           </div>
         ))}

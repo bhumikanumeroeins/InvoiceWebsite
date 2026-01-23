@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { currencyService } from '../../services/currencyService';
 import { UserPlus, FileText, Filter, Loader2, Calendar, Search, Download } from 'lucide-react';
 import { customerAPI } from '../../services/invoiceService';
 import { getUploadsUrl } from '../../services/apiConfig';
@@ -8,6 +9,13 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
   const [summary, setSummary] = useState({ totalAmount: 0, totalPaidAmount: 0, remainingAmount: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Helper function to format currency amount
+  const formatCurrency = (amount, currencyCode) => {
+    const symbol = currencyService.getSymbol(currencyCode || 'INR');
+    const locale = currencyCode === 'USD' ? 'en-US' : 'en-IN';
+    return `${symbol} ${amount.toLocaleString(locale, { minimumFractionDigits: 2 })}`;
+  };
   const [activeTab, setActiveTab] = useState('documents');
   
   const [dateFrom, setDateFrom] = useState('');
@@ -37,6 +45,7 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
         : '',
       paid: paid,
       total: total,
+      currency: inv.invoiceMeta?.currency || 'INR',
       paymentStatus: inv.paymentStatus || 'unpaid',
       logo: inv.business?.logo ? `${getUploadsUrl()}/uploads/${inv.business.logo}` : null,
       companyName: inv.business?.name || '',
@@ -55,9 +64,9 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
         ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString('en-GB') 
         : '',
       items: (inv.items || []).map(item => ({
-        qty: item.quantity || 1,
+        quantity: item.quantity || 1,
         description: item.description || '',
-        unitPrice: item.rate || 0,
+        rate: item.rate || 0,
         amount: item.amount || 0,
       })),
       terms: (inv.terms || []).map(t => t.text || t),
@@ -69,7 +78,7 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
         ifscCode: inv.payment?.ifscCode || '',
       },
       signature: inv.signature ? `${getUploadsUrl()}/uploads/${inv.signature}` : null,
-      qrCode: inv.payment?.qrCode ? `${getUploadsUrl()}/uploads/${inv.payment.qrCode}` : null,
+      qrCode: inv.qrCode ? `${getUploadsUrl()}/uploads/${inv.qrCode}` : null,
     };
   };
 
@@ -317,11 +326,11 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
                         </td>
                         <td className="p-4 text-sm text-right">
                           <span className={(doc.paidAmount || 0) > 0 ? 'text-emerald-600 font-medium' : 'text-orange-500'}>
-                            ₹ {(doc.paidAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                            {formatCurrency(doc.paidAmount || 0, doc.invoiceMeta?.currency)}
                           </span>
                         </td>
                         <td className="p-4 text-sm text-slate-700 text-right font-medium">
-                          ₹ {(doc.totals?.grandTotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          {formatCurrency(doc.totals?.grandTotal || 0, doc.invoiceMeta?.currency)}
                         </td>
                       </tr>
                     ))}
@@ -334,15 +343,15 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="font-semibold text-slate-700 uppercase">Total</span>
-                    <span className="font-bold text-slate-800">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <span className="font-bold text-slate-800">{formatCurrency(totalAmount, 'INR')}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="font-semibold text-slate-700 uppercase">Paid Amount</span>
-                    <span className="font-bold text-emerald-600">₹ {totalPaidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <span className="font-bold text-emerald-600">{formatCurrency(totalPaidAmount, 'INR')}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="font-semibold text-slate-700 uppercase">Balance Due</span>
-                    <span className="font-bold text-orange-500">₹ {remainingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <span className="font-bold text-orange-500">{formatCurrency(remainingAmount, 'INR')}</span>
                   </div>
                 </div>
               </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Mail, Phone, MapPin, Send, MessageSquare, Clock } from 'lucide-react';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import { contactAPI } from '../services/contactService';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,19 +12,36 @@ const Contact = () => {
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate form submission
-    setSubmitted(true);
-    setTimeout(() => {
-      setFormData({ name: '', email: '', subject: '', message: '' });
-      setSubmitted(false);
-    }, 3000);
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await contactAPI.submitContact(formData);
+      
+      if (response.success) {
+        setSubmitted(true);
+        setTimeout(() => {
+          setFormData({ name: '', email: '', subject: '', message: '' });
+          setSubmitted(false);
+        }, 5000);
+      } else {
+        setError(response.message || 'Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Contact form submission error:', error);
+      setError('Failed to send message. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -121,6 +139,11 @@ const Contact = () => {
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-5">
+                    {error && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                        <p className="text-red-600 text-sm">{error}</p>
+                      </div>
+                    )}
                     <div className="grid md:grid-cols-2 gap-5">
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -181,10 +204,20 @@ const Contact = () => {
                     </div>
                     <button
                       type="submit"
-                      className="w-full py-4 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
+                      disabled={loading}
+                      className="w-full py-4 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Send className="w-5 h-5" />
-                      Send Message
+                      {loading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-5 h-5" />
+                          Send Message
+                        </>
+                      )}
                     </button>
                   </form>
                 )}
