@@ -4,6 +4,7 @@ import InvoiceTaxForm from "../../models/forms/invoiceTaxForm.js";
 import { parseISODate } from "../../utils/utils.js";
 import { sendInvoiceEmail } from "../../utils/emailService.js";
 import ItemMaster from "../../models/items/items.js";
+import { createRemindersForInvoice } from "../reminders/paymentReminder.js";
 
 /* ---------------- ADDRESS PARSING HELPERS ---------------- */
 const parseAddress = (addressText) => {
@@ -235,6 +236,15 @@ export const createInvoice = async (req, res) => {
 
     /* ---------------- POPULATE USER ---------------- */
     await invoice.populate("createdBy", "email");
+
+    /* ---------------- CREATE PAYMENT REMINDERS ---------------- */
+    try {
+      if (invoice.invoiceMeta?.dueDate && invoice.client?.email && invoice.paymentStatus === 'unpaid') {
+        await createRemindersForInvoice(invoice._id);
+      }
+    } catch (reminderError) {
+      console.error("Failed to create payment reminders:", reminderError);
+    }
 
     return res.status(201).json({
       success: true,

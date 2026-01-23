@@ -115,6 +115,18 @@ const SettingsPage = () => {
                     />
                   </div>
                 </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                      Business Name & Billing Address
+                    </label>
+                    <input
+                      placeholder="Your business name"
+                      className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 

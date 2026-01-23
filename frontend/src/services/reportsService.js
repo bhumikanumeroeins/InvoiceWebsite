@@ -21,7 +21,8 @@ export const reportsAPI = {
         page = 1,
         limit = 50,
         sortBy = 'date',
-        sortOrder = 'desc'
+        sortOrder = 'desc',
+        quickFilter = null
       } = filters;
 
       const queryParams = buildQueryString({
@@ -32,7 +33,8 @@ export const reportsAPI = {
         page,
         limit,
         sortBy,
-        sortOrder
+        sortOrder,
+        quickFilter
       });
 
       return await apiCall(`/reports?${queryParams}`);
@@ -59,7 +61,8 @@ export const reportsAPI = {
         dateFrom,
         dateTo,
         status = 'all',
-        documentType = 'all'
+        documentType = 'all',
+        quickFilter = null
       } = filters;
 
       const queryParams = buildQueryString({
@@ -67,7 +70,8 @@ export const reportsAPI = {
         dateTo,
         status,
         documentType,
-        format
+        format,
+        quickFilter
       });
 
       return await apiCall(`/reports/export?${queryParams}`);
