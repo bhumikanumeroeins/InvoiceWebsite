@@ -6,6 +6,15 @@ const registrationSchema = new mongoose.Schema({
         required: true, 
         unique: true
     },
+    name: {
+        type: String,
+        required: false
+    },
+
+    bussinessName: {
+        type: String,
+        required: false
+    },
     password: {     
         type: String,
         required: true
