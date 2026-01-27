@@ -843,7 +843,7 @@ const InvoiceForm = ({
                     name="fromAddress"
                     value={invoiceData.fromAddress}
                     onChange={handleInputChange}
-                    placeholder="Address, City, State, ZIP&#10;Phone, Email"
+                    placeholder="Address, City, State, ZIP"
                     rows={3}
                     className="w-full px-0 py-2 text-slate-600 placeholder-slate-400 border-0 border-b-2 border-transparent focus:border-indigo-500 focus:outline-none bg-transparent resize-none transition-all"
                   />

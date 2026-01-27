@@ -18,37 +18,75 @@ const parseAddress = (addressText) => {
     return { address: '', city: '', state: '', zip: '' };
   }
 
-  // First line is always address
-  const address = lines[0] || '';
+  let address = '', city = '', state = '', zip = '';
   
-  // Try to parse city, state, zip from remaining lines
-  let city = '', state = '', zip = '';
-  
-  if (lines.length > 1) {
-    // Look for patterns like "City, State ZIP" or "City State ZIP"
-    const lastLine = lines[lines.length - 1];
-    const zipMatch = lastLine.match(/\b\d{5,6}\b$/); // 5-6 digit zip at end
+  // If single line, try to parse city/zip from it
+  if (lines.length === 1) {
+    const fullText = lines[0];
+    const zipMatch = fullText.match(/\b(\d{5,6})\b/);
     
     if (zipMatch) {
       zip = zipMatch[0];
-      const beforeZip = lastLine.substring(0, lastLine.lastIndexOf(zip)).trim();
+      const beforeZip = fullText.substring(0, fullText.indexOf(zip)).trim();
       
-      // Split by comma or space for city, state
-      const parts = beforeZip.split(/[,\s]+/).filter(part => part);
+      // Split by comma to separate address from city/state
+      const parts = beforeZip.split(',').map(p => p.trim()).filter(p => p);
+      
       if (parts.length >= 2) {
-        state = parts[parts.length - 1];
-        city = parts.slice(0, -1).join(' ');
+        // First part is address, last part is city (and maybe state)
+        address = parts[0];
+        const cityStatePart = parts[parts.length - 1];
+        const cityStateParts = cityStatePart.split(/\s+/).filter(p => p);
+        
+        if (cityStateParts.length >= 2) {
+          state = cityStateParts[cityStateParts.length - 1];
+          city = cityStateParts.slice(0, -1).join(' ');
+        } else {
+          city = cityStatePart;
+        }
       } else if (parts.length === 1) {
-        city = parts[0];
+        // Try to split by spaces to find city before ZIP
+        const words = beforeZip.split(/\s+/).filter(w => w);
+        if (words.length >= 2) {
+          city = words[words.length - 1];
+          address = words.slice(0, -1).join(' ');
+        } else {
+          address = beforeZip;
+        }
       }
     } else {
-      // No zip found, try to split city and state
-      const parts = lastLine.split(/[,\s]+/).filter(part => part);
-      if (parts.length >= 2) {
-        city = parts.slice(0, -1).join(' ');
-        state = parts[parts.length - 1];
-      } else if (parts.length === 1) {
-        city = parts[0];
+      // No ZIP found, just use as address
+      address = fullText;
+    }
+  } else {
+    // Multiple lines - first line is address
+    address = lines[0];
+    
+    // Try to parse city, state, zip from remaining lines
+    if (lines.length > 1) {
+      const lastLine = lines[lines.length - 1];
+      const zipMatch = lastLine.match(/\b(\d{5,6})\b/);
+      
+      if (zipMatch) {
+        zip = zipMatch[0];
+        const beforeZip = lastLine.substring(0, lastLine.indexOf(zip)).trim();
+        
+        const parts = beforeZip.split(/[,\s]+/).filter(part => part);
+        if (parts.length >= 2) {
+          state = parts[parts.length - 1];
+          city = parts.slice(0, -1).join(' ');
+        } else if (parts.length === 1) {
+          city = parts[0];
+        }
+      } else {
+        // No zip found, try to split city and state
+        const parts = lastLine.split(/[,\s]+/).filter(part => part);
+        if (parts.length >= 2) {
+          city = parts.slice(0, -1).join(' ');
+          state = parts[parts.length - 1];
+        } else if (parts.length === 1) {
+          city = parts[0];
+        }
       }
     }
   }
@@ -176,7 +214,10 @@ export const createInvoice = async (req, res) => {
       const parsed = parseAddress(data.business.address);
       data.business = {
         ...data.business,
-        ...parsed
+        city: data.business.city || parsed.city,
+        state: data.business.state || parsed.state,
+        zip: data.business.zip || parsed.zip,
+        address: parsed.address || data.business.address
       };
     }
 
@@ -184,7 +225,10 @@ export const createInvoice = async (req, res) => {
       const parsed = parseAddress(data.client.address);
       data.client = {
         ...data.client,
-        ...parsed
+        city: data.client.city || parsed.city,
+        state: data.client.state || parsed.state,
+        zip: data.client.zip || parsed.zip,
+        address: parsed.address || data.client.address
       };
     }
 
@@ -192,7 +236,10 @@ export const createInvoice = async (req, res) => {
       const parsed = parseShippingAddress(data.shipTo.shippingAddress);
       data.shipTo = {
         ...data.shipTo,
-        ...parsed
+        shippingCity: data.shipTo.shippingCity || parsed.shippingCity,
+        shippingState: data.shipTo.shippingState || parsed.shippingState,
+        shippingZip: data.shipTo.shippingZip || parsed.shippingZip,
+        shippingAddress: parsed.shippingAddress || data.shipTo.shippingAddress
       };
     }
 

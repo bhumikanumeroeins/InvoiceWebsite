@@ -21,7 +21,7 @@ export const getInvoiceData = (data = {}) => ({
   upiId: data.paymentInfo?.upiId || data.payment?.upiId || '',
   signature: data.signature || null,
   qrCode: data.qrCode || null,
-  email: data.email || '',
-  phone: data.phone || '',
+  email: data.buisness?.email || '',
+  phone: data.buisness?.phone || '',
   website: data.website || '',
 });
