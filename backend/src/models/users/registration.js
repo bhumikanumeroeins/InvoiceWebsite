@@ -20,6 +20,44 @@ const registrationSchema = new mongoose.Schema({
         required: true
     },
 
+    phone: {
+        type: String,
+        required: false
+    },
+
+    address: {
+        type: String,
+        required: false
+    },
+
+    totalInvoices: {
+        type: Number,
+        default: 0
+    },
+
+    paidInvoicesCount: {
+        type: Number,
+        default: 0
+    },
+
+    paidInvoicesAmount: {
+        type: Number,
+        default: 0
+    },
+
+    pendingInvoicesCount: {
+        type: Number,
+        default: 0
+    },  
+
+    pendingInvoicesAmount: {
+        type: Number,
+        default: 0
+    },
+
+    
+
+
     createdAt: {
         type: Date,
         default: Date.now

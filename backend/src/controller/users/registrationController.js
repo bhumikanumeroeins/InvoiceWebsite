@@ -55,7 +55,7 @@ export const loginUser = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
     const { userId } = req.params;
-    const { name, bussinessName } = req.body;
+    const { name, bussinessName, phone, address } = req.body;
 
     try {
         const user = await Registration.findById(userId);
@@ -63,7 +63,10 @@ export const updateProfile = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
         user.name = name || user.name;
-        user.bussinessName = bussinessName || user.bussinessName; 
+        user.bussinessName = bussinessName || user.bussinessName;
+        user.phone = phone || user.phone;
+        user.address = address || user.address;
+         
         await user.save();
         res.status(200).json(createResult({ message: 'Profile updated successfully' }));
     } catch (error) {

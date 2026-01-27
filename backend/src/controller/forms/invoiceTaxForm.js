@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import InvoiceTaxForm from "../../models/forms/invoiceTaxForm.js";
-
+import Registration from "../../models/users/registration.js";
 import { parseISODate } from "../../utils/utils.js";
 import { sendInvoiceEmail } from "../../utils/emailService.js";
 import ItemMaster from "../../models/items/items.js";
@@ -232,6 +232,11 @@ export const createInvoice = async (req, res) => {
 
     /* ---------------- SAVE INVOICE ---------------- */
     const invoice = await InvoiceTaxForm.create(data);
+
+    /* ---------------- INCREMENT USER INVOICE COUNT ---------------- */
+    await Registration.updateOne({ _id: req.user.userId },
+      { $inc: { totalInvoices: 1 } }
+    );
 
     /* ---------------- POPULATE USER ---------------- */
     await invoice.populate("createdBy", "email");
