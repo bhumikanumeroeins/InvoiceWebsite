@@ -13,7 +13,8 @@ export const getReports = async (req, res) => {
       page = 1,
       limit = 50,
       sortBy = 'date',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
+      quickFilter = null // New parameter for quick date filters
     } = req.query;
 
     // Build match conditions
@@ -22,14 +23,59 @@ export const getReports = async (req, res) => {
       isDeleted: false
     };
 
-    // Date range filter
-    if (dateFrom || dateTo) {
-      matchConditions['invoiceMeta.invoiceDate'] = {};
-      if (dateFrom) {
-        matchConditions['invoiceMeta.invoiceDate'].$gte = new Date(dateFrom);
+    // Handle quick date filters
+    let finalDateFrom = dateFrom;
+    let finalDateTo = dateTo;
+
+    if (quickFilter) {
+      const now = new Date();
+      
+      switch (quickFilter) {
+        case 'lastMonth':
+          finalDateFrom = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+          finalDateTo = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+          break;
+          
+        case 'lastQuarter':
+          const currentQuarter = Math.floor(now.getMonth() / 3);
+          const lastQuarterStart = new Date(now.getFullYear(), (currentQuarter - 1) * 3, 1);
+          const lastQuarterEnd = new Date(now.getFullYear(), currentQuarter * 3, 0);
+          finalDateFrom = lastQuarterStart.toISOString().split('T')[0];
+          finalDateTo = lastQuarterEnd.toISOString().split('T')[0];
+          break;
+          
+        case 'thisMonth':
+          finalDateFrom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+          finalDateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+          break;
+          
+        case 'thisQuarter':
+          const thisQuarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+          const thisQuarterEnd = new Date(now.getFullYear(), (Math.floor(now.getMonth() / 3) + 1) * 3, 0);
+          finalDateFrom = thisQuarterStart.toISOString().split('T')[0];
+          finalDateTo = thisQuarterEnd.toISOString().split('T')[0];
+          break;
+          
+        case 'thisYear':
+          finalDateFrom = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+          finalDateTo = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+          break;
+          
+        case 'lastYear':
+          finalDateFrom = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0];
+          finalDateTo = new Date(now.getFullYear() - 1, 11, 31).toISOString().split('T')[0];
+          break;
       }
-      if (dateTo) {
-        matchConditions['invoiceMeta.invoiceDate'].$lte = new Date(dateTo);
+    }
+
+    // Date range filter (use final dates)
+    if (finalDateFrom || finalDateTo) {
+      matchConditions['invoiceMeta.invoiceDate'] = {};
+      if (finalDateFrom) {
+        matchConditions['invoiceMeta.invoiceDate'].$gte = new Date(finalDateFrom);
+      }
+      if (finalDateTo) {
+        matchConditions['invoiceMeta.invoiceDate'].$lte = new Date(finalDateTo);
       }
     }
 
@@ -176,10 +222,11 @@ export const getReports = async (req, res) => {
           count: totals.count
         },
         filters: {
-          dateFrom,
-          dateTo,
+          dateFrom: finalDateFrom,
+          dateTo: finalDateTo,
           status,
-          documentType
+          documentType,
+          quickFilter
         }
       }
     });
@@ -329,8 +376,54 @@ export const exportReports = async (req, res) => {
       dateTo,
       status = 'all',
       documentType = 'all',
-      format = 'csv'
+      format = 'csv',
+      quickFilter = null
     } = req.query;
+
+    // Handle quick date filters (same logic as getReports)
+    let finalDateFrom = dateFrom;
+    let finalDateTo = dateTo;
+
+    if (quickFilter) {
+      const now = new Date();
+      
+      switch (quickFilter) {
+        case 'lastMonth':
+          finalDateFrom = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+          finalDateTo = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+          break;
+          
+        case 'lastQuarter':
+          const currentQuarter = Math.floor(now.getMonth() / 3);
+          const lastQuarterStart = new Date(now.getFullYear(), (currentQuarter - 1) * 3, 1);
+          const lastQuarterEnd = new Date(now.getFullYear(), currentQuarter * 3, 0);
+          finalDateFrom = lastQuarterStart.toISOString().split('T')[0];
+          finalDateTo = lastQuarterEnd.toISOString().split('T')[0];
+          break;
+          
+        case 'thisMonth':
+          finalDateFrom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+          finalDateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+          break;
+          
+        case 'thisQuarter':
+          const thisQuarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+          const thisQuarterEnd = new Date(now.getFullYear(), (Math.floor(now.getMonth() / 3) + 1) * 3, 0);
+          finalDateFrom = thisQuarterStart.toISOString().split('T')[0];
+          finalDateTo = thisQuarterEnd.toISOString().split('T')[0];
+          break;
+          
+        case 'thisYear':
+          finalDateFrom = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+          finalDateTo = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+          break;
+          
+        case 'lastYear':
+          finalDateFrom = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0];
+          finalDateTo = new Date(now.getFullYear() - 1, 11, 31).toISOString().split('T')[0];
+          break;
+      }
+    }
 
     // Use the same logic as getReports but without pagination
     const matchConditions = {
@@ -338,13 +431,13 @@ export const exportReports = async (req, res) => {
       isDeleted: false
     };
 
-    if (dateFrom || dateTo) {
+    if (finalDateFrom || finalDateTo) {
       matchConditions['invoiceMeta.invoiceDate'] = {};
-      if (dateFrom) {
-        matchConditions['invoiceMeta.invoiceDate'].$gte = new Date(dateFrom);
+      if (finalDateFrom) {
+        matchConditions['invoiceMeta.invoiceDate'].$gte = new Date(finalDateFrom);
       }
-      if (dateTo) {
-        matchConditions['invoiceMeta.invoiceDate'].$lte = new Date(dateTo);
+      if (finalDateTo) {
+        matchConditions['invoiceMeta.invoiceDate'].$lte = new Date(finalDateTo);
       }
     }
 

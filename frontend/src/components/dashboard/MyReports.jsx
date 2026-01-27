@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { currencyService } from '../../services/currencyService';
 import { BarChart3, Filter, Loader2, Calendar, FileText, Printer, Search } from 'lucide-react';
 import { reportsAPI } from '../../services/reportsService';
+import jsPDF from 'jspdf';
 
 const MyReports = ({ onInvoiceClick }) => {
   const [reports, setReports] = useState([]);
@@ -42,6 +43,7 @@ const MyReports = ({ onInvoiceClick }) => {
         dateTo: filters.dateTo || dateTo,
         status: filters.status || status,
         documentType: filters.documentType || documentType,
+        quickFilter: filters.quickFilter || null,
         page: 1,
         limit: 50
       });
@@ -64,31 +66,28 @@ const MyReports = ({ onInvoiceClick }) => {
     fetchReports();
   }, []);
 
-  const getFilteredReports = () => {
-    // Apply predefined filters
-    const dateRanges = reportsAPI.getDateRanges();
-    let filterParams = {};
-
-    if (reportFilter === 'lastMonth') {
-      filterParams = {
-        dateFrom: dateRanges.lastMonth.from,
-        dateTo: dateRanges.lastMonth.to
-      };
-    } else if (reportFilter === 'lastQuarter') {
-      filterParams = {
-        dateFrom: dateRanges.lastQuarter.from,
-        dateTo: dateRanges.lastQuarter.to
-      };
-    }
-
-    if (Object.keys(filterParams).length > 0) {
-      fetchReports(filterParams);
-    }
+  const handleQuickFilter = (filterId) => {
+    setReportFilter(filterId);
     
-    return reports;
+    if (filterId === 'all') {
+      // Clear date filters for "All Invoices"
+      setDateFrom('');
+      setDateTo('');
+      fetchReports({ quickFilter: null });
+    } else {
+      // Use quick filter
+      fetchReports({ quickFilter: filterId });
+    }
   };
 
-  const filteredReports = getFilteredReports();
+  const handleSearch = () => {
+    fetchReports({
+      dateFrom,
+      dateTo,
+      status,
+      documentType
+    });
+  };
 
   const totalSubtotal = totals.subtotal || 0;
   const totalTax = totals.tax || 0;
@@ -101,30 +100,133 @@ const MyReports = ({ onInvoiceClick }) => {
     { id: 'lastQuarter', label: 'Last Quarter' },
   ];
 
-  const handleSearch = () => {
-    fetchReports({
-      dateFrom,
-      dateTo,
-      status,
-      documentType
-    });
-  };
-
   const handleExportPDF = async () => {
     try {
       const response = await reportsAPI.exportReports({
         dateFrom,
         dateTo,
         status,
-        documentType
+        documentType,
+        quickFilter: reportFilter !== 'all' ? reportFilter : null
       }, 'json');
 
       if (response.success) {
-        // For PDF export, you might want to generate PDF on frontend
-        // or implement PDF generation on backend
-        alert('PDF export functionality - Coming soon!');
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Invoice Reports', 20, 25);
+        
+        // Add filter info
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        let yPos = 40;
+        
+        if (dateFrom || dateTo) {
+          const dateRange = `Date Range: ${dateFrom || 'Start'} to ${dateTo || 'End'}`;
+          doc.text(dateRange, 20, yPos);
+          yPos += 6;
+        }
+        
+        if (status !== 'all') {
+          doc.text(`Status: ${status}`, 20, yPos);
+          yPos += 6;
+        }
+        
+        if (documentType !== 'all') {
+          doc.text(`Document Type: ${documentType}`, 20, yPos);
+          yPos += 6;
+        }
+        
+        if (reportFilter !== 'all') {
+          const filterLabel = reportFilters.find(f => f.id === reportFilter)?.label || reportFilter;
+          doc.text(`Quick Filter: ${filterLabel}`, 20, yPos);
+          yPos += 6;
+        }
+        
+        yPos += 10;
+        
+        // Table headers
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        const headers = ['Customer', 'Type', 'Number', 'Date', 'Due Date', 'Subtotal', 'Tax', 'Paid', 'Total', 'Status'];
+        const colWidths = [35, 20, 25, 20, 20, 20, 15, 20, 20, 20];
+        let xPos = 20;
+        
+        // Draw header row
+        headers.forEach((header, index) => {
+          doc.text(header, xPos, yPos);
+          xPos += colWidths[index];
+        });
+        
+        yPos += 8;
+        doc.setFont('helvetica', 'normal');
+        
+        // Draw data rows
+        response.data.forEach((report, rowIndex) => {
+          if (yPos > 270) { // Start new page if needed
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          xPos = 20;
+          const rowData = [
+            (report.customerName || '').substring(0, 15),
+            (report.documentType || 'invoice').substring(0, 8),
+            (report.invoiceNumber || '').substring(0, 12),
+            report.invoiceDate ? new Date(report.invoiceDate).toLocaleDateString('en-GB') : '',
+            report.dueDate ? new Date(report.dueDate).toLocaleDateString('en-GB') : '',
+            getCurrencySymbol(report.currency) + (report.subtotal || 0).toFixed(2),
+            getCurrencySymbol(report.currency) + (report.taxAmount || 0).toFixed(2),
+            getCurrencySymbol(report.currency) + (report.paidAmount || 0).toFixed(2),
+            getCurrencySymbol(report.currency) + (report.total || 0).toFixed(2),
+            (report.paymentStatus || 'unpaid').substring(0, 8)
+          ];
+          
+          rowData.forEach((cell, index) => {
+            doc.text(String(cell), xPos, yPos);
+            xPos += colWidths[index];
+          });
+          
+          yPos += 6;
+        });
+        
+        // Add summary
+        yPos += 10;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text('Summary:', 20, yPos);
+        
+        yPos += 10;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Total Records: ${response.data.length}`, 20, yPos);
+        yPos += 6;
+        doc.text(`Total Subtotal: ${formatCurrency(totalSubtotal, 'INR')}`, 20, yPos);
+        yPos += 6;
+        doc.text(`Total Tax: ${formatCurrency(totalTax, 'INR')}`, 20, yPos);
+        yPos += 6;
+        doc.text(`Total Paid: ${formatCurrency(totalPaidAmount, 'INR')}`, 20, yPos);
+        yPos += 6;
+        doc.text(`Grand Total: ${formatCurrency(totalAmount, 'INR')}`, 20, yPos);
+        
+        // Add footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.text(`Generated on ${new Date().toLocaleDateString('en-GB')} | Page ${i} of ${pageCount}`, 20, 285);
+          doc.text('InvoicePro Reports', 150, 285);
+        }
+        
+        // Save the PDF
+        const filename = `invoice_reports_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(filename);
+        
       }
     } catch (error) {
+      console.error('PDF export error:', error);
       alert('Failed to export PDF: ' + error.message);
     }
   };
@@ -168,7 +270,7 @@ const MyReports = ({ onInvoiceClick }) => {
           </div>
           <div className="flex items-center gap-2 text-slate-400">
             <Filter className="w-4 h-4" />
-            <span className="text-sm">{filteredReports.length} records</span>
+            <span className="text-sm">{reports.length} records</span>
           </div>
         </div>
       </div>
@@ -255,7 +357,7 @@ const MyReports = ({ onInvoiceClick }) => {
             {reportFilters.map((filter) => (
               <button
                 key={filter.id}
-                onClick={() => setReportFilter(filter.id)}
+                onClick={() => handleQuickFilter(filter.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   reportFilter === filter.id
                     ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
@@ -315,7 +417,7 @@ const MyReports = ({ onInvoiceClick }) => {
             Retry
           </button>
         </div>
-      ) : filteredReports.length === 0 ? (
+      ) : reports.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
           <BarChart3 className="w-16 h-16 text-slate-300 mb-4" />
           <p className="text-slate-500">No reports found</p>
@@ -338,7 +440,7 @@ const MyReports = ({ onInvoiceClick }) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredReports.map((report, index) => (
+                {reports.map((report, index) => (
                   <tr 
                     key={report.id} 
                     onClick={() => onInvoiceClick && onInvoiceClick(report)}

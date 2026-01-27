@@ -795,8 +795,8 @@ Best regards`,
                     currentInvoice?.paymentStatus === 'partiallyPaid' ? 'text-amber-700' : 'text-slate-700'
                   }`}>
                     This invoice of {formatCurrency(currentInvoice?.total || currentInvoice?.totals?.grandTotal || 0, currentInvoice?.currency || currentInvoice?.invoiceMeta?.currency || 'INR')} is {currentInvoice?.paymentStatus || 'unpaid'}.
-                    {currentInvoice?.dueDate && (
-                      <span> It's due on {new Date(currentInvoice.dueDate).toLocaleDateString('en-GB')}.</span>
+                    {currentInvoice?.invoiceMeta?.dueDate && (
+                      <span> It's due on {new Date(currentInvoice.invoiceMeta.dueDate).toLocaleDateString('en-GB')}.</span>
                     )}
                   </p>
                   
