@@ -153,12 +153,58 @@ export const getInvoicesByClientName = async (req, res) => {
       });
     }
 
-    /* ---------------- FETCH INVOICES ---------------- */
-    const invoices = await InvoiceTaxForm.find({
+    /* ---------------- QUERY PARAMS FOR FILTERING ---------------- */
+    const { dateFrom, dateTo, status, documentType } = req.query;
+
+    /* ---------------- BUILD FILTER QUERY ---------------- */
+    const filter = {
       createdBy: userId,
       "client.name": clientName,
       isDeleted: false
-    }).sort({ createdAt: -1 });
+    };
+
+    // Date range filter
+    if (dateFrom || dateTo) {
+      filter["invoiceMeta.invoiceDate"] = {};
+      if (dateFrom) {
+        filter["invoiceMeta.invoiceDate"].$gte = new Date(dateFrom);
+      }
+      if (dateTo) {
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999); // Include the entire end date
+        filter["invoiceMeta.invoiceDate"].$lte = endDate;
+      }
+    }
+
+    // Payment status filter
+    if (status && status !== 'all') {
+      if (status === 'partial') {
+        filter.paymentStatus = 'partiallyPaid';
+      } else if (status === 'overdue') {
+        // Overdue: unpaid or partially paid AND due date has passed
+        filter.$and = [
+          {
+            $or: [
+              { paymentStatus: 'unpaid' },
+              { paymentStatus: 'partiallyPaid' }
+            ]
+          },
+          {
+            "invoiceMeta.dueDate": { $lt: new Date() }
+          }
+        ];
+      } else {
+        filter.paymentStatus = status;
+      }
+    }
+
+    // Document type filter
+    if (documentType && documentType !== 'all') {
+      filter.documentType = documentType;
+    }
+
+    /* ---------------- FETCH INVOICES ---------------- */
+    const invoices = await InvoiceTaxForm.find(filter).sort({ createdAt: -1 });
 
     /* ---------------- CALCULATIONS ---------------- */
     let totalAmount = 0;
