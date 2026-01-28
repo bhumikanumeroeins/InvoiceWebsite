@@ -19,8 +19,6 @@ const Sidebar = () => {
     { name: "Dashboard", path: "/dashboard", icon: Home },
     { name: "Invoices", path: "/invoices", icon: FileText },
     { name: "Customers", path: "/customers", icon: Users },
-    { name: "Items", path: "/items", icon: Package },
-    { name: "Taxes", path: "/taxes", icon: Receipt },
     { name: "Users", path: "/users", icon: UserCheck },
     { name: "Templates", path: "/templates", icon: Image },
     { name: "Reminders", path: "/reminders", icon: Bell },
