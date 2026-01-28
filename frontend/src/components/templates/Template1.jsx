@@ -47,17 +47,18 @@ const Template1 = ({ data = {} }) => {
       <div style={{ position: 'relative', zIndex: 2 }}>
 
         {/* HEADER CONTENT */}
-        <div style={{ padding: '45px 50px 30px', position: 'relative' }}>
+        <div
+          style={{
+            padding: '75px 50px 30px',
+            position: 'relative',
+            zIndex: 5
+          }}
+        >
 
           {/* Logo */}
           <div style={{ marginBottom: '18px' }}>
             {logo ? (
-              <img
-                src={logo}
-                alt="Logo"
-                crossOrigin="anonymous"
-                style={{ height: '32px' }}
-              />
+              <img src={logo} alt="Logo" style={{ height: '32px' }} />
             ) : (
               <span
                 style={{
@@ -89,7 +90,7 @@ const Template1 = ({ data = {} }) => {
           </div>
 
           {/* Company Info */}
-          <div style={{ marginBottom: '28px' }}>
+          <div style={{ marginBottom: '28px', maxWidth: '420px' }}>
             <p
               style={{
                 color: '#000000',
@@ -98,7 +99,8 @@ const Template1 = ({ data = {} }) => {
                 letterSpacing: '1px',
                 margin: '0 0 4px 0',
                 fontFamily: "'Orbitron', sans-serif",
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                wordBreak: 'break-word'
               }}
             >
               {companyName}
@@ -108,8 +110,8 @@ const Template1 = ({ data = {} }) => {
                 color: '#4b5563',
                 fontSize: '14px',
                 margin: 0,
-                whiteSpace: 'pre-line',
-                lineHeight: '1.5'
+                lineHeight: '1.5',
+                wordBreak: 'break-word'
               }}
             >
               {companyAddress}
@@ -121,18 +123,18 @@ const Template1 = ({ data = {} }) => {
 
             {/* Bill To */}
             <div style={{ width: '170px' }}>
-              <p style={{ fontWeight: 700, fontSize: '14px' }}>BILL TO:</p>
+              <p style={{ fontWeight: 700 }}>BILL TO:</p>
               <p>{billToName}</p>
-              <p style={{ whiteSpace: 'pre-line' }}>{billToAddress}</p>
+              <p style={{ wordBreak: 'break-word' }}>{billToAddress}</p>
             </div>
 
             <img src={bracketImg} alt="" style={{ height: '80px', margin: '0 10px' }} />
 
             {/* Ship To */}
             <div style={{ width: '170px' }}>
-              <p style={{ fontWeight: 700, fontSize: '14px' }}>SHIP TO</p>
+              <p style={{ fontWeight: 700 }}>SHIP TO</p>
               <p>{shipToName}</p>
-              <p style={{ whiteSpace: 'pre-line' }}>{shipToAddress}</p>
+              <p style={{ wordBreak: 'break-word' }}>{shipToAddress}</p>
             </div>
 
             <img src={bracketImg} alt="" style={{ height: '80px', margin: '0 10px' }} />
@@ -157,7 +159,7 @@ const Template1 = ({ data = {} }) => {
           </div>
         </div>
 
-        {/* ITEMS */}
+        {/* ITEMS TABLE */}
         <div style={{ padding: '0 50px', marginTop: '10px' }}>
           <div style={{ backgroundColor: '#ff0f7c', display: 'flex', padding: '14px 35px' }}>
             {['QTY', 'DESCRIPTION', 'UNIT PRICE', 'AMOUNT'].map((h, i) => (
@@ -187,8 +189,15 @@ const Template1 = ({ data = {} }) => {
           ))}
         </div>
 
-        {/* TOTAL */}
-        <div style={{ padding: '40px 50px 0', display: 'flex', justifyContent: 'flex-end' }}>
+        {/* TERMS & TOTALS */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '40px 50px 0' }}>
+          <div style={{ width: '45%' }}>
+            <p style={{ fontWeight: 700 }}>TERMS AND CONDITIONS</p>
+            {terms.map((term, index) => (
+              <p key={index}>◆ {term}</p>
+            ))}
+          </div>
+
           <div style={{ width: '40%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <strong>SUBTOTAL</strong>
@@ -212,6 +221,33 @@ const Template1 = ({ data = {} }) => {
               <strong style={{ color: '#fff' }}>TOTAL</strong>
               <span style={{ color: '#fff' }}>{total}</span>
             </div>
+          </div>
+        </div>
+
+        {/* THANK YOU */}
+        <div style={{ padding: '35px 50px 0' }}>
+          <p style={{ fontWeight: 800 }}>THANK YOU FOR YOUR BUSINESS</p>
+        </div>
+
+        {/* PAYMENT / SIGN / QR */}
+        <div style={{ display: 'flex', gap: '20px', padding: '0 50px' }}>
+          <div style={{ width: '220px', position: 'relative' }}>
+            <img src={paymentBoxImg} alt="" style={{ width: '100%' }} />
+            <div style={{ position: 'absolute', top: '40px', left: '12px' }}>
+              <p>Bank Name: {bankName}</p>
+              <p>Account No: {accountNo}</p>
+              <p>IFSC: {ifscCode}</p>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            {signature && <img src={signature} alt="" style={{ height: '40px' }} />}
+            <p>Authorised Sign</p>
+          </div>
+
+          <div style={{ width: '160px', textAlign: 'center' }}>
+            <img src={scanBoxImg} alt="" style={{ width: '100%' }} />
+            {qrCode && <img src={qrCode} alt="" style={{ width: '75px' }} />}
           </div>
         </div>
 
