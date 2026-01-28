@@ -30,6 +30,11 @@ const registrationSchema = new mongoose.Schema({
         required: false
     },
 
+    websiteLink: {
+        type: String,
+        required: false 
+    },
+
     totalInvoices: {
         type: Number,
         default: 0
@@ -54,9 +59,6 @@ const registrationSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-
-    
-
 
     createdAt: {
         type: Date,
