@@ -243,12 +243,23 @@ const InvoiceForm = ({
       const fromAddress = buildAddress(editInvoice.business);
       const billTo = buildClientAddress(editInvoice.client);
 
+      // Build shipTo with name, address, city, state, zip
+      const buildShipTo = (shipTo) => {
+        if (!shipTo) return '';
+        const parts = [
+          shipTo.shippingName,
+          shipTo.shippingAddress,
+          [shipTo.shippingCity, shipTo.shippingState, shipTo.shippingZip].filter(Boolean).join(' ')
+        ].filter(Boolean);
+        return parts.join('\n');
+      };
+
       setFormMode(editInvoice.formType || 'basic');
       setInvoiceData({
         fromName: editInvoice.companyName || editInvoice.business?.name || '',
         fromAddress,
         billTo,
-        shipTo: editInvoice.shipTo?.shippingAddress || '',
+        shipTo: buildShipTo(editInvoice.shipTo),
         invoiceNumber: editInvoice.invoiceNumber || editInvoice.invoiceMeta?.invoiceNo || '',
         invoiceDate: parseDate(editInvoice.invoiceDate || editInvoice.invoiceMeta?.invoiceDate),
         dueDate: parseDate(editInvoice.dueDate || editInvoice.invoiceMeta?.dueDate),
@@ -589,7 +600,6 @@ const InvoiceForm = ({
     return sum + item.amount;
   }, 0);
   
-  // Calculate simple taxes first (non-compound)
   const simpleTaxTotal = items.reduce(
     (sum, item) => {
       const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
@@ -600,16 +610,13 @@ const InvoiceForm = ({
     0
   );
   
-  // Calculate compound taxes (applied on subtotal + simple taxes)
   const compoundTaxTotal = items.reduce(
     (sum, item) => {
       const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
       if (!item.taxIds || item.taxIds.length === 0) return sum;
       const compoundTaxes = savedTaxes.filter(t => item.taxIds.includes(t.id) && t.isCompound);
-      // Get simple taxes for this item
       const itemSimpleTaxes = savedTaxes.filter(t => item.taxIds.includes(t.id) && !t.isCompound);
       const itemSimpleTaxAmount = itemSimpleTaxes.reduce((taxSum, t) => taxSum + (itemAmount * t.rate / 100), 0);
-      // Compound tax is calculated on (item amount + simple taxes)
       const baseForCompound = itemAmount + itemSimpleTaxAmount;
       return sum + compoundTaxes.reduce((taxSum, t) => taxSum + (baseForCompound * t.rate / 100), 0);
     },
@@ -638,7 +645,6 @@ const InvoiceForm = ({
   };
 
   const parseAddress = (addressStr) => {
-    // Just send raw address - backend will parse it
     return {
       address: addressStr || '',
       phone: '',
@@ -650,7 +656,7 @@ const InvoiceForm = ({
     const lines = addressStr.split('\n').filter(l => l.trim());
     return {
       name: lines[0] || '',
-      address: lines.slice(1).join('\n') || '', // Everything after name is address
+      address: lines.slice(1).join('\n') || '', 
       email: '',
     };
   };
@@ -672,11 +678,9 @@ const InvoiceForm = ({
       for (const item of items) {
         if (!item.description) continue;
         
-        // If item already has an itemId (from saved items), use it
         if (item.itemId) {
           itemIds.push({ itemId: item.itemId });
         } else {
-          // Create new item in ItemMaster
           const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
           const itemTaxes = savedTaxes.filter(t => item.taxIds?.includes(t.id));
           const taxAmount = itemTaxes.reduce((sum, t) => sum + (itemAmount * t.rate / 100), 0);
@@ -691,7 +695,6 @@ const InvoiceForm = ({
           if (response.success && response.data._id) {
             itemIds.push({ itemId: response.data._id });
             
-            // Add to saved items list
             const newSavedItem = {
               id: response.data._id,
               _id: response.data._id,
@@ -715,6 +718,27 @@ const InvoiceForm = ({
       const businessInfo = parseAddress(invoiceData.fromAddress);
       const clientInfo = parseClientAddress(invoiceData.billTo);
 
+      const parseShipTo = (shipToStr) => {
+        if (!shipToStr) return null;
+        const lines = shipToStr.split('\n').filter(l => l.trim());
+        return {
+          shippingName: lines[0] || '',
+          shippingAddress: lines.slice(1).join('\n') || '', // Send full address, backend will parse
+        };
+      };
+
+      const shipToInfo = formMode === 'advanced' ? parseShipTo(invoiceData.shipTo) : null;
+
+      const getExistingFilename = (url) => {
+        if (!url) return undefined;
+        if (url.startsWith('blob:')) return undefined; 
+        if (url.startsWith('http')) {
+          const parts = url.split('/');
+          return parts[parts.length - 1];
+        }
+        return url; 
+      };
+
       // Step 2: Create invoice with itemIds
       const invoicePayload = {
         formType: formMode,
@@ -722,18 +746,17 @@ const InvoiceForm = ({
         business: {
           name: invoiceData.fromName,
           ...businessInfo,
+          ...(isEditMode && !logoFile && logo ? { logo: getExistingFilename(logo) } : {}),
         },
         client: clientInfo,
-        shipTo: formMode === 'advanced' ? {
-          shippingAddress: invoiceData.shipTo,
-          shippingCity: '',
-          shippingState: '',
-          shippingZip: '',
+        shipTo: shipToInfo ? {
+          shippingName: shipToInfo.shippingName,
+          shippingAddress: shipToInfo.shippingAddress,
         } : undefined,
         invoiceMeta: {
           invoiceNo: invoiceData.invoiceNumber,
-          invoiceDate: invoiceData.invoiceDate, // Send YYYY-MM-DD directly
-          dueDate: invoiceData.dueDate, // Send YYYY-MM-DD directly
+          invoiceDate: invoiceData.invoiceDate, 
+          dueDate: invoiceData.dueDate,
           currency: invoiceData.currency,
         },
         items: itemIds, // Send itemIds instead of full item objects
@@ -748,6 +771,8 @@ const InvoiceForm = ({
           taxTotal: totalTax,
           grandTotal: config.showTax ? total : subtotal,
         },
+        ...(isEditMode && !signatureFile && signature ? { signature: getExistingFilename(signature) } : {}),
+        ...(isEditMode && !qrCodeFile && qrCode ? { qrCode: getExistingFilename(qrCode) } : {}),
       };
 
       const formData = new FormData();
@@ -882,7 +907,7 @@ const InvoiceForm = ({
                       name="shipTo"
                       value={invoiceData.shipTo}
                       onChange={handleInputChange}
-                      placeholder="Shipping Address&#10;City, State, ZIP"
+                      placeholder="Recipient Name&#10;Shipping Address&#10;City, State, ZIP"
                       rows={3}
                       className="w-full px-0 py-2 text-slate-600 placeholder-slate-400 border-0 border-b-2 border-transparent focus:border-emerald-500 focus:outline-none bg-transparent resize-none transition-all"
                     />

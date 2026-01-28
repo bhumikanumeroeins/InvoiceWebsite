@@ -70,11 +70,13 @@ const invoiceSchema = new mongoose.Schema({
     address: String,
     city: String,
     state: String,
-    zip: String
+    zip: String,
+    email: String
   },
 
   // 🔹 SHIP TO
   shipTo: {
+    shippingName: String,
     shippingAddress: String,
     shippingCity: String,
     shippingState: String,
@@ -131,6 +133,12 @@ const invoiceSchema = new mongoose.Schema({
   paymentMethod: String,
   paymentNote: String,
   balanceDue: Number,
+
+  paymentId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Payment",
+  default: null
+},
 
   createdAt: {
     type: Date,

@@ -139,6 +139,13 @@ If you need assistance or have any questions, please email: support@invoicepro.c
     }
   }, [clientEmail, recurringData.emailTo]);
 
+  // Update emailData.to when clientEmail changes (after invoice is sent and email is saved)
+  useEffect(() => {
+    if (clientEmail) {
+      setEmailData(prev => ({ ...prev, to: clientEmail }));
+    }
+  }, [clientEmail]);
+
   // Update email subject with actual invoice number when invoice changes
   useEffect(() => {
     if (currentInvoice && currentInvoice._id) {
@@ -450,6 +457,18 @@ Best regards`,
       });
       
       if (response && response.success) {
+        // Refresh invoice data to get the saved email
+        try {
+          const updatedInvoice = await invoiceAPI.getById(invoiceId);
+          if (updatedInvoice.success && updatedInvoice.data) {
+            setCurrentInvoice(updatedInvoice.data);
+            if (onInvoiceUpdated) {
+              onInvoiceUpdated(updatedInvoice.data);
+            }
+          }
+        } catch (refreshError) {
+          console.error('Failed to refresh invoice:', refreshError);
+        }
         setActiveAction('invoice');
       } else {
         alert('Failed to send email: ' + (response?.message || 'Unknown error'));

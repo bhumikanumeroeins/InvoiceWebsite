@@ -86,6 +86,17 @@ export const processPendingReminders = async (req, res) => {
           continue;
         }
 
+        // Use email from invoice.client.email (saved when invoice was sent)
+        const recipientEmail = reminder.invoiceId?.client?.email || reminder.clientEmail;
+        
+        if (!recipientEmail) {
+          console.error(`No email found for reminder ${reminder._id}`);
+          reminder.status = 'failed';
+          await reminder.save();
+          failed++;
+          continue;
+        }
+
         const dueDate = new Date(reminder.dueDate).toLocaleDateString();
         const isFirstReminder = reminder.reminderType === 'first';
         
@@ -119,7 +130,7 @@ Please make the payment immediately to avoid any late fees.
 Thank you!`;
 
         await sendInvoiceEmail({
-          to: reminder.clientEmail,
+          to: recipientEmail,
           subject,
           message,
           pdfBuffer: null
