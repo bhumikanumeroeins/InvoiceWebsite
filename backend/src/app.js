@@ -13,6 +13,8 @@ import contact from "./routes/contact/contact.js";
 import currency from "./routes/currency/currency.js";
 import recurring from "./routes/recurring/recurringInvoice.js";
 import reminders from "./routes/reminders/paymentReminder.js";
+import admin from "./routes/admin/admin_register.js";
+
 
 import path from "path";
 
@@ -38,6 +40,7 @@ app.use("/api/contact", contact);
 app.use("/api/currencies", currency);
 app.use("/api/recurring", recurring);
 app.use("/api/reminders", reminders);
+app.use("/api/admin", admin);
 
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));

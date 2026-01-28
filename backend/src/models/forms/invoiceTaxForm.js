@@ -61,8 +61,6 @@ const invoiceSchema = new mongoose.Schema({
     city: String,
     state: String,
     zip: String,
-    phone: String,
-    email: String,
     logo: String
   },
 
@@ -72,8 +70,7 @@ const invoiceSchema = new mongoose.Schema({
     address: String,
     city: String,
     state: String,
-    zip: String,
-    email: String
+    zip: String
   },
 
   // 🔹 SHIP TO
