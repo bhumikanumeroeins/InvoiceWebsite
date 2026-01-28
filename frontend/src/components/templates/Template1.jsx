@@ -49,7 +49,7 @@ const Template1 = ({ data = {} }) => {
         {/* HEADER CONTENT */}
         <div
           style={{
-            padding: '75px 50px 30px',
+            padding: '95px 50px 30px',
             position: 'relative',
             zIndex: 5
           }}
@@ -90,7 +90,7 @@ const Template1 = ({ data = {} }) => {
           </div>
 
           {/* Company Info */}
-          <div style={{ marginBottom: '28px', maxWidth: '420px' }}>
+          <div style={{ marginBottom: '28px', maxWidth: '360px' }}>
             <p
               style={{
                 color: '#000000',
@@ -229,44 +229,73 @@ const Template1 = ({ data = {} }) => {
           <p style={{ fontWeight: 800 }}>THANK YOU FOR YOUR BUSINESS</p>
         </div>
 
-        {/* PAYMENT / SIGN / QR */}
-        <div style={{ display: 'flex', gap: '20px', padding: '0 50px' }}>
+        {/* PAYMENT, SIGNATURE, QR */}
+        <div style={{ display: 'flex', gap: '20px', padding: '0px 50px', alignItems: 'flex-end' }}>
+          {/* Payment Info */}
           <div style={{ width: '220px', position: 'relative' }}>
-            <img src={paymentBoxImg} alt="" style={{ width: '100%' }} />
-            <div style={{ position: 'absolute', top: '40px', left: '12px' }}>
-              <p>Bank Name: {bankName}</p>
-              <p>Account No: {accountNo}</p>
-              <p>IFSC: {ifscCode}</p>
+            <img src={paymentBoxImg} alt="Payment Box" style={{ width: '100%', height: 'auto' }} />
+            <p style={{ position: 'absolute', top: '20px', left: '12px', color: darkBg, fontWeight: '800', fontSize: '13px', letterSpacing: '1px', margin: 0, fontFamily: "'Orbitron', sans-serif" }}>PAYMENT INFORMATION</p>
+            <div style={{ position: 'absolute', top: '45px', left: '12px', right: '12px' }}>
+              <div style={{ display: 'flex', marginBottom: '2px', fontSize: '11px' }}>
+                <span style={{ color: '#71717a', width: '75px', fontFamily: "'Montserrat', sans-serif" }}>Bank Name:</span>
+                <span style={{ color: '#27272a', fontWeight: '600', fontFamily: "'Montserrat', sans-serif" }}>{bankName}</span>
+              </div>
+              <div style={{ display: 'flex', marginBottom: '2px', fontSize: '10px' }}>
+                <span style={{ color: '#71717a', width: '75px', fontFamily: "'Montserrat', sans-serif" }}>Account No:</span>
+                <span style={{ color: '#27272a', fontWeight: '600', fontFamily: "'Montserrat', sans-serif" }}>{accountNo}</span>
+              </div>
+              <div style={{ display: 'flex', fontSize: '10px', bottom:'12px' }}>
+                <span style={{ color: '#71717a', width: '75px', fontFamily: "'Montserrat', sans-serif" }}>IFSC Code:</span>
+                <span style={{ color: '#27272a', fontWeight: '600', fontFamily: "'Montserrat', sans-serif" }}>{ifscCode}</span>
+              </div>
             </div>
           </div>
 
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            {signature && <img src={signature} alt="" style={{ height: '40px' }} />}
-            <p>Authorised Sign</p>
+          {/* Signature */}
+          <div style={{ flex: 1, textAlign: 'center', paddingBottom: '8px' }}>
+            {signature ? (
+              <img src={signature} alt="Signature" style={{ height: '40px', marginBottom: '6px' }} />
+            ) : (
+              <div style={{ height: '40px', width: '90px', margin: '0 auto 6px', borderBottom: '2px solid #ff0f7c', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <span style={{ fontStyle: 'italic', color: '#a1a1aa', fontSize: '16px', fontFamily: 'cursive', paddingBottom: '5px' }}>Sign</span>
+              </div>
+            )}
+            <p style={{ color: '#27272a', fontWeight:'700', fontSize: '13px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>Authorised Sign</p>
           </div>
 
+          {/* QR Code */}
           <div style={{ width: '160px', textAlign: 'center' }}>
-            <img src={scanBoxImg} alt="" style={{ width: '100%' }} />
-            {qrCode && <img src={qrCode} alt="" style={{ width: '75px' }} />}
+            <div style={{ position: 'relative' }}>
+              <img src={scanBoxImg} alt="Scan Box" style={{ width: '100%', height: 'auto' }} />
+              <p style={{ position: 'absolute', top: '20px', left: '58%', transform: 'translateX(-50%)', color: magenta, fontWeight: '800', fontSize: '11px', letterSpacing: '1px', margin: 0, fontFamily: "'Orbitron', sans-serif", whiteSpace: 'nowrap' }}>SCAN TO PAY</p>
+              <div style={{ position: 'absolute', top: '42px', left: '77%', transform: 'translateX(-50%)', width: '100%' }}>
+                {qrCode ? (
+                  <img src={qrCode} alt="QR Code" style={{ width: '75px', height: '75px' }} />
+                ) : (
+                  <img src={qrCodeImg} alt="QR Code" style={{ width: '90px', height: '75px' }} />
+                )}
+              </div>
+            </div>
+            <p style={{ color: '#27272a', fontSize: '12px', margin: '6px 0 0 0', lineHeight: '1.3', fontFamily: "'Montserrat', sans-serif" }}>
+              Dynamic QR Code will<br />be inserted here
+            </p>
           </div>
         </div>
 
         {/* FOOTER */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '70px',
-            padding: '10px 50px',
-            display: 'flex',
-            justifyContent: 'space-between'
-          }}
-        >
-          <span>{email}</span>
-          <span>{phone}</span>
-          <span>{website}</span>
+        <div style={{ position: 'absolute', bottom: '0', left: 0, right: 0, padding: '10px 50px', display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '14px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>EMAIL</p>
+            <p style={{ color: '#ffffff', fontSize: '14px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{email}</p>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '14px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>PHONE NO.</p>
+            <p style={{ color: '#ffffff', fontSize: '14px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{phone}</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '14px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>WEBSITE</p>
+            <p style={{ color: '#ffffff', fontSize: '14px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{website}</p>
+          </div>
         </div>
 
       </div>
