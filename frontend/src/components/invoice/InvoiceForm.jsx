@@ -235,8 +235,7 @@ const InvoiceForm = ({
         const parts = [
           client.name,
           client.address,
-          [client.city, client.state, client.zip].filter(Boolean).join(' '),
-          client.email
+          [client.city, client.state, client.zip].filter(Boolean).join(' ')
         ].filter(Boolean);
         return parts.join('\n');
       };
@@ -868,7 +867,7 @@ const InvoiceForm = ({
                     name="billTo"
                     value={invoiceData.billTo}
                     onChange={handleInputChange}
-                    placeholder="Client Name&#10;Client Address, City, State, ZIP&#10;Client Email"
+                    placeholder="Client Name&#10;Client Address, City, State, ZIP"
                     rows={4}
                     className="w-full px-0 py-2 text-slate-600 placeholder-slate-400 border-0 border-b-2 border-transparent focus:border-emerald-500 focus:outline-none bg-transparent resize-none transition-all"
                   />

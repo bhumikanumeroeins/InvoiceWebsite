@@ -28,50 +28,47 @@ export const getInvoiceData = (data = {}) => {
     return parts.join('\n');
   };
 
-  const companyAddress = data.business 
-    ? buildAddress(data.business)
-    : (data.companyAddress || '');
-    
-  const billToAddress = data.client
-    ? buildAddress(data.client)
-    : (data.billTo?.address || '');
-
-  const terms = Array.isArray(data.terms)
-    ? data.terms.map(t => typeof t === 'string' ? t : (t.text || ''))
-    : [];
-
-  const items = (data.items || []).map(item => ({
-    quantity: item.quantity || 1,
-    description: item.description || '',
-    rate: item.rate || 0,
-    amount: item.amount || 0,
-  }));
-
   return {
-    logo: getImageUrl(data.logo || data.business?.logo),
-    companyName: data.companyName || data.business?.name || '',
-    companyAddress,
-    billToName: data.billTo?.name || data.client?.name || '',
-    billToAddress,
-    shipToName: data.shipTo?.name || '',
-    shipToAddress: data.shipTo?.address || data.shipTo?.shippingAddress || '',
-    invoiceNumber: data.invoiceNumber || data.invoiceMeta?.invoiceNo || '',
-    invoiceDate: formatDate(data.invoiceDate || data.invoiceMeta?.invoiceDate),
-    poNumber: data.poNumber || '',
-    dueDate: formatDate(data.dueDate || data.invoiceMeta?.dueDate),
-    items,
-    terms,
-    subtotal: data.subtotal || data.totals?.subtotal || 0,
-    taxAmount: data.taxAmount || data.totals?.taxTotal || 0,
-    total: data.total || data.totals?.grandTotal || 0,
-    bankName: data.paymentInfo?.bankName || data.payment?.bankName || '',
-    accountNo: data.paymentInfo?.accountNo || data.payment?.accountNo || '',
-    ifscCode: data.paymentInfo?.ifscCode || data.payment?.ifscCode || '',
-    upiId: data.paymentInfo?.upiId || data.payment?.upiId || '',
+    logo: getImageUrl(data.business?.logo),
+    companyName: data.business?.name || '',
+    companyAddress: buildAddress(data.business),
+    
+    billToName: data.client?.name || '',
+    billToAddress: buildAddress(data.client),
+    
+    shipToName: '',
+    shipToAddress: data.shipTo?.shippingAddress || '',
+    
+    invoiceNumber: data.invoiceMeta?.invoiceNo || '',
+    invoiceDate: formatDate(data.invoiceMeta?.invoiceDate),
+    dueDate: formatDate(data.invoiceMeta?.dueDate),
+    
+    items: (data.items || []).map(item => ({
+      quantity: item.quantity || 1,
+      description: item.description || '',
+      rate: item.rate || 0,
+      amount: item.amount || 0,
+    })),
+    
+    terms: Array.isArray(data.terms)
+      ? data.terms.map(t => typeof t === 'string' ? t : (t.text || ''))
+      : [],
+    
+    subtotal: data.totals?.subtotal || 0,
+    taxAmount: data.totals?.taxTotal || 0,
+    total: data.totals?.grandTotal || 0,
+    
+    bankName: data.payment?.bankName || '',
+    accountNo: data.payment?.accountNo || '',
+    ifscCode: data.payment?.ifscCode || '',
+    
     signature: getImageUrl(data.signature),
     qrCode: getImageUrl(data.qrCode),
-    email: data.business?.email || data.buisness?.email || '',
-    phone: data.business?.phone || data.buisness?.phone || '',
-    website: data.website || '',
+    
+    poNumber: '',
+    email: '',
+    phone: '',
+    website: '',
+    upiId: '',
   };
 };
