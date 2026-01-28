@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-
+import Login from "./pages/Login";
 import Register from "./pages/Register";
 
 // Layout
@@ -22,7 +22,7 @@ function App() {
     <Router>
       <Routes>
         {/* PUBLIC ROUTES */}
-        {/* <Route path="/" element={<Login />} /> */}
+        <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* ADMIN ROUTES WITH SIDEBAR */}

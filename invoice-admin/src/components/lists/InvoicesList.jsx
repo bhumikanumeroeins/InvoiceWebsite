@@ -296,14 +296,6 @@ const InvoicesList = () => {
                       <button className="text-emerald-600 hover:text-emerald-800 transition">
                         Download
                       </button>
-
-                      <button className="text-gray-700 hover:text-gray-900 transition">
-                        Edit
-                      </button>
-
-                      <button className="text-red-600 hover:text-red-800 transition">
-                        Delete
-                      </button>
                     </div>
                   </td>
                 </tr>

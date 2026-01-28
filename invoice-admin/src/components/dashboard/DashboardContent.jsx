@@ -273,9 +273,6 @@ const DashboardContent = () => {
                       <button className="text-indigo-600 hover:text-indigo-900 text-sm">
                         View
                       </button>
-                      <button className="text-blue-600 hover:text-blue-900 text-sm">
-                        Send
-                      </button>
                       <button className="text-green-600 hover:text-green-900 text-sm">
                         Download
                       </button>
@@ -304,9 +301,6 @@ const DashboardContent = () => {
                     <div className="flex space-x-2">
                       <button className="text-indigo-600 hover:text-indigo-900 text-sm">
                         View
-                      </button>
-                      <button className="text-blue-600 hover:text-blue-900 text-sm">
-                        Send
                       </button>
                       <button className="text-green-600 hover:text-green-900 text-sm">
                         Download
@@ -337,9 +331,6 @@ const DashboardContent = () => {
                       <button className="text-indigo-600 hover:text-indigo-900 text-sm">
                         View
                       </button>
-                      <button className="text-blue-600 hover:text-blue-900 text-sm">
-                        Send
-                      </button>
                       <button className="text-green-600 hover:text-green-900 text-sm">
                         Download
                       </button>
@@ -368,9 +359,6 @@ const DashboardContent = () => {
                     <div className="flex space-x-2">
                       <button className="text-indigo-600 hover:text-indigo-900 text-sm">
                         View
-                      </button>
-                      <button className="text-blue-600 hover:text-blue-900 text-sm">
-                        Send
                       </button>
                       <button className="text-green-600 hover:text-green-900 text-sm">
                         Download
