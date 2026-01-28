@@ -62,57 +62,57 @@ export const loginAdmin = async ( req , res ) =>
 
 
 
+
 export const getTotalInvoiceCount = async (req, res) => {
   try {
     const {
-      invoiceNumber,
-      customerId,
+      invoiceNo,
+      clientName,
       status,
       dateFrom,
       dateTo,
       amountMin,
       amountMax,
-      templateId,
       page = 1,
       limit = 10
     } = req.query;
 
-    // base filter (always)
     const baseFilter = { isDeleted: false };
-
-    // dynamic filter for search
     const filter = { ...baseFilter };
 
-    // 🔍 Invoice Number search
-    if (invoiceNumber) {
-      filter.invoiceNumber = { $regex: invoiceNumber.trim(), $options: "i" };
+    // 🔍 Invoice No filter
+    if (invoiceNo) {
+      filter["invoiceMeta.invoiceNo"] = {
+        $regex: invoiceNo.trim(),
+        $options: "i"
+      };
     }
 
-    // 👤 Customer filter
-    if (customerId && mongoose.Types.ObjectId.isValid(customerId)) {
-      filter.customerId = customerId;
+    // 👤 Client Name filter
+    if (clientName) {
+      filter["client.name"] = {
+        $regex: clientName.trim(),
+        $options: "i"
+      };
     }
 
     // 📌 Status filter
     if (status && status !== "all") {
-      filter.paymentStatus = status; // change key if needed
+      filter.paymentStatus = status;
     }
 
-    // 📄 Template filter
-    if (templateId && mongoose.Types.ObjectId.isValid(templateId)) {
-      filter.templateId = templateId;
-    }
-
-    // 📅 Date filter
+    // 📅 Invoice Date filter
     if (dateFrom || dateTo) {
-      filter.issueDate = {}; // change if your schema uses invoiceMeta.issueDate
+      filter["invoiceMeta.invoiceDate"] = {};
 
-      if (dateFrom) filter.issueDate.$gte = new Date(dateFrom);
+      if (dateFrom) {
+        filter["invoiceMeta.invoiceDate"].$gte = new Date(dateFrom);
+      }
 
       if (dateTo) {
         const endDate = new Date(dateTo);
         endDate.setHours(23, 59, 59, 999);
-        filter.issueDate.$lte = endDate;
+        filter["invoiceMeta.invoiceDate"].$lte = endDate;
       }
     }
 
@@ -136,35 +136,29 @@ export const getTotalInvoiceCount = async (req, res) => {
         .limit(limitNum)
         .populate("createdBy", "name email"),
 
-      // count based on applied filters
       Invoice.countDocuments(filter),
 
-      // count of ALL invoices (without filters)
       Invoice.countDocuments(baseFilter)
     ]);
 
     return res.status(200).json({
       success: true,
-
-      // total invoices in DB (all)
       totalInvoiceCount,
-
-      // total invoices after applying filters
       filteredCount,
-
       currentPage: pageNum,
       totalPages: Math.ceil(filteredCount / limitNum),
-
       data: invoices
     });
   } catch (error) {
     console.error("getTotalInvoiceCount error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch invoices"
+      message: "Failed to fetch invoices",
+      error: error.message
     });
   }
 };
+
 
 
 
@@ -188,6 +182,77 @@ export const getRecentInvoices = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch recent invoices"
+    });
+  }
+};
+
+
+
+
+
+export const getCustomersFromInvoices = async (req, res) => {
+  try {
+    const { search } = req.query;
+
+    const matchStage = { isDeleted: false };
+
+    // optional search by client name/email
+    if (search) {
+      matchStage.$or = [
+        { "client.name": { $regex: search, $options: "i" } },
+        { "client.email": { $regex: search, $options: "i" } }
+      ];
+    }
+
+    const clients = await Invoice.aggregate([
+      { $match: matchStage },
+
+      // group by client email (best unique key)
+      {
+        $group: {
+          _id: { $ifNull: ["$client.email", "$client.name"] },
+
+          clientName: { $first: "$client.name" },
+          clientEmail: { $first: "$client.email" },
+          clientAddress: { $first: "$client.address" },
+          clientCity: { $first: "$client.city" },
+          clientState: { $first: "$client.state" },
+          clientZip: { $first: "$client.zip" },
+
+          totalInvoices: { $sum: 1 },
+
+          totalGrandTotal: { $sum: { $ifNull: ["$totals.grandTotal", 0] } },
+          totalPaidAmount: { $sum: { $ifNull: ["$paidAmount", 0] } },
+
+          lastInvoiceDate: { $max: "$invoiceMeta.invoiceDate" }
+        }
+      },
+
+      // compute pending
+      {
+        $addFields: {
+          totalPendingAmount: {
+            $max: [
+              0,
+              { $subtract: ["$totalGrandTotal", "$totalPaidAmount"] }
+            ]
+          }
+        }
+      },
+
+      { $sort: { lastInvoiceDate: -1 } }
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      totalClients: clients.length,
+      data: clients
+    });
+  } catch (error) {
+    console.error("getClientsFromInvoices error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch clients"
     });
   }
 };
