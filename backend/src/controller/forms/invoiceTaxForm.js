@@ -897,10 +897,15 @@ export const sendInvoiceEmailController = async (req, res) => {
     const invoiceNo = invoice.invoiceMeta?.invoiceNo || 'Invoice';
     const copyToEmail = sendCopy ? invoice.createdBy?.email : null;
     
+    // Save the recipient email to invoice.client.email
+    await InvoiceTaxForm.findByIdAndUpdate(id, {
+      'client.email': to
+    });
+    
     // Send response immediately, email will be sent in background
     res.status(200).json({
       success: true,
-      message: "Email is being sent"
+      message: "Email is being sent and saved"
     });
 
     // Send email in background (don't await)

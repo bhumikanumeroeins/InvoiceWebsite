@@ -80,12 +80,10 @@ export const getInvoiceData = (data = {}) => {
     return parts.join('\n');
   };
 
-  // Trigger profile fetch if not cached (async, won't block)
   if (!profileCache) {
     fetchProfileData();
   }
   
-  // Use cached profile data (will be empty on first call, populated on subsequent calls)
   const profile = profileCache || { email: '', phone: '', websiteLink: '' };
 
   return {
@@ -125,7 +123,6 @@ export const getInvoiceData = (data = {}) => {
     signature: getImageUrl(data.signature),
     qrCode: getImageUrl(data.qrCode),
     
-    // Profile data from cache
     email: profile.email || '',
     phone: profile.phone || '',
     website: profile.websiteLink || '',
