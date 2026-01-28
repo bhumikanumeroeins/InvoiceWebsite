@@ -75,6 +75,7 @@ const invoiceSchema = new mongoose.Schema({
 
   // 🔹 SHIP TO
   shipTo: {
+    shippingName: String,
     shippingAddress: String,
     shippingCity: String,
     shippingState: String,
