@@ -24,6 +24,7 @@ import SavedItemsModal from "./SavedItemsModal";
 import FooterLabelModal from "./FooterLabelModal";
 import { invoiceAPI, taxAPI, itemAPI } from "../../services/invoiceService";
 import { isAuthenticated } from "../../services/authService";
+import { getUploadsUrl } from "../../services/apiConfig";
 
 const documentConfig = {
   invoice: {
@@ -219,12 +220,36 @@ const InvoiceForm = ({
         return date.toISOString().split('T')[0];
       };
 
+      // Reconstruct full address from separate fields
+      const buildAddress = (addressObj) => {
+        if (!addressObj) return '';
+        const parts = [
+          addressObj.address,
+          [addressObj.city, addressObj.state, addressObj.zip].filter(Boolean).join(' ')
+        ].filter(Boolean);
+        return parts.join('\n');
+      };
+
+      const buildClientAddress = (client) => {
+        if (!client) return '';
+        const parts = [
+          client.name,
+          client.address,
+          [client.city, client.state, client.zip].filter(Boolean).join(' '),
+          client.email
+        ].filter(Boolean);
+        return parts.join('\n');
+      };
+
+      const fromAddress = buildAddress(editInvoice.business);
+      const billTo = buildClientAddress(editInvoice.client);
+
       setFormMode(editInvoice.formType || 'basic');
       setInvoiceData({
         fromName: editInvoice.companyName || editInvoice.business?.name || '',
-        fromAddress: editInvoice.companyAddress || editInvoice.business?.address || '',
-        billTo: editInvoice.billTo?.name ? `${editInvoice.billTo.name}\n${editInvoice.billTo.address || ''}` : '',
-        shipTo: editInvoice.shipTo?.address || editInvoice.shipTo?.shippingAddress || '',
+        fromAddress,
+        billTo,
+        shipTo: editInvoice.shipTo?.shippingAddress || '',
         invoiceNumber: editInvoice.invoiceNumber || editInvoice.invoiceMeta?.invoiceNo || '',
         invoiceDate: parseDate(editInvoice.invoiceDate || editInvoice.invoiceMeta?.invoiceDate),
         dueDate: parseDate(editInvoice.dueDate || editInvoice.invoiceMeta?.dueDate),
@@ -235,7 +260,7 @@ const InvoiceForm = ({
       });
 
       if (editInvoice.items && editInvoice.items.length > 0) {
-        setItems(editInvoice.items.map(item => ({
+        const loadedItems = editInvoice.items.map(item => ({
           description: item.description || '',
           quantity: item.quantity || 1,
           rate: item.rate || 0,
@@ -243,7 +268,8 @@ const InvoiceForm = ({
           taxIds: [],
           paymentMethod: 'Other',
           paymentNote: '',
-        })));
+        }));
+        setItems(loadedItems);
       }
 
       if (editInvoice.terms && editInvoice.terms.length > 0) {
@@ -255,9 +281,32 @@ const InvoiceForm = ({
         }
       }
 
-      if (editInvoice.logo) setLogo(editInvoice.logo);
-      if (editInvoice.signature) setSignature(editInvoice.signature);
-      if (editInvoice.qrCode) setQrCode(editInvoice.qrCode);
+      if (editInvoice.logo) {
+        const logoUrl = editInvoice.logo.startsWith('http') 
+          ? editInvoice.logo 
+          : `${getUploadsUrl()}/uploads/${editInvoice.logo}`;
+        setLogo(logoUrl);
+      }
+      if (editInvoice.signature) {
+        const signatureUrl = editInvoice.signature.startsWith('http') 
+          ? editInvoice.signature 
+          : `${getUploadsUrl()}/uploads/${editInvoice.signature}`;
+        setSignature(signatureUrl);
+      }
+      if (editInvoice.qrCode) {
+        const qrCodeUrl = editInvoice.qrCode.startsWith('http') 
+          ? editInvoice.qrCode 
+          : `${getUploadsUrl()}/uploads/${editInvoice.qrCode}`;
+        setQrCode(qrCodeUrl);
+      }
+      
+      // Also check business.logo for backward compatibility
+      if (!editInvoice.logo && editInvoice.business?.logo) {
+        const logoUrl = editInvoice.business.logo.startsWith('http') 
+          ? editInvoice.business.logo 
+          : `${getUploadsUrl()}/uploads/${editInvoice.business.logo}`;
+        setLogo(logoUrl);
+      }
     }
   }, [editInvoice]);
 
@@ -590,14 +639,11 @@ const InvoiceForm = ({
   };
 
   const parseAddress = (addressStr) => {
-    const lines = addressStr.split('\n').filter(l => l.trim());
+    // Just send raw address - backend will parse it
     return {
-      address: lines[0] || '',
-      city: '',
-      state: '',
-      zip: '',
-      phone: lines[1]?.split(',')[0]?.trim() || '',
-      email: lines[1]?.split(',')[1]?.trim() || '',
+      address: addressStr || '',
+      phone: '',
+      email: '',
     };
   };
 
@@ -605,11 +651,8 @@ const InvoiceForm = ({
     const lines = addressStr.split('\n').filter(l => l.trim());
     return {
       name: lines[0] || '',
-      address: lines[1] || '',
-      city: '',
-      state: '',
-      zip: '',
-      email: lines[2] || '',
+      address: lines.slice(1).join('\n') || '', // Everything after name is address
+      email: '',
     };
   };
 
@@ -730,45 +773,8 @@ const InvoiceForm = ({
       }
       
       if (onSave && response.data) {
-        const savedInvoice = response.data;
-        onSave({
-          _id: savedInvoice._id,
-          id: savedInvoice._id,
-          number: invoiceData.invoiceNumber,
-          customer: clientInfo.name || 'Customer',
-          date: invoiceData.invoiceDate,
-          dueDate: invoiceData.dueDate,
-          total: config.showTax ? total : subtotal,
-          logo: logo,
-          companyName: invoiceData.fromName,
-          companyAddress: invoiceData.fromAddress,
-          billTo: {
-            name: clientInfo.name,
-            address: `${clientInfo.address}\n${clientInfo.email}`,
-          },
-          shipTo: formMode === 'advanced' ? {
-            name: '',
-            address: invoiceData.shipTo,
-          } : null,
-          invoiceNumber: invoiceData.invoiceNumber,
-          invoiceDate: invoiceData.invoiceDate,
-          items: items.map(item => ({
-            quantity: item.quantity || 1,
-            description: item.description,
-            rate: formMode === 'advanced' ? item.rate : item.amount,
-            amount: formMode === 'advanced' ? (item.quantity * item.rate) : item.amount,
-          })),
-          terms: terms.filter(t => t.trim()),
-          subtotal: subtotal,
-          taxAmount: totalTax,
-          paymentInfo: {
-            bankName: invoiceData.bankName,
-            accountNo: invoiceData.accountNo,
-            ifscCode: invoiceData.ifscCode,
-          },
-          signature: signature,
-          qrCode: qrCode,
-        }, isEditMode);
+        // Pass the complete invoice data from backend
+        onSave(response.data, isEditMode);
       }
     } catch (error) {
       console.error('Save invoice error:', error);

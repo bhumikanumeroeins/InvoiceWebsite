@@ -20,7 +20,6 @@ const parseAddress = (addressText) => {
 
   let address = '', city = '', state = '', zip = '';
   
-  // If single line, try to parse city/zip from it
   if (lines.length === 1) {
     const fullText = lines[0];
     const zipMatch = fullText.match(/\b(\d{5,6})\b/);
@@ -29,11 +28,11 @@ const parseAddress = (addressText) => {
       zip = zipMatch[0];
       const beforeZip = fullText.substring(0, fullText.indexOf(zip)).trim();
       
-      // Split by comma to separate address from city/state
-      const parts = beforeZip.split(',').map(p => p.trim()).filter(p => p);
+      const cleanBeforeZip = beforeZip.replace(/,\s*$/, '');
+      
+      const parts = cleanBeforeZip.split(',').map(p => p.trim()).filter(p => p);
       
       if (parts.length >= 2) {
-        // First part is address, last part is city (and maybe state)
         address = parts[0];
         const cityStatePart = parts[parts.length - 1];
         const cityStateParts = cityStatePart.split(/\s+/).filter(p => p);
@@ -45,24 +44,20 @@ const parseAddress = (addressText) => {
           city = cityStatePart;
         }
       } else if (parts.length === 1) {
-        // Try to split by spaces to find city before ZIP
-        const words = beforeZip.split(/\s+/).filter(w => w);
+        const words = cleanBeforeZip.split(/\s+/).filter(w => w);
         if (words.length >= 2) {
           city = words[words.length - 1];
           address = words.slice(0, -1).join(' ');
         } else {
-          address = beforeZip;
+          address = cleanBeforeZip;
         }
       }
     } else {
-      // No ZIP found, just use as address
       address = fullText;
     }
   } else {
-    // Multiple lines - first line is address
     address = lines[0];
     
-    // Try to parse city, state, zip from remaining lines
     if (lines.length > 1) {
       const lastLine = lines[lines.length - 1];
       const zipMatch = lastLine.match(/\b(\d{5,6})\b/);
@@ -79,7 +74,6 @@ const parseAddress = (addressText) => {
           city = parts[0];
         }
       } else {
-        // No zip found, try to split city and state
         const parts = lastLine.split(/[,\s]+/).filter(part => part);
         if (parts.length >= 2) {
           city = parts.slice(0, -1).join(' ');
@@ -214,9 +208,9 @@ export const createInvoice = async (req, res) => {
       const parsed = parseAddress(data.business.address);
       data.business = {
         ...data.business,
-        city: data.business.city || parsed.city,
-        state: data.business.state || parsed.state,
-        zip: data.business.zip || parsed.zip,
+        city: (data.business.city && data.business.city.trim()) || parsed.city,
+        state: (data.business.state && data.business.state.trim()) || parsed.state,
+        zip: (data.business.zip && data.business.zip.trim()) || parsed.zip,
         address: parsed.address || data.business.address
       };
     }
@@ -225,9 +219,9 @@ export const createInvoice = async (req, res) => {
       const parsed = parseAddress(data.client.address);
       data.client = {
         ...data.client,
-        city: data.client.city || parsed.city,
-        state: data.client.state || parsed.state,
-        zip: data.client.zip || parsed.zip,
+        city: (data.client.city && data.client.city.trim()) || parsed.city,
+        state: (data.client.state && data.client.state.trim()) || parsed.state,
+        zip: (data.client.zip && data.client.zip.trim()) || parsed.zip,
         address: parsed.address || data.client.address
       };
     }
@@ -497,31 +491,57 @@ export const updateInvoice = async (req, res) => {
     }
 
     /* ---------------- ADDRESS PARSING ---------------- */
-    // Parse business address if it's a single string
     if (data.business?.address && typeof data.business.address === 'string') {
       const parsed = parseAddress(data.business.address);
       data.business = {
         ...data.business,
-        ...parsed
+        city: (data.business.city && data.business.city.trim()) || parsed.city,
+        state: (data.business.state && data.business.state.trim()) || parsed.state,
+        zip: (data.business.zip && data.business.zip.trim()) || parsed.zip,
+        address: parsed.address || data.business.address
       };
     }
 
-    // Parse client address if it's a single string
     if (data.client?.address && typeof data.client.address === 'string') {
       const parsed = parseAddress(data.client.address);
       data.client = {
         ...data.client,
-        ...parsed
+        city: (data.client.city && data.client.city.trim()) || parsed.city,
+        state: (data.client.state && data.client.state.trim()) || parsed.state,
+        zip: (data.client.zip && data.client.zip.trim()) || parsed.zip,
+        address: parsed.address || data.client.address
       };
     }
 
-    // Parse shipping address if it's a single string
     if (data.shipTo?.shippingAddress && typeof data.shipTo.shippingAddress === 'string') {
       const parsed = parseShippingAddress(data.shipTo.shippingAddress);
       data.shipTo = {
         ...data.shipTo,
-        ...parsed
+        shippingCity: (data.shipTo.shippingCity && data.shipTo.shippingCity.trim()) || parsed.shippingCity,
+        shippingState: (data.shipTo.shippingState && data.shipTo.shippingState.trim()) || parsed.shippingState,
+        shippingZip: (data.shipTo.shippingZip && data.shipTo.shippingZip.trim()) || parsed.shippingZip,
+        shippingAddress: parsed.shippingAddress || data.shipTo.shippingAddress
       };
+    }
+
+    /* ---------------- ITEMS HANDLING ---------------- */
+    if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+      const itemIds = data.items.map(i => i.itemId || i);
+
+      const masterItems = await ItemMaster.find({
+        _id: { $in: itemIds },
+        createdBy: userId
+      });
+
+      if (masterItems.length > 0) {
+        data.items = masterItems.map(item => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+          tax: item.tax
+        }));
+      }
     }
 
     /* ---------------- CLEAN EMPTY OBJECTS ---------------- */

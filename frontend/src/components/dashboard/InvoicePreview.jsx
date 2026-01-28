@@ -62,7 +62,29 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
   
   // Update currentInvoice when invoice prop changes
   useEffect(() => {
-    setCurrentInvoice(invoice);
+    const fetchFullInvoice = async () => {
+      if (invoice?._id || invoice?.id) {
+        try {
+          setLoading(true);
+          const response = await invoiceAPI.getById(invoice._id || invoice.id);
+          
+          if (response.success && response.data) {
+            setCurrentInvoice(response.data);
+          } else {
+            setCurrentInvoice(invoice);
+          }
+        } catch (error) {
+          console.error('Failed to fetch full invoice:', error);
+          setCurrentInvoice(invoice);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setCurrentInvoice(invoice);
+      }
+    };
+    
+    fetchFullInvoice();
   }, [invoice]);
   
   // Payment state
@@ -577,43 +599,8 @@ Best regards`,
     }
   };
 
-  const previewData = currentInvoice ? {
-    logo: currentInvoice.logo || currentInvoice.business?.logo,
-    companyName: currentInvoice.companyName || currentInvoice.business?.name || '',
-    companyAddress: currentInvoice.companyAddress || currentInvoice.business?.address || '',
-    billTo: currentInvoice.billTo || {
-      name: currentInvoice.client?.name || '',
-      address: currentInvoice.client?.address || '',
-      email: currentInvoice.client?.email || '',
-    },
-    shipTo: currentInvoice.shipTo || (currentInvoice.shipTo?.shippingAddress ? {
-      address: currentInvoice.shipTo.shippingAddress,
-    } : null),
-    invoiceNumber: currentInvoice.invoiceNumber || currentInvoice.invoiceMeta?.invoiceNo || currentInvoice.number || '',
-    invoiceDate: currentInvoice.invoiceDate || currentInvoice.invoiceMeta?.invoiceDate || currentInvoice.date || '',
-    dueDate: currentInvoice.dueDate || currentInvoice.invoiceMeta?.dueDate || '',
-    items: (currentInvoice.items || []).map(item => ({
-      quantity: item.quantity || 1,
-      description: item.description || '',
-      rate: item.rate || 0,
-      amount: item.amount || 0,
-    })),
-    terms: Array.isArray(currentInvoice.terms) 
-      ? currentInvoice.terms.map(t => typeof t === 'string' ? t : t.text)
-      : [],
-    subtotal: currentInvoice.subtotal || currentInvoice.totals?.subtotal || 0,
-    taxAmount: currentInvoice.taxAmount || currentInvoice.totals?.taxTotal || 0,
-    total: currentInvoice.total || currentInvoice.totals?.grandTotal || 0,
-    currency: currentInvoice.currency || currentInvoice.invoiceMeta?.currency || 'INR',
-    signature: currentInvoice.signature,
-    qrCode: currentInvoice.qrCode,
-    number: currentInvoice.number || currentInvoice.invoiceMeta?.invoiceNo || currentInvoice.invoiceNumber || '',
-    date: currentInvoice.date || currentInvoice.invoiceMeta?.invoiceDate || currentInvoice.invoiceDate || '',
-    
-    // Currency utilities
-    formatAmount: (amount) => formatAmount(amount, currentInvoice.currency || currentInvoice.invoiceMeta?.currency || 'INR'),
-    getCurrencySymbol: () => getCurrencySymbol(currentInvoice.currency || currentInvoice.invoiceMeta?.currency || 'INR'),
-  } : {
+  // Pass currentInvoice directly to templates - invoiceDefaults.js handles the mapping
+  const previewData = currentInvoice || {
     number: 'INV-001',
     date: new Date().toLocaleDateString('en-GB'),
     items: [],
