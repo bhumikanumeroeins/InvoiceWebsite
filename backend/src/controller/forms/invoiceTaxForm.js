@@ -5,6 +5,7 @@ import { parseISODate } from "../../utils/utils.js";
 import { sendInvoiceEmail } from "../../utils/emailService.js";
 import ItemMaster from "../../models/items/items.js";
 import { createRemindersForInvoice } from "../reminders/paymentReminder.js";
+import e from "express";
 
 /* ---------------- ADDRESS PARSING HELPERS ---------------- */
 const parseAddress = (addressText) => {
@@ -228,7 +229,8 @@ export const createInvoice = async (req, res) => {
         city: data.client.city || parsed.city,
         state: data.client.state || parsed.state,
         zip: data.client.zip || parsed.zip,
-        address: parsed.address || data.client.address
+        address: parsed.address || data.client.address,
+        email: data.client.email || parsed.email || ''
       };
     }
 

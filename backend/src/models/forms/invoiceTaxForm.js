@@ -70,7 +70,8 @@ const invoiceSchema = new mongoose.Schema({
     address: String,
     city: String,
     state: String,
-    zip: String
+    zip: String,
+    email: String
   },
 
   // 🔹 SHIP TO
