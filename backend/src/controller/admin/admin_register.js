@@ -3,7 +3,7 @@ import Invoice from "../../models/forms/invoiceTaxForm.js";
 import bcrypt from 'bcryptjs' ;
 import jwt from 'jsonwebtoken' ;
 import { createResult , createError } from '../../utils/utils.js' ;
-
+import Registration from '../../models/users/registration.js' ;
 export const registerAdmin = async ( req , res ) => 
 {
     const { email , password } = req.body ;
@@ -253,6 +253,65 @@ export const getCustomersFromInvoices = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch clients"
+    });
+  }
+};
+
+
+
+export const getUsersList = async (req, res) => {
+  try {
+    const { email, name, search, page = 1, limit = 10 } = req.query;
+
+    const filter = {};
+
+    // ✅ filter by email
+    if (email && email.trim()) {
+      filter.email = { $regex: email.trim(), $options: "i" };
+    }
+
+    // ✅ filter by name
+    if (name && name.trim()) {
+      filter.name = { $regex: name.trim(), $options: "i" };
+    }
+
+    // ✅ optional: single search for both email + name
+    if (search && search.trim()) {
+      filter.$or = [
+        { email: { $regex: search.trim(), $options: "i" } },
+        { name: { $regex: search.trim(), $options: "i" } }
+      ];
+    }
+
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [users, filteredCount, totalUsers] = await Promise.all([
+      Registration.find(filter)
+        .select("-password") // ❌ never send password
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum),
+
+      Registration.countDocuments(filter),
+      Registration.countDocuments({})
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      totalUsers,
+      filteredCount,
+      currentPage: pageNum,
+      totalPages: Math.ceil(filteredCount / limitNum),
+      data: users
+    });
+  } catch (error) {
+    console.error("getUsersListAdmin error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch users",
+      error: error.message
     });
   }
 };
