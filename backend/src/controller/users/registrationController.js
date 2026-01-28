@@ -53,6 +53,51 @@ export const loginUser = async (req, res) => {
 ;
 
 
+export const getProfile = async (req, res) => {
+  try {
+    /* ---------------- AUTH CHECK ---------------- */
+    if (!req.user?.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+
+    const userId = req.user.userId;
+
+    /* ---------------- FIND USER ---------------- */
+    const user = await Registration.findById(userId).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        email: user.email,
+        name: user.name || '',
+        bussinessName: user.bussinessName || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        websiteLink: user.websiteLink || ''
+      }
+    });
+
+  } catch (error) {
+    console.error("GET PROFILE ERROR 👉", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+
 export const updateProfile = async (req, res) => {
   try {
     /* ---------------- AUTH CHECK ---------------- */

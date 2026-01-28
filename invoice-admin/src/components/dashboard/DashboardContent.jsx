@@ -63,49 +63,8 @@ const DashboardContent = () => {
               </div>
             </div>
           </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">P</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Items
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    78
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">T</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Taxes
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    5
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
+        </div>       
+        
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -191,7 +150,7 @@ const DashboardContent = () => {
           </div>
         </div>
       </div>
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Revenue Chart</h3>
@@ -250,7 +209,7 @@ const DashboardContent = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       <div className="mt-8">
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
@@ -314,9 +273,6 @@ const DashboardContent = () => {
                       <button className="text-indigo-600 hover:text-indigo-900 text-sm">
                         View
                       </button>
-                      <button className="text-blue-600 hover:text-blue-900 text-sm">
-                        Send
-                      </button>
                       <button className="text-green-600 hover:text-green-900 text-sm">
                         Download
                       </button>
@@ -345,9 +301,6 @@ const DashboardContent = () => {
                     <div className="flex space-x-2">
                       <button className="text-indigo-600 hover:text-indigo-900 text-sm">
                         View
-                      </button>
-                      <button className="text-blue-600 hover:text-blue-900 text-sm">
-                        Send
                       </button>
                       <button className="text-green-600 hover:text-green-900 text-sm">
                         Download
@@ -378,9 +331,6 @@ const DashboardContent = () => {
                       <button className="text-indigo-600 hover:text-indigo-900 text-sm">
                         View
                       </button>
-                      <button className="text-blue-600 hover:text-blue-900 text-sm">
-                        Send
-                      </button>
                       <button className="text-green-600 hover:text-green-900 text-sm">
                         Download
                       </button>
@@ -409,9 +359,6 @@ const DashboardContent = () => {
                     <div className="flex space-x-2">
                       <button className="text-indigo-600 hover:text-indigo-900 text-sm">
                         View
-                      </button>
-                      <button className="text-blue-600 hover:text-blue-900 text-sm">
-                        Send
                       </button>
                       <button className="text-green-600 hover:text-green-900 text-sm">
                         Download

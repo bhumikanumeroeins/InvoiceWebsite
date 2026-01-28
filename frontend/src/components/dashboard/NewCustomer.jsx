@@ -3,6 +3,8 @@ import { currencyService } from '../../services/currencyService';
 import { UserPlus, FileText, Filter, Loader2, Calendar, Search, Download } from 'lucide-react';
 import { customerAPI } from '../../services/invoiceService';
 import { getUploadsUrl } from '../../services/apiConfig';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const NewCustomer = ({ customer, onInvoiceClick }) => {
   const [documents, setDocuments] = useState([]);
@@ -99,7 +101,14 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await customerAPI.getInvoices(customerName);
+      // Build filter params
+      const params = {};
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+      if (status && status !== 'all') params.status = status;
+      if (documentType && documentType !== 'all') params.documentType = documentType;
+
+      const response = await customerAPI.getInvoices(customerName, params);
       if (response.success) {
         setDocuments(response.data || []);
         setSummary(response.summary || { totalAmount: 0, totalPaidAmount: 0, remainingAmount: 0 });
@@ -129,8 +138,135 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
     { id: 'statement', label: 'Customer Statement', icon: FileText, isDownload: true },
   ];
 
-  const handleDownloadStatement = () => {
-    alert('Customer Statement PDF download - Coming soon after backend integration!');
+  const handleDownloadStatement = async () => {
+    if (documents.length === 0) {
+      alert('No documents available to generate statement');
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Get company info from first document
+      const firstDoc = documents[0];
+      const companyName = firstDoc.business?.name || 'Company Name';
+      const companyAddress = firstDoc.business?.address || '';
+      const companyCity = firstDoc.business?.city || '';
+      const companyZip = firstDoc.business?.zip || '';
+      const fullAddress = `${companyAddress}${companyCity ? ', ' + companyCity : ''}${companyZip ? ' ' + companyZip : ''}`;
+      const logoUrl = firstDoc.business?.logo ? `${getUploadsUrl()}/uploads/${firstDoc.business.logo}` : null;
+
+      let yPosition = 20;
+
+      // Add logo if available
+      if (logoUrl) {
+        try {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = logoUrl;
+          });
+          doc.addImage(img, 'PNG', pageWidth - 50, 15, 35, 35);
+        } catch (err) {
+          console.error('Failed to load logo:', err);
+        }
+      }
+
+      // Company info
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      doc.text(companyName, 15, yPosition);
+      yPosition += 5;
+      doc.text(fullAddress, 15, yPosition);
+      yPosition += 10;
+
+      // Title
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Customer Statement for ${companyName} ${customerName}`, 15, yPosition);
+      yPosition += 10;
+
+      // Customer info
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text(customerName, 15, yPosition);
+      yPosition += 10;
+
+      // Prepare table data
+      const tableData = documents.map(doc => {
+        const subtotal = doc.totals?.subtotal || 0;
+        const tax = doc.totals?.taxTotal || 0;
+        const total = doc.totals?.grandTotal || 0;
+        const paid = doc.paidAmount || 0;
+        const currency = doc.invoiceMeta?.currency || 'INR';
+        const symbol = currencyService.getSymbol(currency);
+
+        return [
+          doc.invoiceMeta?.invoiceNo || '',
+          doc.invoiceMeta?.invoiceDate 
+            ? new Date(doc.invoiceMeta.invoiceDate).toLocaleDateString('en-GB')
+            : '',
+          subtotal.toFixed(2),
+          tax.toFixed(2),
+          paid.toFixed(2),
+          `${symbol} ${total.toFixed(2)}`
+        ];
+      });
+
+      // Add table
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Number', 'Date', 'Subtotal', 'Tax', 'Paid Amount', 'Total']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        styles: {
+          fontSize: 9,
+          cellPadding: 5
+        },
+        columnStyles: {
+          0: { halign: 'left', cellWidth: 22 },
+          1: { halign: 'center', cellWidth: 28 },
+          2: { halign: 'right', cellWidth: 23 },
+          3: { halign: 'right', cellWidth: 23 },
+          4: { halign: 'right', cellWidth: 28 },
+          5: { halign: 'right', cellWidth: 45 }
+        }
+      });
+
+      // Summary section
+      const finalY = doc.lastAutoTable.finalY + 10;
+      const currency = documents[0]?.invoiceMeta?.currency || 'INR';
+      const symbol = currencyService.getSymbol(currency);
+
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text('Total', 15, finalY);
+      doc.text(`${totalAmount.toFixed(2)} ${currency}`, pageWidth - 15, finalY, { align: 'right' });
+
+      doc.setTextColor(0, 150, 255);
+      doc.text('Paid Amount', 15, finalY + 7);
+      doc.text(`${totalPaidAmount.toFixed(2)} ${currency}`, pageWidth - 15, finalY + 7, { align: 'right' });
+
+      doc.setTextColor(0, 0, 0);
+      doc.text('Balance Due', 15, finalY + 14);
+      doc.text(`${remainingAmount.toFixed(2)} ${currency}`, pageWidth - 15, finalY + 14, { align: 'right' });
+
+      // Save PDF
+      doc.save(`Customer_Statement_${customerName.replace(/\s+/g, '_')}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
   };
 
   return (

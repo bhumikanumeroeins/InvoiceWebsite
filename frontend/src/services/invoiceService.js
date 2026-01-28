@@ -2,7 +2,11 @@ import { apiCall } from './apiConfig';
 
 export const customerAPI = {
   getAll: () => apiCall('/customers/list'),
-  getInvoices: (name) => apiCall(`/customers/invoices/${encodeURIComponent(name)}`),
+  getInvoices: (name, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = `/customers/invoices/${encodeURIComponent(name)}${queryString ? `?${queryString}` : ''}`;
+    return apiCall(url);
+  },
 };
 
 export const taxAPI = {

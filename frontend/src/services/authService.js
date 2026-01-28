@@ -11,6 +11,18 @@ export const authAPI = {
     body: JSON.stringify(data),
   }),
   
+  getProfile: () => apiCall('/invoices/profile'),
+  
+  updateProfile: (data) => apiCall('/invoices/updateProfile', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  
+  changePassword: (data) => apiCall('/invoices/changePassword', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

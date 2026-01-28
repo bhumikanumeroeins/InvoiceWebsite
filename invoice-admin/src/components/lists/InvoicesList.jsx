@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from "react-router-dom";
 
 const InvoicesList = () => {
   const [filters, setFilters] = useState({
@@ -103,9 +104,6 @@ const InvoicesList = () => {
     <div className="container mx-auto px-6 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Invoices</h1>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
-          Add New Invoice
-        </button>
       </div>
 
       {/* Filters Row */}
@@ -286,21 +284,17 @@ const InvoicesList = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900 p-1" title="Preview">
-                        👁
-                      </button>
-                      <button className="text-green-600 hover:text-green-900 p-1" title="Send">
-                        ✉
-                      </button>
-                      <button className="text-purple-600 hover:text-purple-900 p-1" title="Download">
-                        📥
-                      </button>
-                      <button className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit">
-                        ✏
-                      </button>
-                      <button className="text-red-600 hover:text-red-900 p-1" title="Delete">
-                        🗑
+                    <div className="flex gap-3">
+                      <Link
+                        to={`/invoices/${invoice.id}`}
+                        className="text-indigo-600 hover:text-indigo-800 transition"
+                      >
+                        View
+                      </Link>
+
+
+                      <button className="text-emerald-600 hover:text-emerald-800 transition">
+                        Download
                       </button>
                     </div>
                   </td>

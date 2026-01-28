@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import {
   User,
-  Settings,
   BarChart3,
   Lock,
   Save,
-  Mail,
   Globe,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import Layout from "../components/layout/Layout";
-import { getCurrentUser } from "../services/authService";
+import { getCurrentUser, authAPI } from "../services/authService";
 
 const tabs = [
   { id: "nameEmail", label: "My Name & Email", icon: User },
@@ -23,6 +24,28 @@ const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("nameEmail");
   const [searchParams, setSearchParams] = useSearchParams();
   const [userEmail, setUserEmail] = useState("");
+  
+  // Profile state
+  const [profileData, setProfileData] = useState({
+    name: '',
+    email: '',
+    bussinessName: '',
+    phone: '',
+    address: '',
+    websiteLink: ''
+  });
+  
+  // Password state
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -32,7 +55,97 @@ const SettingsPage = () => {
   useEffect(() => {
     const user = getCurrentUser();
     if (user?.email) setUserEmail(user.email);
+    fetchProfile();
   }, []);
+
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      const response = await authAPI.getProfile();
+      if (response.success) {
+        setProfileData(response.data);
+        setUserEmail(response.data.email);
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    setMessage({ type: '', text: '' });
+    setSaving(true);
+    
+    try {
+      const response = await authAPI.updateProfile({
+        name: profileData.name,
+        bussinessName: profileData.bussinessName,
+        phone: profileData.phone,
+        address: profileData.address,
+        websiteLink: profileData.websiteLink
+      });
+      
+      // Backend returns { success: true, message: '...' }
+      if (response.success || response.status === 'success') {
+        setMessage({ type: 'success', text: 'Profile updated successfully!' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } else {
+        setMessage({ type: 'error', text: response.message || response.data?.message || 'Failed to update profile' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setMessage({ type: '', text: '' });
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setMessage({ type: 'error', text: 'New passwords do not match' });
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+      return;
+    }
+    
+    setSaving(true);
+    
+    try {
+      const response = await authAPI.changePassword({
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword
+      });
+      
+      // Backend returns { status: "success", data: { message: '...' } }
+      if (response.status === 'success' || response.success) {
+        setMessage({ type: 'success', text: 'Password changed successfully!' });
+        setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } else {
+        setMessage({ type: 'error', text: response.message || response.data?.message || 'Failed to change password' });
+      }
+    } catch (error) {
+      // Error thrown by apiCall when response is not ok (400, 404, 500, etc.)
+      setMessage({ type: 'error', text: error.message || 'Failed to change password' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const changeTab = (tab) => {
     setActiveTab(tab);
@@ -93,40 +206,98 @@ const SettingsPage = () => {
                   Profile Information
                 </h2>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">
-                      Name
-                    </label>
-                    <input
-                      placeholder="Your name"
-                      className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
-                    />
+                {loading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                    <span className="ml-2 text-slate-600">Loading profile...</span>
                   </div>
+                ) : (
+                  <>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                          Name
+                        </label>
+                        <input
+                          name="name"
+                          value={profileData.name}
+                          onChange={handleProfileChange}
+                          placeholder="Your name"
+                          className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">
-                      Email
-                    </label>
-                    <input
-                      value={userEmail}
-                      disabled
-                      className="mt-2 w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl"
-                    />
-                  </div>
-                </div>
+                      <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                          Email
+                        </label>
+                        <input
+                          value={userEmail}
+                          disabled
+                          className="mt-2 w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl"
+                        />
+                      </div>
+                    </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">
-                      Business Name & Billing Address
-                    </label>
-                    <input
-                      placeholder="Your business name"
-                      className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
-                    />
-                  </div>
-                </div>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                          Phone Number
+                        </label>
+                        <input
+                          name="phone"
+                          type="tel"
+                          value={profileData.phone}
+                          onChange={handleProfileChange}
+                          placeholder="+1 (555) 123-4567"
+                          className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                          Website
+                        </label>
+                        <input
+                          name="websiteLink"
+                          type="url"
+                          value={profileData.websiteLink}
+                          onChange={handleProfileChange}
+                          placeholder="https://yourwebsite.com"
+                          className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                          Business Name
+                        </label>
+                        <input
+                          name="bussinessName"
+                          value={profileData.bussinessName}
+                          onChange={handleProfileChange}
+                          placeholder="Your business name"
+                          className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                          Billing Address
+                        </label>
+                        <input
+                          name="address"
+                          value={profileData.address}
+                          onChange={handleProfileChange}
+                          placeholder="Your billing address"
+                          className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -163,17 +334,26 @@ const SettingsPage = () => {
 
                 <div className="grid md:grid-cols-3 gap-6">
                   <input
+                    name="oldPassword"
                     type="password"
+                    value={passwordData.oldPassword}
+                    onChange={handlePasswordChange}
                     placeholder="Current Password"
                     className="px-4 py-3 border border-slate-200 rounded-xl"
                   />
                   <input
+                    name="newPassword"
                     type="password"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
                     placeholder="New Password"
                     className="px-4 py-3 border border-slate-200 rounded-xl"
                   />
                   <input
+                    name="confirmPassword"
                     type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
                     placeholder="Confirm Password"
                     className="px-4 py-3 border border-slate-200 rounded-xl"
                   />
@@ -202,9 +382,38 @@ const SettingsPage = () => {
 
             {/* FOOTER ACTION BAR */}
             <div className="px-8 py-6 bg-slate-50 border-t border-slate-200">
-              <button className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold hover:shadow-xl transition-all flex items-center justify-center gap-3">
-                <Save className="w-5 h-5" />
-                Save Settings
+              {/* Message Display */}
+              {message.text && (
+                <div className={`mb-4 p-4 rounded-xl flex items-center gap-3 ${
+                  message.type === 'success' 
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                    : 'bg-red-50 text-red-700 border border-red-200'
+                }`}>
+                  {message.type === 'success' ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5" />
+                  )}
+                  <span>{message.text}</span>
+                </div>
+              )}
+              
+              <button 
+                onClick={activeTab === 'changePassword' ? handleChangePassword : handleSaveProfile}
+                disabled={saving}
+                className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold hover:shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" />
+                    {activeTab === 'changePassword' ? 'Change Password' : 'Save Settings'}
+                  </>
+                )}
               </button>
             </div>
           </div>

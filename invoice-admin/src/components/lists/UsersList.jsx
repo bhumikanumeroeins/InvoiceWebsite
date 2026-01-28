@@ -127,9 +127,6 @@ const UsersList = () => {
     <div className="container mx-auto px-6 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
-          Add New User
-        </button>
       </div>
 
       {/* Filters */}
@@ -186,19 +183,7 @@ const UsersList = () => {
                   Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Login
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
                 </th>
               </tr>
             </thead>
@@ -216,50 +201,8 @@ const UsersList = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleColor(user.role)}`}>
-                      {user.role}
-                    </span>
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(user.status)}`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.lastLogin}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => editUser(user.id)}
-                        className="text-indigo-600 hover:text-indigo-900 p-1"
-                        title="Edit User"
-                      >
-                        ✏
-                      </button>
-                      <button
-                        onClick={() => toggleStatus(user.id)}
-                        className={`p-1 ${
-                          user.status === 'Active'
-                            ? 'text-yellow-600 hover:text-yellow-900'
-                            : 'text-green-600 hover:text-green-900'
-                        }`}
-                        title={user.status === 'Active' ? 'Deactivate User' : 'Activate User'}
-                      >
-                        {user.status === 'Active' ? '🚫' : '✅'}
-                      </button>
-                      <button
-                        onClick={() => deleteUser(user.id)}
-                        className="text-red-600 hover:text-red-900 p-1"
-                        title="Delete User"
-                      >
-                        🗑
-                      </button>
-                    </div>
                   </td>
                 </tr>
               ))}
@@ -280,7 +223,7 @@ const UsersList = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">👥</span>
+                  Users
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
@@ -301,7 +244,7 @@ const UsersList = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">✅</span>
+                  Active
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
@@ -322,7 +265,7 @@ const UsersList = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">👑</span>
+                  Admins
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
@@ -343,7 +286,7 @@ const UsersList = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">🧮</span>
+                  Account
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
