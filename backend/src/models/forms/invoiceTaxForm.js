@@ -132,6 +132,12 @@ const invoiceSchema = new mongoose.Schema({
   paymentNote: String,
   balanceDue: Number,
 
+  paymentId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Payment",
+  default: null
+},
+
   createdAt: {
     type: Date,
     default: Date.now
