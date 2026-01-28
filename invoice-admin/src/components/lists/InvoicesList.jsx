@@ -187,23 +187,6 @@ const InvoicesList = () => {
               onChange={(e) => handleFilterChange('amountMin', e.target.value)}
             />
           </div>
-
-          {/* Template Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Template
-            </label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={filters.template}
-              onChange={(e) => handleFilterChange('template', e.target.value)}
-            >
-              <option value="">All Templates</option>
-              {templates.map(template => (
-                <option key={template} value={template}>{template}</option>
-              ))}
-            </select>
-          </div>
         </div>
 
         {/* Clear Filters Button */}
