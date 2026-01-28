@@ -283,7 +283,7 @@ const Template1 = ({ data = {} }) => {
         </div>
 
         {/* FOOTER */}
-        <div style={{ position: 'absolute', bottom: '0', left: 0, right: 0, padding: '10px 50px', display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ position: 'absolute', bottom: '-338px', left: 0, right: 0, padding: '10px 50px', display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ textAlign: 'left' }}>
             <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '14px', letterSpacing: '2px', margin: '0 0 3px 0', fontFamily: "'Orbitron', sans-serif" }}>EMAIL</p>
             <p style={{ color: '#ffffff', fontSize: '14px', margin: 0, fontFamily: "'Montserrat', sans-serif" }}>{email}</p>

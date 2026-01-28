@@ -9,7 +9,7 @@ import Contact from './pages/Contact';
 
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
-import Template12 from './components/templates/Template12';
+import Template1 from './components/templates/Template1';
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />        
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path='/template' element={<Template12 />} />
+        <Route path='/template' element={<Template1 />} />
       </Routes>
     </BrowserRouter>
   );
