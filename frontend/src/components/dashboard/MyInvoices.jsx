@@ -237,8 +237,9 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
   const filteredInvoices = getFilteredInvoices();
   const isTrashView = invoiceFilter === 'trash';
 
-  const totalAmount = invoices.reduce((sum, inv) => sum + inv.total, 0);
-  const paidAmount = invoices.reduce((sum, inv) => sum + inv.paid, 0);
+  // Calculate totals from FILTERED invoices, not all invoices
+  const totalAmount = filteredInvoices.reduce((sum, inv) => sum + inv.total, 0);
+  const paidAmount = filteredInvoices.reduce((sum, inv) => sum + inv.paid, 0);
   const balanceDue = totalAmount - paidAmount;
 
   const invoiceFilters = [

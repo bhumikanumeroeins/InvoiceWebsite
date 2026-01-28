@@ -1,3 +1,46 @@
+let profileCache = null;
+let profilePromise = null;
+
+const fetchProfileData = async () => {
+  if (profileCache) return profileCache;
+  
+  if (profilePromise) return profilePromise;
+  
+  profilePromise = (async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        profileCache = { email: '', phone: '', websiteLink: '' };
+        return profileCache;
+      }
+      
+      const response = await fetch('http://localhost:5000/api/invoices/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          profileCache = result.data;
+          return result.data;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+    }
+    
+    profileCache = { email: '', phone: '', websiteLink: '' };
+    return profileCache;
+  })();
+  
+  const data = await profilePromise;
+  profilePromise = null;
+  return data;
+};
+
 export const getInvoiceData = (data = {}) => {
   const BACKEND_URL = 'http://localhost:5000';
   
@@ -28,6 +71,23 @@ export const getInvoiceData = (data = {}) => {
     return parts.join('\n');
   };
 
+  const buildShippingAddress = (shipTo) => {
+    if (!shipTo) return '';
+    const parts = [
+      shipTo.shippingAddress,
+      [shipTo.shippingCity, shipTo.shippingState, shipTo.shippingZip].filter(Boolean).join(' ')
+    ].filter(Boolean);
+    return parts.join('\n');
+  };
+
+  // Trigger profile fetch if not cached (async, won't block)
+  if (!profileCache) {
+    fetchProfileData();
+  }
+  
+  // Use cached profile data (will be empty on first call, populated on subsequent calls)
+  const profile = profileCache || { email: '', phone: '', websiteLink: '' };
+
   return {
     logo: getImageUrl(data.business?.logo),
     companyName: data.business?.name || '',
@@ -36,8 +96,8 @@ export const getInvoiceData = (data = {}) => {
     billToName: data.client?.name || '',
     billToAddress: buildAddress(data.client),
     
-    shipToName: '',
-    shipToAddress: data.shipTo?.shippingAddress || '',
+    shipToName: data.shipTo?.shippingName || '',
+    shipToAddress: buildShippingAddress(data.shipTo),
     
     invoiceNumber: data.invoiceMeta?.invoiceNo || '',
     invoiceDate: formatDate(data.invoiceMeta?.invoiceDate),
@@ -65,10 +125,12 @@ export const getInvoiceData = (data = {}) => {
     signature: getImageUrl(data.signature),
     qrCode: getImageUrl(data.qrCode),
     
+    // Profile data from cache
+    email: profile.email || '',
+    phone: profile.phone || '',
+    website: profile.websiteLink || '',
+    
     poNumber: '',
-    email: '',
-    phone: '',
-    website: '',
     upiId: '',
   };
 };
