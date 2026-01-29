@@ -17,8 +17,8 @@ const Template2 = ({ data = {}, editorMode = true }) => {
   const [layout, setLayout] = useState({
     header: { x: 380, y: 30 },
     party: { x: 60, y: 250 },
-    items: { x: 60, y: 30 },
-    terms: { x: 60, y: 690 },
+    items: { x: 60, y: 320 },
+    terms: { x: 60, y: 450 },
     totals: { x: 380, y: 690 },
     footer: { x: 0, y: 980 },
   });
