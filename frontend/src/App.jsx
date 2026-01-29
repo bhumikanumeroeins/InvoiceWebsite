@@ -6,10 +6,9 @@ import CreateInvoice from './pages/CreateInvoice';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
 import TemplateBuilder from './pages/TemplateBuilder';
-
-
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
+import Template3 from './components/templates/Template3/Template3';
 
 
 
@@ -25,8 +24,8 @@ function App() {
         <Route path="/contact" element={<Contact />} />        
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/template-builder" element={<TemplateBuilder />} />
-        
+        <Route path="/template" element={<Template3 />} />
+        <Route path="/template-builder" element={<TemplateBuilder />} />        
       </Routes>
     </BrowserRouter>
   );

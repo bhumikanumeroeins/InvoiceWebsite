@@ -6,7 +6,7 @@ const getCurrencySymbol = (currency = 'INR') => {
   return currencyService.getSymbol(currency);
 };
 
-const formatAmount = (amount, currency = 'INR') => {
+const formatAmount = (amount, currency = 'INR') => { 
   // Use basic formatting since we don't have locale config
   return Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
 };
@@ -19,7 +19,7 @@ const formatCurrency = (amount, currency = 'INR') => {
 
 import Template1 from '../templates/Template1/Template1';
 import Template2 from '../templates/Template2/Template2';
-import Template3 from '../templates/Template3';
+import Template3 from '../templates/Template3/Template3';
 import Template4 from '../templates/Template4';
 import Template5 from '../templates/Template5';
 import Template6 from '../templates/Template6';

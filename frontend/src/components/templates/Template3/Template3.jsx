@@ -1,32 +1,34 @@
 import { useState } from "react";
 import { Rnd } from "react-rnd";
 
-import bgImage from "../../../assets/templates/1_4.jpeg";
+import bgImage from "../../../assets/templates/3_1.png";
 import { getInvoiceData } from "../../../utils/invoiceDefaults";
 
 import HeaderBlock from "./HeaderBlock";
 import PartyBlock from "./PartyBlock";
+import InvoiceDetailsBlock from "./InvoiceDetailsBlock";
 import ItemsBlock from "./ItemsBlock";
 import TermsPaymentBlock from "./TermsPaymentBlock";
 import TotalsQRBlock from "./TotalsQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template2 = ({ data = {}, editorMode = true }) => {
+const Template3 = ({ data = {}, editorMode = true }) => {
   const invoice = getInvoiceData(data);
 
   const [layout, setLayout] = useState({
-    header: { x: 380, y: 30 },
-    party: { x: 60, y: 250 },
-    items: { x: 60, y: 320 },
-    terms: { x: 60, y: 550 },
-    totals: { x: 380, y: 550 },
-    footer: { x: 0, y: 780 },
+    header: { x: 0, y: 20 },
+    party: { x: 0, y: 100 },
+    details: { x: 0, y: 200 },
+    items: { x: 0, y: 260 },
+    terms: { x: 50, y: 440 },
+    totals: { x: 420, y: 420 },
+    footer: { x: 50, y: 650 },
   });
 
   const updatePos = (key, x, y) => {
-    setLayout((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], x, y },
+    setLayout((p) => ({
+      ...p,
+      [key]: { ...p[key], x, y },
     }));
   };
 
@@ -36,62 +38,75 @@ const Template2 = ({ data = {}, editorMode = true }) => {
         width: 794,
         height: 1123,
         position: "relative",
-        overflow: "hidden",
         backgroundImage: `url(${bgImage})`,
         backgroundSize: "794px 1123px",
+        backgroundRepeat: "no-repeat",
+        overflow: "hidden",
+        fontFamily: "'DM Sans', sans-serif",
       }}
     >
       {/* HEADER */}
       <Rnd
         bounds="parent"
-        size={{ width: 300, height: "auto" }}
+        size={{ width: 700 }}
         position={layout.header}
-        onDragStop={(e, d) => updatePos("header", d.x, d.y)}
         disableDragging={!editorMode}
+        onDragStop={(e, d) => updatePos("header", d.x, d.y)}
       >
         <HeaderBlock {...invoice} />
       </Rnd>
 
-      {/* PARTY */}
+      {/* BILL / SHIP */}
       <Rnd
         bounds="parent"
-        size={{ width: 675, height: "auto" }}
+        size={{ width: 700 }}
         position={layout.party}
-        onDragStop={(e, d) => updatePos("party", d.x, d.y)}
         disableDragging={!editorMode}
+        onDragStop={(e, d) => updatePos("party", d.x, d.y)}
       >
         <PartyBlock {...invoice} />
+      </Rnd>
+
+      {/* INVOICE DETAILS */}
+      <Rnd
+        bounds="parent"
+        size={{ width: 700 }}
+        position={layout.details}
+        disableDragging={!editorMode}
+        onDragStop={(e, d) => updatePos("details", d.x, d.y)}
+      >
+        <InvoiceDetailsBlock {...invoice} />
       </Rnd>
 
       {/* ITEMS */}
       <Rnd
         bounds="parent"
-        size={{ width: 675, height: "auto" }}
+        size={{ width: 700 }}
         position={layout.items}
-        onDragStop={(e, d) => updatePos("items", d.x, d.y)}
         disableDragging={!editorMode}
+        onDragStop={(e, d) => updatePos("items", d.x, d.y)}
       >
         <ItemsBlock items={invoice.items} />
       </Rnd>
 
-      {/* TERMS / PAYMENT */}
+      {/* TERMS + PAYMENT */}
       <Rnd
         bounds="parent"
-        size={{ width: 300, height: "auto" }}
+        size={{ width: 300 }}
         position={layout.terms}
-        onDragStop={(e, d) => updatePos("terms", d.x, d.y)}
         disableDragging={!editorMode}
+        onDragStop={(e, d) => updatePos("terms", d.x, d.y)}
       >
         <TermsPaymentBlock {...invoice} />
       </Rnd>
 
-      {/* TOTALS / QR */}
+      {/* TOTALS + QR */}
       <Rnd
         bounds="parent"
-        size={{ width: 300, height: "auto" }}
+        size={{ width: 300 }}
         position={layout.totals}
-        onDragStop={(e, d) => updatePos("totals", d.x, d.y)}
         disableDragging={!editorMode}
+        onDragStop={(e, d) => updatePos("totals", d.x, d.y)}
       >
         <TotalsQRBlock {...invoice} />
       </Rnd>
@@ -99,10 +114,10 @@ const Template2 = ({ data = {}, editorMode = true }) => {
       {/* FOOTER */}
       <Rnd
         bounds="parent"
-        size={{ width: 794, height: "auto" }}
+        size={{ width: 700 }}
         position={layout.footer}
-        onDragStop={(e, d) => updatePos("footer", d.x, d.y)}
         disableDragging={!editorMode}
+        onDragStop={(e, d) => updatePos("footer", d.x, d.y)}
       >
         <FooterBlock {...invoice} />
       </Rnd>
@@ -110,4 +125,4 @@ const Template2 = ({ data = {}, editorMode = true }) => {
   );
 };
 
-export default Template2;
+export default Template3;
