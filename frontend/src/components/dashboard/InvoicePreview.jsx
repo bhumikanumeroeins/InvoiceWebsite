@@ -7,7 +7,6 @@ const getCurrencySymbol = (currency = 'INR') => {
 };
 
 const formatAmount = (amount, currency = 'INR') => {
-  // Use basic formatting since we don't have locale config
   return Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
 };
 
