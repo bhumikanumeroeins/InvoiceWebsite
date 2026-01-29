@@ -5,7 +5,7 @@ import qrCodeImg from '../../assets/templates/images (1).png';
 import bracketImg from '../../assets/templates/1.jpg';
 import { getInvoiceData } from '../../utils/invoiceDefaults';
 
-const Template1 = ({ data = {} }) => {
+const Templates1 = ({ data = {} }) => {
   const {
     logo, companyName, companyAddress, billToName, billToAddress,
     shipToName, shipToAddress, invoiceNumber, invoiceDate, poNumber,
@@ -575,4 +575,4 @@ const Template1 = ({ data = {} }) => {
   );
 };
 
-export default Template1;
+export default Templates1;

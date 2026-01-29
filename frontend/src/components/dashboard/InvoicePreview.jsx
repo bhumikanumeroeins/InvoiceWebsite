@@ -17,8 +17,8 @@ const formatCurrency = (amount, currency = 'INR') => {
   return `${symbol}${formattedAmount}`;
 };
 
-import Template1 from '../templates/Template1';
-import Template2 from '../templates/Template2';
+import Template1 from '../templates/Template1/Template1';
+import Template2 from '../templates/Template2/Template2';
 import Template3 from '../templates/Template3';
 import Template4 from '../templates/Template4';
 import Template5 from '../templates/Template5';
@@ -641,10 +641,21 @@ Best regards`,
       {activeAction === 'invoice' && (
         <div className="p-6">
           <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm flex justify-center">
-            <div className="transform scale-[0.6] origin-top">
+            <div
+                className="origin-top"
+                style={{
+                  transform: activeAction === "invoice" ? "scale(0.6)" : "scale(1)",
+                }}
+              >
               {(() => {
                 const TemplateComponent = templates[selectedTemplate];
-                return <TemplateComponent data={previewData} />;
+                return (
+                  <TemplateComponent
+                    data={previewData}
+                    editorMode={true}
+                  />
+                );
+
               })()}
             </div>
           </div>
@@ -702,7 +713,11 @@ Best regards`,
                         height: '1123px' 
                       }}
                     >
-                      <TemplateComponent data={previewData} />
+                      <TemplateComponent
+                        data={previewData}
+                        editorMode={true}
+                      />
+
                     </div>
                   </div>
                   <p className={`text-center text-sm py-2 font-medium ${
@@ -1228,7 +1243,13 @@ Best regards`,
                   <div className="transform scale-[0.08] origin-top-left w-[1250%] h-[1250%]">
                     {(() => {
                       const TemplateComponent = templates[selectedTemplate];
-                      return <TemplateComponent data={previewData} />;
+                      return (
+                        <TemplateComponent
+                          data={previewData}
+                          editorMode={false}
+                        />
+                      );
+
                     })()}
                   </div>
                 </div>
