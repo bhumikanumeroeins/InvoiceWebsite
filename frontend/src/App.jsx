@@ -5,6 +5,7 @@ import SignUp from './pages/SignUp';
 import CreateInvoice from './pages/CreateInvoice';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
+import TemplateBuilder from './pages/TemplateBuilder';
 
 
 import Dashboard from './pages/Dashboard';
@@ -24,6 +25,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />        
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/template-builder" element={<TemplateBuilder />} />
         <Route path='/template' element={<Template2 />} />
       </Routes>
     </BrowserRouter>
