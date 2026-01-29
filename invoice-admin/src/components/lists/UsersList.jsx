@@ -1,126 +1,106 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getUsersList } from '../../services/adminService';
 
 const UsersList = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-
-  const users = [
-    {
-      id: 1,
-      name: 'John Smith',
-      email: 'john.smith@company.com',
-      role: 'Admin',
-      status: 'Active',
-      lastLogin: '2026-01-22 09:30',
-      avatar: 'JS',
-      joinDate: '2025-06-15'
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      email: 'sarah.j@company.com',
-      role: 'Accountant',
-      status: 'Active',
-      lastLogin: '2026-01-21 16:45',
-      avatar: 'SJ',
-      joinDate: '2025-08-20'
-    },
-    {
-      id: 3,
-      name: 'Mike Davis',
-      email: 'mike.davis@company.com',
-      role: 'Staff',
-      status: 'Active',
-      lastLogin: '2026-01-20 11:15',
-      avatar: 'MD',
-      joinDate: '2025-09-10'
-    },
-    {
-      id: 4,
-      name: 'Emily Chen',
-      email: 'emily.chen@company.com',
-      role: 'Accountant',
-      status: 'Inactive',
-      lastLogin: '2026-01-15 14:20',
-      avatar: 'EC',
-      joinDate: '2025-07-05'
-    },
-    {
-      id: 5,
-      name: 'David Wilson',
-      email: 'david.wilson@company.com',
-      role: 'Staff',
-      status: 'Active',
-      lastLogin: '2026-01-22 08:00',
-      avatar: 'DW',
-      joinDate: '2025-10-01'
-    },
-    {
-      id: 6,
-      name: 'Lisa Brown',
-      email: 'lisa.brown@company.com',
-      role: 'Admin',
-      status: 'Active',
-      lastLogin: '2026-01-19 17:30',
-      avatar: 'LB',
-      joinDate: '2025-05-12'
-    },
-    {
-      id: 7,
-      name: 'Robert Taylor',
-      email: 'robert.taylor@company.com',
-      role: 'Staff',
-      status: 'Inactive',
-      lastLogin: '2026-01-10 13:45',
-      avatar: 'RT',
-      joinDate: '2025-11-15'
-    }
-  ];
-
-  const roles = ['Admin', 'Accountant', 'Staff'];
-  const statuses = ['Active', 'Inactive'];
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit] = useState(10);
+  
+  const [filters, setFilters] = useState({
+    search: '',
+    email: '',
+    name: ''
   });
 
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'Admin':
-        return 'bg-purple-100 text-purple-800';
-      case 'Accountant':
-        return 'bg-blue-100 text-blue-800';
-      case 'Staff':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  // Fetch users from backend
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage, filters]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Build query params
+      const params = {
+        page: currentPage,
+        limit: limit
+      };
+
+      // Add filters if they have values
+      if (filters.search) params.search = filters.search;
+      if (filters.email) params.email = filters.email;
+      if (filters.name) params.name = filters.name;
+
+      const response = await getUsersList(params);
+
+      if (response.success) {
+        setUsers(response.data || []);
+        setTotalUsers(response.totalUsers || 0);
+        setFilteredCount(response.filteredCount || 0);
+        setCurrentPage(response.currentPage || 1);
+        setTotalPages(response.totalPages || 1);
+      } else {
+        setError('Failed to fetch users');
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      
+      if (err.response?.status === 401) {
+        setError('Session expired. Redirecting to login...');
+        localStorage.removeItem('token');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else {
+        setError('Failed to load users. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusColor = (status) => {
-    return status === 'Active'
-      ? 'bg-green-100 text-green-800'
-      : 'bg-red-100 text-red-800';
+  const handleFilterChange = (field, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
-  const toggleStatus = (userId) => {
-    // In a real app, this would make an API call
-    console.log(`Toggle status for user ${userId}`);
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      email: '',
+      name: ''
+    });
+    setCurrentPage(1);
   };
 
-  const editUser = (userId) => {
-    // In a real app, this would open an edit modal or navigate to edit page
-    console.log(`Edit user ${userId}`);
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
   };
 
-  const deleteUser = (userId) => {
-    // In a real app, this would show a confirmation dialog and make an API call
-    console.log(`Delete user ${userId}`);
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
 
   return (
@@ -129,180 +109,279 @@ const UsersList = () => {
         <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
       </div>
 
+      {error && (
+        <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <span className="mr-2">🔍</span>
+          Filters
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Search (Name or Email)
+            </label>
             <input
               type="text"
-              placeholder="Search by name or email..."
+              placeholder="Search..."
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
             />
           </div>
-          <div className="sm:w-40">
-            <select
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by Name
+            </label>
+            <input
+              type="text"
+              placeholder="Name..."
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-            >
-              <option value="all">All Roles</option>
-              {roles.map(role => (
-                <option key={role} value={role}>{role}</option>
-              ))}
-            </select>
+              value={filters.name}
+              onChange={(e) => handleFilterChange('name', e.target.value)}
+            />
           </div>
-          <div className="sm:w-40">
-            <select
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by Email
+            </label>
+            <input
+              type="text"
+              placeholder="Email..."
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              {statuses.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
+              value={filters.email}
+              onChange={(e) => handleFilterChange('email', e.target.value)}
+            />
           </div>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button
+            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
+            onClick={handleClearFilters}
+          >
+            Clear Filters
+          </button>
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Users ({filteredUsers.length})
-          </h3>
+      {loading ? (
+        <div className="flex justify-center items-center h-64 bg-white rounded-lg shadow">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                        {user.avatar}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">Joined {new Date(user.joinDate).toLocaleDateString()}</div>
-                      </div>
+      ) : (
+        <>
+          {/* Users Table */}
+          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+            <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Users ({filteredCount})
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Total users: {totalUsers}
+                </p>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Phone
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Business Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Invoices
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Joined Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                        No users found matching your criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((user) => (
+                      <tr key={user._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                              {getInitials(user.name)}
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{user.name || 'N/A'}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {user.email || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {user.phone || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {user.bussinessName || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                          {user.totalInvoices || 0}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {formatDate(user.createdAt)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4 rounded-lg shadow">
+              <div className="flex-1 flex justify-between sm:hidden">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Showing page <span className="font-medium">{currentPage}</span> of{' '}
+                    <span className="font-medium">{totalPages}</span>
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    {[...Array(totalPages)].map((_, index) => {
+                      const page = index + 1;
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              page === currentPage
+                                ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
+                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (page === currentPage - 2 || page === currentPage + 2) {
+                        return (
+                          <span
+                            key={page}
+                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Summary Cards */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold">
+                      U
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.email}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filteredUsers.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No users found matching your criteria.
-          </div>
-        )}
-      </div>
-
-      {/* Summary Cards */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                  Users
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Total Users
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {totalUsers}
+                      </dd>
+                    </dl>
+                  </div>
                 </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Users
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {users.length}
-                  </dd>
-                </dl>
+            </div>
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center text-white font-bold">
+                      F
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Filtered Results
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {filteredCount}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                  Active
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Active Users
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {users.filter(user => user.status === 'Active').length}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                  Admins
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Admins
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {users.filter(user => user.role === 'Admin').length}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
-                  Account
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Accountants
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {users.filter(user => user.role === 'Accountant').length}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 };

@@ -160,7 +160,7 @@ const DashboardContent = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip formatter={(value) => [`$${value}`, 'Revenue']} />
+                  <Tooltip formatter={(value) => [`${value}`, 'Revenue']} />
                   <Line
                     type="monotone"
                     dataKey="revenue"
