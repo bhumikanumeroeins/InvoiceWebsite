@@ -6,7 +6,7 @@ const TermsPaymentBlock = ({
   signature,
 }) => {
   return (
-    <div style={{ width: "45%" }}>
+    <div style={{ width: "100%" }}>
       <h4>Terms & Conditions</h4>
 
       {terms.map((t, i) => (

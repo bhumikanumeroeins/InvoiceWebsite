@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
 import bgImage from "../../../assets/templates/1_1.jpg";
@@ -10,23 +10,50 @@ import TotalsBlock from "./TotalsBlock";
 import PaymentBlock from "./PaymentBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template1 = ({ data = {}, editorMode = true }) => {
+
+
+const Template1 = ({ data = {}, editorMode = true , backendLayout,  background,  templateId}) => {
+  console.log("📦 backendLayout prop:", backendLayout);
+
+const bgUrl = background
+  ? `/uploads/templates/${background}`
+  : bgImage;
+
+
   const invoice = getInvoiceData(data);
 
-  const [layout, setLayout] = useState({
-    header: { x: 0, y: 0 },
-    items: { x: 0, y: 250 },
-    totals: { x: 0, y: 400 },
-    payment: { x: 0, y: 550 },
-    footer: { x: 0, y: 750 },
-  });
+  const DEFAULT_LAYOUT = {
+      header: { x: 0, y: 0 },
+      items: { x: 0, y: 250 },
+      totals: { x: 0, y: 400 },
+      payment: { x: 0, y: 550 },
+      footer: { x: 0, y: 750 },
+    };
+    const [layout, setLayout] = useState(DEFAULT_LAYOUT);
 
-  const updatePos = (key, x, y) => {
-    setLayout((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], x, y },
-    }));
+    useEffect(() => {
+      console.log("➡️ useEffect fired with backendLayout:", backendLayout);
+      if (backendLayout) {
+        setLayout(backendLayout);
+      }
+    }, [backendLayout]);
+
+
+
+const updatePos = (key, x, y) => {
+  const newLayout = {
+    ...layout,
+    [key]: { x, y },
   };
+
+  setLayout(newLayout);
+
+  // later call save API here
+};
+
+console.log("🧭 current layout state:", layout);
+
+
 
   return (
     <div
@@ -40,7 +67,7 @@ const Template1 = ({ data = {}, editorMode = true }) => {
     >
       {/* Background */}
       <img
-        src={bgImage}
+        src={bgUrl}
         alt=""
         style={{
           position: "absolute",

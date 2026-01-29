@@ -4,9 +4,9 @@ const ItemsBlock = ({ items }) => {
       style={{
         position: "absolute",
         top: 35,
-        left: "50%",
+        left: "43%",
         transform: "translateX(-50%)",
-        width: "100%",
+        width: "87%",
       }}
     >
       <div style={{ display: "flex" }}>
