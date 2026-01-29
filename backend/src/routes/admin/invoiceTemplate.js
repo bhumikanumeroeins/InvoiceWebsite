@@ -5,7 +5,7 @@ import {createInvoiceTemplate, getInvoiceTemplate} from "../../controller/admin/
 const router = express.Router();
 
 router.post("/create-invoice-template", createInvoiceTemplate);
-router.get("/invoice-template/:id", getInvoiceTemplate);
+router.get("/:name", getInvoiceTemplate);
 
 
 export default router;

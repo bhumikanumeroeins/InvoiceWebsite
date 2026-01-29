@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X, Copy, ArrowRight, Loader2, Trash2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { templateAPI } from '../../services/templateService';
 const getCurrencySymbol = (currency = 'INR') => {
   return currencyService.getSymbol(currency);
 };
@@ -20,7 +21,7 @@ const formatCurrency = (amount, currency = 'INR') => {
 import Template1 from '../templates/Template1/Template1';
 import Template2 from '../templates/Template2/Template2';
 import Template3 from '../templates/Template3/Template3';
-import Template4 from '../templates/Template4';
+import Template4 from '../templates/Template4/Template4';
 import Template5 from '../templates/Template5';
 import Template6 from '../templates/Template6';
 import Template7 from '../templates/Template7';
@@ -58,6 +59,7 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
   const [currentInvoice, setCurrentInvoice] = useState(invoice);
   const [loading, setLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
+  const [templateMeta, setTemplateMeta] = useState(null);
   const templateRef = useRef(null);
   
   // Update currentInvoice when invoice prop changes
@@ -86,6 +88,25 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
     
     fetchFullInvoice();
   }, [invoice]);
+
+  useEffect(() => {
+  const loadTemplate = async () => {
+    try {
+      const res = await templateAPI.getByName(
+        `Template${selectedTemplate}`
+      );
+
+      setTemplateMeta(res);
+      console.log("🔥 TEMPLATE META FROM API:", res.data);
+
+    } catch (err) {
+      console.error("Template fetch failed", err);
+    }
+  };
+
+  loadTemplate();
+}, [selectedTemplate]);
+
   
   // Payment state
   const [paymentTab, setPaymentTab] = useState('manual'); // 'manual' or 'cards'
@@ -652,7 +673,10 @@ Best regards`,
                 return (
                   <TemplateComponent
                     data={previewData}
-                    editorMode={true}
+                    editorMode
+                    backendLayout={templateMeta?.layout}
+                    background={templateMeta?.background}
+                    templateId={templateMeta?._id}
                   />
                 );
 
@@ -716,8 +740,9 @@ Best regards`,
                       <TemplateComponent
                         data={previewData}
                         editorMode={true}
+                        backendLayout={templateMeta?.layout}
+                        background={templateMeta?.background}
                       />
-
                     </div>
                   </div>
                   <p className={`text-center text-sm py-2 font-medium ${
@@ -1246,10 +1271,12 @@ Best regards`,
                       return (
                         <TemplateComponent
                           data={previewData}
-                          editorMode={false}
+                          editorMode={true}
+                          backendLayout={templateMeta?.layout}
+                          background={templateMeta?.background}
+                          templateId={templateMeta?._id}
                         />
                       );
-
                     })()}
                   </div>
                 </div>
@@ -1528,7 +1555,14 @@ Best regards`,
         <div ref={templateRef}>
           {(() => {
             const TemplateComponent = templates[selectedTemplate];
-            return <TemplateComponent data={previewData} />;
+              return (
+                <TemplateComponent
+                  data={previewData}
+                  editorMode={false}
+                  backendLayout={templateMeta?.layout}
+                  background={templateMeta?.background}
+                />
+              );
           })()}
         </div>
       </div>
