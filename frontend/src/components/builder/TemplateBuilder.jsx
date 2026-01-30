@@ -7,7 +7,6 @@ import { apiCall } from '../../services/apiConfig';
 import { buildInvoiceAPI } from '../../services/buildInvoiceService';
 import { getCurrentUser } from '../../services/authService';
 import TemplateBuilderTabs from './TemplateBuilderTabs';
-import '../../styles/pdf-compat.css';
 
 const EditableText = ({ value, onChange, style, className, placeholder }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -231,48 +230,38 @@ Best regards`,
       }
 
       // Dynamically import libraries
-      const html2canvas = (await import('html2canvas')).default;
+      const { domToPng } = await import('modern-screenshot');
       const { jsPDF } = await import('jspdf');
 
-      // Add PDF capture mode class to avoid oklch colors
-      templateRef.current.classList.add('pdf-capture-mode');
+      // Temporarily enable preview mode to hide drag handles
+      const wasPreviewMode = previewMode;
+      setPreviewMode(true);
+      
+      // Wait for React to re-render
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Wait for styles to apply
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      // Capture using html2canvas
-      const canvas = await html2canvas(templateRef.current, {
+      // Capture using modern-screenshot (supports modern CSS including oklch)
+      const dataUrl = await domToPng(templateRef.current, {
         scale: 2,
-        useCORS: true,
-        allowTaint: true,
         backgroundColor: templateConfig.backgroundColor,
-        logging: false,
-        windowWidth: 850,
-        windowHeight: 1123,
-        onclone: (clonedDoc, element) => {
-          // Remove all Rnd handles from cloned document
-          const handles = element.querySelectorAll('.react-draggable-handle, .react-resizable-handle');
-          handles.forEach(handle => {
-            if (handle.parentNode) {
-              handle.parentNode.removeChild(handle);
-            }
-          });
-          
-          // Remove opacity-0 elements
-          const hidden = element.querySelectorAll('.opacity-0');
-          hidden.forEach(el => {
-            if (el.parentNode) {
-              el.parentNode.removeChild(el);
-            }
-          });
+        filter: (node) => {
+          // Skip hidden elements (opacity-0)
+          if (node.classList && node.classList.contains('opacity-0')) {
+            return false;
+          }
+          // Skip drag handles
+          if (node.classList && (
+            node.classList.contains('react-draggable-handle') ||
+            node.classList.contains('react-resizable-handle')
+          )) {
+            return false;
+          }
+          return true;
         }
       });
 
-      // Remove PDF capture mode class
-      templateRef.current.classList.remove('pdf-capture-mode');
-
-      // Convert canvas to image
-      const imgData = canvas.toDataURL('image/png');
+      // Restore preview mode
+      setPreviewMode(wasPreviewMode);
 
       // Create PDF (A4 size)
       const pdf = new jsPDF({
@@ -285,12 +274,20 @@ Best regards`,
       const pdfWidth = 210;
       const pdfHeight = 297;
 
+      // Load image to get dimensions
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+
       // Calculate image dimensions to fit A4
       const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      const imgHeight = (img.height * pdfWidth) / img.width;
 
       // Add image to PDF
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight);
 
       if (forDownload) {
         // Download the PDF
@@ -302,10 +299,8 @@ Best regards`,
         return pdfBase64;
       }
     } catch (error) {
-      // Clean up PDF capture mode class if it exists
-      if (templateRef.current) {
-        templateRef.current.classList.remove('pdf-capture-mode');
-      }
+      // Restore preview mode on error
+      setPreviewMode(false);
       throw new Error('Failed to generate PDF: ' + error.message);
     }
   };
