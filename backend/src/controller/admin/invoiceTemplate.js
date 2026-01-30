@@ -42,8 +42,8 @@ export const getInvoiceTemplate = async (req, res) => {
     const template = await InvoiceTemplate.findOne({
       name: req.params.name,
       isActive: true,
-    });
-
+    });    
+    
     if (!template) {
       return res.status(404).json({ message: "Template not found" });
     }
@@ -53,3 +53,5 @@ export const getInvoiceTemplate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
