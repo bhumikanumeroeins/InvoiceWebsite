@@ -117,6 +117,7 @@ const invoiceCustomizationSchema = new mongoose.Schema(
     paymentInfo: { type: Boolean, default: true },
     signature: { type: Boolean, default: true },
     qrCodeSection: { type: Boolean, default: true },
+    logo:{ type: Boolean, default: true },
     
     
 
@@ -133,6 +134,7 @@ const invoiceCustomizationSchema = new mongoose.Schema(
     qrCodePosition: { type: positionSchema, default: { x: 380, y: 780, width: 190, height: 100 } },
     signaturePosition: { type: positionSchema, default: { x: 560, y: 780, width: 190, height: 100 } },
     footerPosition: { type: positionSchema, default: { x: 50, y: 950, width: 700, height: 60 } },
+    invoiceTitlePosition: { type: positionSchema, default: { x: 50, y: 200, width: 300, height: 40 } },
 
     // background pattern 
 
