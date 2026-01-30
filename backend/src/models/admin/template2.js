@@ -12,27 +12,22 @@ const template2Schema = new mongoose.Schema(
         x: { type: Number, default: 380 },
         y: { type: Number, default: 30 }
       },
-
       party: {
         x: { type: Number, default: 60 },
         y: { type: Number, default: 250 }
       },
-
       items: {
         x: { type: Number, default: 60 },
         y: { type: Number, default: 320 }
       },
-
       terms: {
         x: { type: Number, default: 60 },
         y: { type: Number, default: 550 }
       },
-
       totals: {
         x: { type: Number, default: 380 },
         y: { type: Number, default: 550 }
       },
-
       footer: {
         x: { type: Number, default: 0 },
         y: { type: Number, default: 780 }
