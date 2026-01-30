@@ -15,6 +15,7 @@ import recurring from "./routes/recurring/recurringInvoice.js";
 import reminders from "./routes/reminders/paymentReminder.js";
 import admin from "./routes/admin/admin_register.js";
 import invoiceTemplate from "./routes/admin/invoiceTemplate.js";
+import buildInvoice from "./routes/users/buildInvoice.js";
 
 
 import path from "path";
@@ -43,6 +44,7 @@ app.use("/api/recurring", recurring);
 app.use("/api/reminders", reminders);
 app.use("/api/admin", admin);
 app.use("/api/invoice-template", invoiceTemplate);
+app.use("/api/build-invoice", buildInvoice);
 
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
