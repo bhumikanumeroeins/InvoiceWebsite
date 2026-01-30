@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const template9Schema = new mongoose.Schema(
+const template10Schema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -9,32 +9,28 @@ const template9Schema = new mongoose.Schema(
 
     layout: {
       header: {
-        x: { type: Number, default: 80 },
-        y: { type: Number, default: 40 }
-      },
-      pill: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 110 }
+        y: { type: Number, default: 0 }
       },
       party: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 200 }
+        y: { type: Number, default: 150 }
       },
       items: {
-        x: { type: Number, default: 0 },
-        y: { type: Number, default: 300 }
+        x: { type: Number, default: 80 },
+        y: { type: Number, default: 250 }
       },
       termsTotals: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 450 }
+        y: { type: Number, default: 400 }
       },
       paymentQR: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 520 }
+        y: { type: Number, default: 500 }
       },
       footer: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 650 }
+        y: { type: Number, default: 700 }
       }
     },
 
@@ -46,6 +42,6 @@ const template9Schema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const template9 = mongoose.model("Template9", template9Schema);
+const template10 = mongoose.model("Template10", template10Schema);
 
-export default template9;
+export default template10;
