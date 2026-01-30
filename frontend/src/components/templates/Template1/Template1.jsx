@@ -12,12 +12,11 @@ import FooterBlock from "./FooterBlock";
 
 
 
-const Template1 = ({ data = {}, editorMode = true , backendLayout,  background,  templateId}) => {
-  console.log("📦 backendLayout prop:", backendLayout);
+const Template1 = ({ data = {}, editorMode = true , backendLayout,  templateId}) => {
 
-const bgUrl = background
-  ? `/uploads/templates/${background}`
-  : bgImage;
+const bgUrl = bgImage;
+
+
 
 
   const invoice = getInvoiceData(data);
@@ -29,14 +28,21 @@ const bgUrl = background
       payment: { x: 0, y: 550 },
       footer: { x: 0, y: 750 },
     };
-    const [layout, setLayout] = useState(DEFAULT_LAYOUT);
+    const [layout, setLayout] = useState(
+      backendLayout || DEFAULT_LAYOUT
+    );
+
 
     useEffect(() => {
-      console.log("➡️ useEffect fired with backendLayout:", backendLayout);
-      if (backendLayout) {
+      if (
+        backendLayout &&
+        Object.keys(backendLayout).length > 0
+      ) {
+        console.log("✅ Applying backend layout:", backendLayout);
         setLayout(backendLayout);
       }
     }, [backendLayout]);
+
 
 
 

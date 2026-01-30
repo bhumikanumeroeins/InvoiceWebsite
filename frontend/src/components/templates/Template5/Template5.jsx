@@ -1,27 +1,28 @@
 import { useState } from "react";
 import { Rnd } from "react-rnd";
 
-import bgImage from "../../../assets/templates/4_1.jpg";
+import bgImage from "../../../assets/templates/5_1.jpg";
 import { getInvoiceData } from "../../../utils/invoiceDefaults";
 
 import HeaderBlock from "./HeaderBlock";
 import InvoiceDetailsBlock from "./InvoiceDetailsBlock";
 import ItemsBlock from "./ItemsBlock";
-import PartyTotalsBlock from "./PartyTotalsBlock";
-import TermsPaymentQRBlock from "./TermsPaymentQRBlock";
+import TermsTotalsBlock from "./TermsTotalsBlock";
+import PaymentQRBlock from "./PaymentQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template4 = ({ data = {}, editorMode = true }) => {
+const Template5 = ({ data = {}, editorMode = true }) => {
   const invoice = getInvoiceData(data);
 
   const [layout, setLayout] = useState({
-    header: { x: 0, y: 80 },
-    details: { x: 430, y: 90 },
-    items: { x: 0, y: 280 },
-    partyTotals: { x: 0, y: 450 },
-    termsQR: { x: 0, y: 550 },
-    footer: { x: 0, y: 780 },
-  });
+        header: { x: 80, y: 40 },
+        details: { x: 90, y: 210 },
+        items: { x: 80, y: 330 },
+        termsTotals: { x: 80, y: 440 },
+        paymentQR: { x: 80, y: 530 },
+        footer: { x: 80, y: 750 },
+    });
+
 
   const update = (k, x, y) =>
     setLayout((p) => ({ ...p, [k]: { x, y } }));
@@ -75,20 +76,20 @@ const Template4 = ({ data = {}, editorMode = true }) => {
 
       <Rnd
         bounds="parent"
-        position={layout.partyTotals}
-        onDragStop={(e, d) => update("partyTotals", d.x, d.y)}
+        position={layout.termsTotals}
+        onDragStop={(e, d) => update("termsTotals", d.x, d.y)}
         disableDragging={!editorMode}
       >
-        <PartyTotalsBlock {...invoice} />
+        <TermsTotalsBlock {...invoice} />
       </Rnd>
 
       <Rnd
         bounds="parent"
-        position={layout.termsQR}
-        onDragStop={(e, d) => update("termsQR", d.x, d.y)}
+        position={layout.paymentQR}
+        onDragStop={(e, d) => update("paymentQR", d.x, d.y)}
         disableDragging={!editorMode}
       >
-        <TermsPaymentQRBlock {...invoice} />
+        <PaymentQRBlock {...invoice} />
       </Rnd>
 
       <Rnd
@@ -103,4 +104,4 @@ const Template4 = ({ data = {}, editorMode = true }) => {
   );
 };
 
-export default Template4;
+export default Template5;

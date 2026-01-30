@@ -2,7 +2,7 @@ import { AlignCenter } from "lucide-react";
 import qrCodeImg from "../../assets/templates/images (1).png";
 import { getInvoiceData } from "../../utils/invoiceDefaults";
 
-const Template9 = ({ data = {} }) => {
+const Templates9 = ({ data = {} }) => {
   const {
     companyName, companyAddress,
     billToName, billToAddress,
@@ -142,9 +142,9 @@ const Template9 = ({ data = {} }) => {
       <div style={{ position: "absolute", top: "710px", left: "80px", right: "80px", display: "flex", justifyContent: "space-between" }}>
         <div>
           <p className="font-medium text-xl" style={{ fontFamily: "Bebas Neue" }}>Payment Info</p>
-          <div><span className="inline-block min-w-[105px] font-medium">Bank Name: </span>{accountNo}</div>
-          <div><span className="inline-block min-w-[105px] font-medium">Account No: </span>{bankName}</div>
-          <div><span className="inline-block min-w-[105px] font-medium">IFSC Code: </span>{ifscCode}</div>
+          <div><span className="inline-block min-w-[105px] font-medium">Bank Name: {accountNo}</span></div>
+          <div><span className="inline-block min-w-[105px] font-medium">Account No: {bankName}</span></div>
+          <div><span className="inline-block min-w-[105px] font-medium">IFSC Code: {ifscCode}</span></div>
 
           <div style={{ marginTop: "30px", textAlign: "center" }}>
             {signature ? <img src={signature} style={{ height: "40px" }} /> : <div style={{ borderBottom: "1px solid #000", width: "120px", margin: "0 auto" }} />}
@@ -170,4 +170,4 @@ const Template9 = ({ data = {} }) => {
   );
 };
 
-export default Template9;
+export default Templates9;

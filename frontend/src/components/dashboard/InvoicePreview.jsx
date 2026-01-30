@@ -21,14 +21,14 @@ import Template1 from '../templates/Template1/Template1';
 import Template2 from '../templates/Template2/Template2';
 import Template3 from '../templates/Template3/Template3';
 import Template4 from '../templates/Template4/Template4';
-import Template5 from '../templates/Template5';
-import Template6 from '../templates/Template6';
-import Template7 from '../templates/Template7';
-import Template8 from '../templates/Template8';
-import Template9 from '../templates/Template9';
-import Template10 from '../templates/Template10';
-import Template11 from '../templates/Template11';
-import Template12 from '../templates/Template12';
+import Template5 from '../templates/Template5/Template5';
+import Template6 from '../templates/Template6/Template6';
+import Template7 from '../templates/Template7/Template7';
+import Template8 from '../templates/Template8/Template8';
+import Template9 from '../templates/Template9/Template9';
+import Template10 from '../templates/Template10/Template10';
+import Template11 from '../templates/Template11/Template11';
+import Template12 from '../templates/Template12/Template12';
 import InvoiceForm from '../invoice/InvoiceForm';
 import InvoiceActionTabs from '../invoice/InvoiceActionTabs';
 import { invoiceAPI } from '../../services/invoiceService';
@@ -60,6 +60,10 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
   const [loadingAction, setLoadingAction] = useState(null);
   const [templateMeta, setTemplateMeta] = useState(null);
   const templateRef = useRef(null);
+
+
+const safeLayout = templateMeta?.layout || null;
+const safeTemplateId = templateMeta?._id || null;
   
   // Update currentInvoice when invoice prop changes
   useEffect(() => {
@@ -94,12 +98,14 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
       const res = await templateAPI.getByName(
         `Template${selectedTemplate}`
       );
-
-      setTemplateMeta(res);
+      console.log("📡 RAW TEMPLATE API:", res);
+      setTemplateMeta(res.data);
       console.log("🔥 TEMPLATE META FROM API:", res.data);
 
     } catch (err) {
-      console.error("Template fetch failed", err);
+      // console.error("Template fetch failed", err);
+      console.warn("⚠️ Template not found, using defaults");
+      setTemplateMeta({ layout: null });
     }
   };
 
@@ -669,13 +675,13 @@ Best regards`,
               >
               {(() => {
                 const TemplateComponent = templates[selectedTemplate];
+                if (!templateMeta) return null;
                 return (
                   <TemplateComponent
                     data={previewData}
                     editorMode
-                    backendLayout={templateMeta?.layout}
-                    background={templateMeta?.background}
-                    templateId={templateMeta?._id}
+                    backendLayout={safeLayout}
+                    templateId={safeTemplateId}
                   />
                 );
 
@@ -735,12 +741,11 @@ Best regards`,
                         width: '794px', 
                         height: '1123px' 
                       }}
-                    >
+                    >                      
                       <TemplateComponent
                         data={previewData}
                         editorMode={true}
-                        backendLayout={templateMeta?.layout}
-                        background={templateMeta?.background}
+                        backendLayout={safeLayout}
                       />
                     </div>
                   </div>
@@ -1271,9 +1276,8 @@ Best regards`,
                         <TemplateComponent
                           data={previewData}
                           editorMode={true}
-                          backendLayout={templateMeta?.layout}
-                          background={templateMeta?.background}
-                          templateId={templateMeta?._id}
+                          backendLayout={safeLayout}
+                          templateId={safeTemplateId}
                         />
                       );
                     })()}
@@ -1558,8 +1562,7 @@ Best regards`,
                 <TemplateComponent
                   data={previewData}
                   editorMode={false}
-                  backendLayout={templateMeta?.layout}
-                  background={templateMeta?.background}
+                  backendLayout={safeLayout}
                 />
               );
           })()}
