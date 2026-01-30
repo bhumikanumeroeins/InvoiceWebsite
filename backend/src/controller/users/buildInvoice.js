@@ -45,6 +45,54 @@ export const createOrUpdateInvoiceCustomization = async (req, res) => {
     console.log("req.user =>", req.user);
     console.log("userId =>", userId);
 
+    if (typeof data.content === 'string') {
+      try {
+        data.content = JSON.parse(data.content);
+      } catch (e) {
+        console.error('Failed to parse content:', e);
+      }
+    }
+ 
+    if (typeof data.typography === 'string') {
+      try {
+        data.typography = JSON.parse(data.typography);
+      } catch (e) {
+        console.error('Failed to parse typography:', e);
+      }
+    }
+ 
+    if (typeof data.visibility === 'string') {
+      try {
+        data.visibility = JSON.parse(data.visibility);
+      } catch (e) {
+        console.error('Failed to parse visibility:', e);
+      }
+    }
+ 
+    if (typeof data.items === 'string') {
+      try {
+        data.items = JSON.parse(data.items);
+      } catch (e) {
+        console.error('Failed to parse items:', e);
+      }
+    }
+ 
+    if (typeof data.paymentInformation === 'string') {
+      try {
+        data.paymentInformation = JSON.parse(data.paymentInformation);
+      } catch (e) {
+        console.error('Failed to parse paymentInformation:', e);
+      }
+    }
+ 
+    if (typeof data.termsAndConditions === 'string') {
+      try {
+        data.termsAndConditions = JSON.parse(data.termsAndConditions);
+      } catch (e) {
+        console.error('Failed to parse termsAndConditions:', e);
+      }
+    }
+
     // multer uploaded files
     const logo = req.files?.logo?.[0]?.filename;
     const qrCode = req.files?.qrCode?.[0]?.filename;
