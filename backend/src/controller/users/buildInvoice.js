@@ -1,5 +1,6 @@
 import Registration from "../../models/users/registration.js";
 import InvoiceCustomization from "../../models/users/buildInvoice.js";
+import { sendInvoiceEmail } from "../../utils/emailService.js";
 
 import { createError } from "../../utils/utils.js";
 import jwt from "jsonwebtoken";
@@ -214,4 +215,78 @@ export const getAllCustomizationsForUser = async (req, res) => {
     });
   }
 
+};
+
+
+
+ 
+export const sendCustomInvoiceEmail = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    const { to, subject, message, sendCopy, pdfBase64 } = req.body;
+ 
+    /* ---------------- VALIDATION ---------------- */
+    if (!to || !subject) {
+      return res.status(400).json({
+        success: false,
+        message: "Recipient email and subject are required"
+      });
+    }
+ 
+    /* ---------------- FIND CUSTOM INVOICE ---------------- */
+    const customInvoice = await InvoiceCustomization.findOne({ 
+      _id: id, 
+      userId 
+    });
+ 
+    if (!customInvoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Custom invoice not found"
+      });
+    }
+ 
+    /* ---------------- PREPARE PDF BUFFER ---------------- */
+    let pdfBuffer = null;
+    if (pdfBase64) {
+      // Remove data URL prefix if present
+      const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
+      pdfBuffer = Buffer.from(base64Data, 'base64');
+    }
+ 
+    /* ---------------- GET USER EMAIL FOR COPY ---------------- */
+    const user = await Registration.findById(userId).select('email');
+    const copyToEmail = sendCopy ? user?.email : null;
+ 
+    /* ---------------- SEND RESPONSE IMMEDIATELY ---------------- */
+    const templateName = customInvoice.templateName || 'Custom Invoice';
+    res.status(200).json({
+      success: true,
+      message: "Email is being sent"
+    });
+ 
+    /* ---------------- SEND EMAIL IN BACKGROUND ---------------- */
+    sendInvoiceEmail({
+      to,
+      subject,
+      message: message || `Please find the attached custom invoice.`,
+      pdfBuffer,
+      pdfFilename: `${templateName}.pdf`,
+      sendCopy: sendCopy || false,
+      copyTo: copyToEmail,
+    }).then(() => {
+      console.log(`✅ Custom invoice email sent successfully to ${to}`);
+    }).catch((err) => {
+      console.error(`❌ Failed to send custom invoice email to ${to}:`, err.message);
+    });
+ 
+  } catch (error) {
+    console.error("SEND CUSTOM INVOICE EMAIL ERROR 👉", error);
+ 
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to send email"
+    });
+  }
 };

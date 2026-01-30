@@ -21,6 +21,10 @@ import invoiceTemplate3 from "./routes/admin/template3.js";
 import invoiceTemplate4 from "./routes/admin/template4.js"; 
 import invoiceTemplate5 from "./routes/admin/template5.js";
 import invoiceTemplate6 from "./routes/admin/template6.js";
+import invoiceTemplate7 from "./routes/admin/template7.js"; 
+import invoiceTemplate8 from "./routes/admin/template8.js";
+import invoiceTemplate9 from "./routes/admin/template9.js";
+
 
 import path from "path";
 
@@ -54,6 +58,9 @@ app.use("/api/invoice-template3", invoiceTemplate3);
 app.use("/api/invoice-template4", invoiceTemplate4);
 app.use("/api/invoice-template5", invoiceTemplate5);
 app.use("/api/invoice-template6", invoiceTemplate6);
+app.use("/api/invoice-template7", invoiceTemplate7);
+app.use("/api/invoice-template8", invoiceTemplate8);
+app.use("/api/invoice-template9", invoiceTemplate9);
 
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
