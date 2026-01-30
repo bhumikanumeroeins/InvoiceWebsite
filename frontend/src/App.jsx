@@ -5,7 +5,7 @@ import SignUp from './pages/SignUp';
 import CreateInvoice from './pages/CreateInvoice';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
-import TemplateBuilder from './pages/TemplateBuilder';
+import TemplateBuilder from './components/builder/TemplateBuilder';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import Template3 from './components/templates/Template3/Template3';
