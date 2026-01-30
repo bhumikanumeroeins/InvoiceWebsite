@@ -9,7 +9,9 @@ import mongoose from "mongoose";
 
 export const createOrUpdateInvoiceCustomization = async (req, res) => {
   try {
-    const userId = req.user._id; // from token middleware
+    const userId = req.user.userId; // from token middleware
+    console.log("req.user:", req.user);
+    console.log("req.user._id =>", req.user?._id);
     const data = req.body;
 
     // multer uploaded files
@@ -46,6 +48,38 @@ export const createOrUpdateInvoiceCustomization = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Invoice customization saved successfully",
+      data: customization
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+
+// GET customization by id (only logged in user can access)
+export const getCustomizedInvoiceById = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { id } = req.params;
+
+    const customization = await InvoiceCustomization.findOne({
+      _id: id,
+      userId
+    });
+
+    if (!customization) {
+      return res.status(404).json({
+        success: false,
+        message: "Customization not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
       data: customization
     });
   } catch (error) {

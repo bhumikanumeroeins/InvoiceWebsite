@@ -37,8 +37,8 @@ const invoiceCustomizationSchema = new mongoose.Schema(
     typography: {
       headingFont: { type: String, default: "Inter" },
       bodyFont: { type: String, default: "Inter" },
-      headingSize: { type: Number, default: 24 }, 
-      bodySize: { type: Number, default: 14 }, 
+      headingSize: { type: String, default: "24px" }, 
+      bodySize: { type: String, default: "14px" }, 
     },
 
     //logo
@@ -115,6 +115,9 @@ const invoiceCustomizationSchema = new mongoose.Schema(
     totals:{ type: Boolean, default: true },
     terms: { type: Boolean, default: true },
     paymentInfo: { type: Boolean, default: true },
+    signature: { type: Boolean, default: true },
+    qrCodeSection: { type: Boolean, default: true },
+    
     
 
     //positoning

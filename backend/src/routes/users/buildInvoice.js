@@ -1,5 +1,5 @@
 import express from "express";
-import {createOrUpdateInvoiceCustomization} from "../../controller/users/buildInvoice.js";
+import {createOrUpdateInvoiceCustomization, getCustomizedInvoiceById} from "../../controller/users/buildInvoice.js";
 import { upload } from "../../config/multer.js";
 
 import { authenticateUser } from "../../middleware/auth.middleware.js";
@@ -11,5 +11,7 @@ router.post("/customize-invoice", authenticateUser, upload.fields([
     { name: "qrCode", maxCount: 1 },
     { name: "authorizedSignature", maxCount: 1 }
   ]),createOrUpdateInvoiceCustomization);
+
+router.get("/customize-invoice/:id", authenticateUser, getCustomizedInvoiceById);
 
 export default router;
