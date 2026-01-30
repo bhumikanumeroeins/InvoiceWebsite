@@ -1,5 +1,5 @@
 import express from "express";
-import {createOrUpdateInvoiceCustomization, getCustomizedInvoiceById} from "../../controller/users/buildInvoice.js";
+import {createOrUpdateInvoiceCustomization, getCustomizedInvoiceById, getAllCustomizationsForUser} from "../../controller/users/buildInvoice.js";
 import { upload } from "../../config/multer.js";
 
 import { authenticateUser } from "../../middleware/auth.middleware.js";
@@ -13,5 +13,6 @@ router.post("/customize-invoice", authenticateUser, upload.fields([
   ]),createOrUpdateInvoiceCustomization);
 
 router.get("/customize-invoice/:id", authenticateUser, getCustomizedInvoiceById);
+router.get("/customize-invoice", authenticateUser, getAllCustomizationsForUser);
 
 export default router;

@@ -193,3 +193,25 @@ export const getCustomizedInvoiceById = async (req, res) => {
     });
   }
 };
+
+
+//get all cutomizations for a user
+export const getAllCustomizationsForUser = async (req, res) => {
+  try {
+    const userId = req.user.userId; // coming from token middleware
+    const customizations = await InvoiceCustomization.find({ userId });
+
+    return res.status(200).json({ 
+      success: true,
+      message: "Customizations fetched successfully", 
+      data: customizations 
+    });
+  }
+  catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+
+};

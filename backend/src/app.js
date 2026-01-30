@@ -16,7 +16,11 @@ import reminders from "./routes/reminders/paymentReminder.js";
 import admin from "./routes/admin/admin_register.js";
 import invoiceTemplate from "./routes/admin/invoiceTemplate.js";
 import buildInvoice from "./routes/users/buildInvoice.js";
-
+import invoiceTemplate2 from "./routes/admin/template2.js"; 
+import invoiceTemplate3 from "./routes/admin/template3.js";
+import invoiceTemplate4 from "./routes/admin/template4.js"; 
+import invoiceTemplate5 from "./routes/admin/template5.js";
+import invoiceTemplate6 from "./routes/admin/template6.js";
 
 import path from "path";
 
@@ -45,6 +49,11 @@ app.use("/api/reminders", reminders);
 app.use("/api/admin", admin);
 app.use("/api/invoice-template", invoiceTemplate);
 app.use("/api/build-invoice", buildInvoice);
+app.use("/api/invoice-template2", invoiceTemplate2);
+app.use("/api/invoice-template3", invoiceTemplate3);
+app.use("/api/invoice-template4", invoiceTemplate4);
+app.use("/api/invoice-template5", invoiceTemplate5);
+app.use("/api/invoice-template6", invoiceTemplate6);
 
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
