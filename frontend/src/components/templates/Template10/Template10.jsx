@@ -1,26 +1,25 @@
 import { useState } from "react";
 import { Rnd } from "react-rnd";
 
-import bgImage from "../../../assets/templates/4_1.jpg";
 import { getInvoiceData } from "../../../utils/invoiceDefaults";
 
 import HeaderBlock from "./HeaderBlock";
-import InvoiceDetailsBlock from "./InvoiceDetailsBlock";
+import PartyBlock from "./PartyBlock";
 import ItemsBlock from "./ItemsBlock";
-import PartyTotalsBlock from "./PartyTotalsBlock";
-import TermsPaymentQRBlock from "./TermsPaymentQRBlock";
+import TermsTotalsBlock from "./TermsTotalsBlock";
+import PaymentQRBlock from "./PaymentQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template4 = ({ data = {}, editorMode = true }) => {
+const Template10 = ({ data = {}, editorMode = true }) => {
   const invoice = getInvoiceData(data);
 
   const [layout, setLayout] = useState({
-    header: { x: 0, y: 80 },
-    details: { x: 430, y: 90 },
-    items: { x: 0, y: 280 },
-    partyTotals: { x: 0, y: 450 },
-    termsQR: { x: 0, y: 550 },
-    footer: { x: 0, y: 780 },
+    header: { x: 0, y: 0 },
+    party: { x: 80, y: 150 },
+    items: { x: 80, y: 250 },
+    termsTotals: { x: 80, y: 400 },
+    paymentQR: { x: 80, y: 500 },
+    footer: { x: 0, y: 700 },
   });
 
   const update = (k, x, y) =>
@@ -30,22 +29,13 @@ const Template4 = ({ data = {}, editorMode = true }) => {
     <div
       style={{
         width: 794,
-        height: 1123,
+        height: 1050,
         position: "relative",
         overflow: "hidden",
+        background: "#fff",
       }}
     >
-      <img
-        src={bgImage}
-        alt=""
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-        }}
-      />
-
+      {/* HEADER */}
       <Rnd
         bounds="parent"
         position={layout.header}
@@ -55,15 +45,17 @@ const Template4 = ({ data = {}, editorMode = true }) => {
         <HeaderBlock {...invoice} />
       </Rnd>
 
+      {/* PARTY */}
       <Rnd
         bounds="parent"
-        position={layout.details}
-        onDragStop={(e, d) => update("details", d.x, d.y)}
+        position={layout.party}
+        onDragStop={(e, d) => update("party", d.x, d.y)}
         disableDragging={!editorMode}
       >
-        <InvoiceDetailsBlock {...invoice} />
+        <PartyBlock {...invoice} />
       </Rnd>
 
+      {/* ITEMS */}
       <Rnd
         bounds="parent"
         position={layout.items}
@@ -73,24 +65,27 @@ const Template4 = ({ data = {}, editorMode = true }) => {
         <ItemsBlock items={invoice.items} />
       </Rnd>
 
+      {/* TERMS + TOTAL */}
       <Rnd
         bounds="parent"
-        position={layout.partyTotals}
-        onDragStop={(e, d) => update("partyTotals", d.x, d.y)}
+        position={layout.termsTotals}
+        onDragStop={(e, d) => update("termsTotals", d.x, d.y)}
         disableDragging={!editorMode}
       >
-        <PartyTotalsBlock {...invoice} />
+        <TermsTotalsBlock {...invoice} />
       </Rnd>
 
+      {/* PAYMENT */}
       <Rnd
         bounds="parent"
-        position={layout.termsQR}
-        onDragStop={(e, d) => update("termsQR", d.x, d.y)}
+        position={layout.paymentQR}
+        onDragStop={(e, d) => update("paymentQR", d.x, d.y)}
         disableDragging={!editorMode}
       >
-        <TermsPaymentQRBlock {...invoice} />
+        <PaymentQRBlock {...invoice} />
       </Rnd>
 
+      {/* FOOTER */}
       <Rnd
         bounds="parent"
         position={layout.footer}
@@ -103,4 +98,4 @@ const Template4 = ({ data = {}, editorMode = true }) => {
   );
 };
 
-export default Template4;
+export default Template10;

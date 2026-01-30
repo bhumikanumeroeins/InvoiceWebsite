@@ -2,7 +2,7 @@ import bgImage from '../../assets/templates/6_1.jpg';
 import qrFallback from "../../assets/templates/images (1).png";
 import { getInvoiceData } from "../../utils/invoiceDefaults";
 
-const Template6 = ({ data = {} }) => {
+const Templates6 = ({ data = {} }) => {
   const {
     logo, companyName, companyAddress,
     billToName, billToAddress,
@@ -138,4 +138,4 @@ const Template6 = ({ data = {} }) => {
   );
 };
 
-export default Template6;
+export default Templates6;

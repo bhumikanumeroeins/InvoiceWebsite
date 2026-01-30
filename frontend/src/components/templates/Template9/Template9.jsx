@@ -1,26 +1,28 @@
 import { useState } from "react";
 import { Rnd } from "react-rnd";
 
-import bgImage from "../../../assets/templates/4_1.jpg";
+import qrCodeImg from "../../../assets/templates/images (1).png";
 import { getInvoiceData } from "../../../utils/invoiceDefaults";
 
 import HeaderBlock from "./HeaderBlock";
-import InvoiceDetailsBlock from "./InvoiceDetailsBlock";
+import InvoicePillBlock from "./InvoicePillBlock";
+import PartyBlock from "./PartyBlock";
 import ItemsBlock from "./ItemsBlock";
-import PartyTotalsBlock from "./PartyTotalsBlock";
-import TermsPaymentQRBlock from "./TermsPaymentQRBlock";
+import TermsTotalsBlock from "./TermsTotalsBlock";
+import PaymentQRBlock from "./PaymentQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template4 = ({ data = {}, editorMode = true }) => {
+const Template9 = ({ data = {}, editorMode = true }) => {
   const invoice = getInvoiceData(data);
 
   const [layout, setLayout] = useState({
-    header: { x: 0, y: 80 },
-    details: { x: 430, y: 90 },
-    items: { x: 0, y: 280 },
-    partyTotals: { x: 0, y: 450 },
-    termsQR: { x: 0, y: 550 },
-    footer: { x: 0, y: 780 },
+    header: { x: 80, y: 40 },
+    pill: { x: 0, y: 110 },
+    party: { x: 80, y: 200 },
+    items: { x: 0, y: 300 },
+    termsTotals: { x: 80, y: 450 },
+    paymentQR: { x: 80, y: 520 },
+    footer: { x: 0, y: 650 },
   });
 
   const update = (k, x, y) =>
@@ -30,22 +32,15 @@ const Template4 = ({ data = {}, editorMode = true }) => {
     <div
       style={{
         width: 794,
-        height: 1123,
+        height: 965,
         position: "relative",
         overflow: "hidden",
+        background: "#fff",
+        fontFamily: "'Open Sans', sans-serif",
+        color: "#1f2552",
       }}
     >
-      <img
-        src={bgImage}
-        alt=""
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-        }}
-      />
-
+      {/* HEADER */}
       <Rnd
         bounds="parent"
         position={layout.header}
@@ -55,15 +50,27 @@ const Template4 = ({ data = {}, editorMode = true }) => {
         <HeaderBlock {...invoice} />
       </Rnd>
 
+      {/* INVOICE PILL */}
       <Rnd
         bounds="parent"
-        position={layout.details}
-        onDragStop={(e, d) => update("details", d.x, d.y)}
+        position={layout.pill}
+        onDragStop={(e, d) => update("pill", d.x, d.y)}
         disableDragging={!editorMode}
       >
-        <InvoiceDetailsBlock {...invoice} />
+        <InvoicePillBlock />
       </Rnd>
 
+      {/* BILL / SHIP / INFO */}
+      <Rnd
+        bounds="parent"
+        position={layout.party}
+        onDragStop={(e, d) => update("party", d.x, d.y)}
+        disableDragging={!editorMode}
+      >
+        <PartyBlock {...invoice} />
+      </Rnd>
+
+      {/* ITEMS */}
       <Rnd
         bounds="parent"
         position={layout.items}
@@ -73,24 +80,27 @@ const Template4 = ({ data = {}, editorMode = true }) => {
         <ItemsBlock items={invoice.items} />
       </Rnd>
 
+      {/* TERMS + TOTAL */}
       <Rnd
         bounds="parent"
-        position={layout.partyTotals}
-        onDragStop={(e, d) => update("partyTotals", d.x, d.y)}
+        position={layout.termsTotals}
+        onDragStop={(e, d) => update("termsTotals", d.x, d.y)}
         disableDragging={!editorMode}
       >
-        <PartyTotalsBlock {...invoice} />
+        <TermsTotalsBlock {...invoice} />
       </Rnd>
 
+      {/* PAYMENT + QR */}
       <Rnd
         bounds="parent"
-        position={layout.termsQR}
-        onDragStop={(e, d) => update("termsQR", d.x, d.y)}
+        position={layout.paymentQR}
+        onDragStop={(e, d) => update("paymentQR", d.x, d.y)}
         disableDragging={!editorMode}
       >
-        <TermsPaymentQRBlock {...invoice} />
+        <PaymentQRBlock {...invoice} />
       </Rnd>
 
+      {/* FOOTER */}
       <Rnd
         bounds="parent"
         position={layout.footer}
@@ -103,4 +113,4 @@ const Template4 = ({ data = {}, editorMode = true }) => {
   );
 };
 
-export default Template4;
+export default Template9;
