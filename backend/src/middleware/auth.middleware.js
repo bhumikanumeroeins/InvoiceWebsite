@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import Registration from "../models/users/registration.js";
 
 export const authenticateUser = (req, res, next) => {
   try {
