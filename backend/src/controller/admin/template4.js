@@ -14,19 +14,18 @@ export const createOrUpdateTemplate4 = async (req, res) => {
       parsedLayout = typeof layout === "string" ? JSON.parse(layout) : layout;
     }
 
-    const updatedTemplate = await Template4.findOneAndUpdate(
-      { name },
-      {
-        name,
-        ...(layout && { layout: parsedLayout }),
-        ...(typeof isActive !== "undefined" && { isActive })
-      },
-      { new: true, upsert: true }
-    );
+    // create new template
+    const newTemplate = new Template4({
+      name,
+      layout: parsedLayout,
+      isActive: typeof isActive !== "undefined" ? isActive : true,
+    });
+
+    await newTemplate.save();
 
     return res
       .status(200)
-      .json(createResult(updatedTemplate, "Template4 saved successfully"));
+      .json(createResult(newTemplate, "Template4 saved successfully"));
   } catch (error) {
     return res.status(500).json(createError(error.message));
   }

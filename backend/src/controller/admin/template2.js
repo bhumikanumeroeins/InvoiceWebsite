@@ -14,26 +14,26 @@ export const createOrUpdateTemplate2 = async (req, res) => {
       parsedLayout = typeof layout === "string" ? JSON.parse(layout) : layout;
     }
 
-    const updatedTemplate = await Template2.findOneAndUpdate(
-      { name },
-      {
-        name,
-        ...(layout && { layout: parsedLayout }),
-        ...(typeof isActive !== "undefined" && { isActive })
-      },
-      { new: true, upsert: true }
-    );
+    // create new template
+    const newTemplate = new Template2({
+      name,
+      layout: parsedLayout,
+      isActive: typeof isActive !== "undefined" ? isActive : true,
+    });
+
+    await newTemplate.save();
+
 
     return res
       .status(200)
-      .json(createResult(updatedTemplate, "Template2 saved successfully"));
+      .json(createResult(newTemplate, "Template2 saved successfully"));
   } catch (error) {
     return res.status(500).json(createError(error.message));
   }
 };
 
 
-// get template2 by name
+// get template3 by name
 export const getTemplate2ByName = async (req, res) => {
   try {
     const { name } = req.params;    
@@ -45,7 +45,7 @@ export const getTemplate2ByName = async (req, res) => {
 
     return res
       .status(200)
-      .json(createResult(template, "Template2 fetched successfully"));
+      .json(createResult(template, "Template3 fetched successfully"));
   } catch (error) {
     return res.status(500).json(createError(error.message));
   }
