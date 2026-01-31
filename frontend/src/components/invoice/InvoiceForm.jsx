@@ -68,16 +68,16 @@ const documentConfig = {
     showDueDate: false,
     showTax: true,
   },
-  "cash-receipt": {
-    fromLabel: "Received From",
-    toLabel: "Received By",
-    numberLabel: "Cash Receipt #",
-    dateLabel: "Date",
-    showDueDate: false,
-    showTax: false,
-    showPaymentMethod: true,
-    itemLabel: "For",
-  },
+  // "cash-receipt": {
+  //   fromLabel: "Received From",
+  //   toLabel: "Received By",
+  //   numberLabel: "Cash Receipt #",
+  //   dateLabel: "Date",
+  //   showDueDate: false,
+  //   showTax: false,
+  //   showPaymentMethod: true,
+  //   itemLabel: "For",
+  // },
   quote: {
     fromLabel: "From",
     toLabel: "Quote For",
@@ -139,7 +139,6 @@ const InvoiceForm = ({
 }) => {
   const isEditMode = !!editInvoice;
   const config = documentConfig[documentType] || documentConfig["invoice"];
-  const [formMode, setFormMode] = useState(editInvoice?.formType || 'basic'); // 'basic' or 'advanced'
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -254,7 +253,6 @@ const InvoiceForm = ({
         return parts.join('\n');
       };
 
-      setFormMode(editInvoice.formType || 'basic');
       setInvoiceData({
         fromName: editInvoice.companyName || editInvoice.business?.name || '',
         fromAddress,
@@ -454,7 +452,7 @@ const InvoiceForm = ({
         const response = await itemAPI.create({
           description: item.description,
           quantity: item.quantity || 1,
-          rate: formMode === 'advanced' ? item.rate : item.amount,
+          rate: item.rate || item.amount || 0,
           tax: 0,
         });
         
@@ -594,15 +592,12 @@ const InvoiceForm = ({
   };
 
   const subtotal = items.reduce((sum, item) => {
-    if (formMode === 'advanced') {
-      return sum + (item.quantity * item.rate);
-    }
-    return sum + item.amount;
+    return sum + (item.quantity * item.rate);
   }, 0);
   
   const simpleTaxTotal = items.reduce(
     (sum, item) => {
-      const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
+      const itemAmount = item.quantity * item.rate;
       if (!item.taxIds || item.taxIds.length === 0) return sum;
       const simpleTaxes = savedTaxes.filter(t => item.taxIds.includes(t.id) && !t.isCompound);
       return sum + simpleTaxes.reduce((taxSum, t) => taxSum + (itemAmount * t.rate / 100), 0);
@@ -612,7 +607,7 @@ const InvoiceForm = ({
   
   const compoundTaxTotal = items.reduce(
     (sum, item) => {
-      const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
+      const itemAmount = item.quantity * item.rate;
       if (!item.taxIds || item.taxIds.length === 0) return sum;
       const compoundTaxes = savedTaxes.filter(t => item.taxIds.includes(t.id) && t.isCompound);
       const itemSimpleTaxes = savedTaxes.filter(t => item.taxIds.includes(t.id) && !t.isCompound);
@@ -633,7 +628,7 @@ const InvoiceForm = ({
       'proforma-invoice': 'proforma',
       'receipt': 'receipt',
       'sales-receipt': 'salesReceipt',
-      'cash-receipt': 'cashReceipt',
+      // 'cash-receipt': 'cashReceipt',
       'quote': 'quote',
       'estimate': 'estimate',
       'credit-memo': 'creditMemo',
@@ -681,14 +676,14 @@ const InvoiceForm = ({
         if (item.itemId) {
           itemIds.push({ itemId: item.itemId });
         } else {
-          const itemAmount = formMode === 'advanced' ? (item.quantity * item.rate) : item.amount;
+          const itemAmount = item.quantity * item.rate;
           const itemTaxes = savedTaxes.filter(t => item.taxIds?.includes(t.id));
           const taxAmount = itemTaxes.reduce((sum, t) => sum + (itemAmount * t.rate / 100), 0);
           
           const response = await itemAPI.create({
             description: item.description,
             quantity: item.quantity || 1,
-            rate: formMode === 'advanced' ? item.rate : item.amount,
+            rate: item.rate || 0,
             tax: taxAmount,
           });
           
@@ -727,7 +722,7 @@ const InvoiceForm = ({
         };
       };
 
-      const shipToInfo = formMode === 'advanced' ? parseShipTo(invoiceData.shipTo) : null;
+      const shipToInfo = parseShipTo(invoiceData.shipTo);
 
       const getExistingFilename = (url) => {
         if (!url) return undefined;
@@ -741,7 +736,7 @@ const InvoiceForm = ({
 
       // Step 2: Create invoice with itemIds
       const invoicePayload = {
-        formType: formMode,
+        formType: 'advanced',
         documentType: getBackendDocType(),
         business: {
           name: invoiceData.fromName,
@@ -823,28 +818,6 @@ const InvoiceForm = ({
                 <p className="text-slate-400 text-sm">{isEditMode ? 'Update your document' : 'Create professional documents in minutes'}</p>
               </div>
             </div>
-            <div className="flex bg-slate-700/50 rounded-lg p-1">
-              <button
-                onClick={() => setFormMode('basic')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  formMode === 'basic'
-                    ? 'bg-white text-slate-900 shadow'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                Basic Form
-              </button>
-              <button
-                onClick={() => setFormMode('advanced')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  formMode === 'advanced'
-                    ? 'bg-amber-400 text-slate-900 shadow'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                Advanced
-              </button>
-            </div>
           </div>
         </div>
 
@@ -897,22 +870,20 @@ const InvoiceForm = ({
                     className="w-full px-0 py-2 text-slate-600 placeholder-slate-400 border-0 border-b-2 border-transparent focus:border-emerald-500 focus:outline-none bg-transparent resize-none transition-all"
                   />
                 </div>
-                {/* Ship To - Only in Advanced Mode */}
-                {formMode === 'advanced' && (
-                  <div className="mt-4 pt-4 border-t border-dashed border-slate-200">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
-                      Ship To (if different)
-                    </label>
-                    <textarea
-                      name="shipTo"
-                      value={invoiceData.shipTo}
-                      onChange={handleInputChange}
-                      placeholder="Recipient Name&#10;Shipping Address&#10;City, State, ZIP"
-                      rows={3}
-                      className="w-full px-0 py-2 text-slate-600 placeholder-slate-400 border-0 border-b-2 border-transparent focus:border-emerald-500 focus:outline-none bg-transparent resize-none transition-all"
-                    />
-                  </div>
-                )}
+                {/* Ship To */}
+                <div className="mt-4 pt-4 border-t border-dashed border-slate-200">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 block">
+                    Ship To (if different)
+                  </label>
+                  <textarea
+                    name="shipTo"
+                    value={invoiceData.shipTo}
+                    onChange={handleInputChange}
+                    placeholder="Recipient Name&#10;Shipping Address&#10;City, State, ZIP"
+                    rows={3}
+                    className="w-full px-0 py-2 text-slate-600 placeholder-slate-400 border-0 border-b-2 border-transparent focus:border-emerald-500 focus:outline-none bg-transparent resize-none transition-all"
+                  />
+                </div>
               </div>
             </div>
 
@@ -979,7 +950,7 @@ const InvoiceForm = ({
                     className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   />
                 </div>
-                {config.showDueDate && formMode === 'advanced' && (
+                {config.showDueDate && (
                   <div>
                     <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
                       <Calendar className="w-3.5 h-3.5" />{" "}
@@ -1058,15 +1029,13 @@ const InvoiceForm = ({
                 </div>
               ) : (
                 <div
-                  className={`grid gap-4 px-6 py-3 bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wide ${
-                    formMode === 'advanced' ? 'grid-cols-12' : (config.showTax ? "grid-cols-12" : "grid-cols-9")
-                  }`}
+                  className="grid gap-4 px-6 py-3 bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wide grid-cols-12"
                 >
-                  <div className={formMode === 'advanced' ? 'col-span-4' : 'col-span-6'}>Description</div>
-                  {formMode === 'advanced' && <div className="col-span-1">Qty</div>}
-                  {formMode === 'advanced' && <div className="col-span-2">Rate</div>}
+                  <div className="col-span-4">Description</div>
+                  <div className="col-span-1">Qty</div>
+                  <div className="col-span-2">Rate</div>
                   <div className="col-span-2">Amount</div>
-                  {config.showTax && <div className={formMode === 'advanced' ? 'col-span-2' : 'col-span-3'}>Tax</div>}
+                  {config.showTax && <div className="col-span-2">Tax</div>}
                   <div className="col-span-1"></div>
                 </div>
               )}
@@ -1149,11 +1118,9 @@ const InvoiceForm = ({
                   ) : (
                     <div
                       key={index}
-                      className={`grid gap-4 px-6 py-4 items-center hover:bg-white transition-colors ${
-                        formMode === 'advanced' ? 'grid-cols-12' : (config.showTax ? "grid-cols-12" : "grid-cols-9")
-                      }`}
+                      className="grid gap-4 px-6 py-4 items-center hover:bg-white transition-colors grid-cols-12"
                     >
-                      <div className={formMode === 'advanced' ? 'col-span-4' : 'col-span-6'}>
+                      <div className="col-span-4">
                         <input
                           type="text"
                           value={item.description}
@@ -1168,51 +1135,35 @@ const InvoiceForm = ({
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
                         />
                       </div>
-                      {formMode === 'advanced' && (
-                        <div className="col-span-1">
-                          <input
-                            type="number"
-                            value={item.quantity || ""}
-                            onChange={(e) =>
-                              handleItemChange(index, "quantity", e.target.value)
-                            }
-                            placeholder="1"
-                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm text-center"
-                          />
-                        </div>
-                      )}
-                      {formMode === 'advanced' && (
-                        <div className="col-span-2">
-                          <input
-                            type="number"
-                            value={item.rate || ""}
-                            onChange={(e) =>
-                              handleItemChange(index, "rate", e.target.value)
-                            }
-                            placeholder="0.00"
-                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
-                          />
-                        </div>
-                      )}
+                      <div className="col-span-1">
+                        <input
+                          type="number"
+                          value={item.quantity || ""}
+                          onChange={(e) =>
+                            handleItemChange(index, "quantity", e.target.value)
+                          }
+                          placeholder="1"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm text-center"
+                        />
+                      </div>
                       <div className="col-span-2">
-                        {formMode === 'advanced' ? (
-                          <div className="px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-700 font-medium text-center">
-                            {getCurrencySymbol()}{(item.quantity * item.rate).toFixed(2)}
-                          </div>
-                        ) : (
-                          <input
-                            type="number"
-                            value={item.amount || ""}
-                            onChange={(e) =>
-                              handleItemChange(index, "amount", e.target.value)
-                            }
-                            placeholder="0.00"
-                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
-                          />
-                        )}
+                        <input
+                          type="number"
+                          value={item.rate || ""}
+                          onChange={(e) =>
+                            handleItemChange(index, "rate", e.target.value)
+                          }
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <div className="px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-700 font-medium text-center">
+                          {getCurrencySymbol()}{(item.quantity * item.rate).toFixed(2)}
+                        </div>
                       </div>
                       {config.showTax && (
-                        <div className={formMode === 'advanced' ? 'col-span-2' : 'col-span-3'}>
+                        <div className="col-span-2">
                           <button
                             onClick={() => openTaxModal(index)}
                             className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-left hover:border-indigo-300 hover:bg-indigo-50/50 transition-all truncate"

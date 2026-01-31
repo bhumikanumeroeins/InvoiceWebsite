@@ -1,4 +1,4 @@
-import { FileText, Edit, Layout, Mail, Copy, Trash2, CreditCard, RefreshCw, Download, X } from 'lucide-react';
+import { FileText, Edit, Layout, Mail, Copy, Trash2, CreditCard, RefreshCw, Download, X, Bell } from 'lucide-react';
 
 const defaultActions = [
   { id: 'invoice', label: 'Invoice', icon: FileText },
@@ -9,6 +9,7 @@ const defaultActions = [
   { id: 'delete', label: 'Delete', icon: Trash2, danger: true },
   { id: 'payments', label: 'Payments', icon: CreditCard },
   { id: 'recurring', label: 'Recurring', icon: RefreshCw },
+  { id: 'reminders', label: 'Reminders', icon: Bell },
   { id: 'download', label: 'Download', icon: Download },
 ];
 

@@ -10,7 +10,7 @@ const documentTypes = [
   { id: 'proforma-invoice', label: 'Proforma', icon: FileCheck, color: 'blue' },
   { id: 'receipt', label: 'Receipt', icon: CreditCard, color: 'emerald' },
   { id: 'sales-receipt', label: 'Sales Receipt', icon: ShoppingCart, color: 'teal' },
-  { id: 'cash-receipt', label: 'Cash Receipt', icon: CreditCard, color: 'green' },
+  // { id: 'cash-receipt', label: 'Cash Receipt', icon: CreditCard, color: 'green' },
   { id: 'quote', label: 'Quote', icon: FileText, color: 'amber' },
   { id: 'estimate', label: 'Estimate', icon: FileCheck, color: 'orange' },
   { id: 'credit-memo', label: 'Credit Memo', icon: Receipt, color: 'rose' },

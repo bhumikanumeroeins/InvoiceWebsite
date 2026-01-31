@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X, Copy, ArrowRight, Loader2, Trash2 } from 'lucide-react';
+import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X, Copy, ArrowRight, Loader2, Trash2, Bell, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { templateAPI } from '../../services/templateService';
+import { reminderAPI } from '../../services/reminderService';
 const getCurrencySymbol = (currency = 'INR') => {
   return currencyService.getSymbol(currency);
 };
@@ -144,6 +145,11 @@ If you need assistance or have any questions, please email: support@invoicepro.c
   const [savingRecurring, setSavingRecurring] = useState(false);
   const [hasExistingRecurring, setHasExistingRecurring] = useState(false);
   const [loadingRecurringData, setLoadingRecurringData] = useState(false);
+
+  // Reminders state
+  const [reminders, setReminders] = useState([]);
+  const [loadingReminders, setLoadingReminders] = useState(false);
+  const [creatingReminders, setCreatingReminders] = useState(false);
 
   const currentUser = getCurrentUser();
   const userEmail = currentUser?.email || '';
@@ -356,7 +362,76 @@ Best regards`,
       return;
     }
     
+    if (actionId === 'reminders') {
+      setActiveAction('reminders');
+      await loadReminders();
+      return;
+    }
+    
     setActiveAction(actionId);
+  };
+
+  const loadReminders = async () => {
+    const invoiceId = currentInvoice?._id || currentInvoice?.id;
+    if (!invoiceId) {
+      return;
+    }
+
+    try {
+      setLoadingReminders(true);
+      const response = await reminderAPI.getByInvoiceId(invoiceId);
+      if (response.success) {
+        setReminders(response.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to load reminders:', error);
+      setReminders([]);
+    } finally {
+      setLoadingReminders(false);
+    }
+  };
+
+  const handleCreateReminders = async () => {
+    const invoiceId = currentInvoice?._id || currentInvoice?.id;
+    if (!invoiceId) {
+      alert('Invoice ID not found');
+      return;
+    }
+
+    try {
+      setCreatingReminders(true);
+      const response = await reminderAPI.create(invoiceId);
+      if (response.success) {
+        alert(response.message || 'Reminders created successfully!');
+        await loadReminders();
+      } else {
+        alert(response.message || 'Failed to create reminders');
+      }
+    } catch (error) {
+      console.error('Failed to create reminders:', error);
+      alert(error.message || 'Failed to create reminders');
+    } finally {
+      setCreatingReminders(false);
+    }
+  };
+
+  const handleDeleteReminder = async (reminderId) => {
+    if (!confirm('Are you sure you want to delete this reminder?')) {
+      return;
+    }
+
+    try {
+      const response = await reminderAPI.delete(reminderId);
+      if (response.success) {
+        alert('Reminder deleted successfully!');
+        await loadReminders();
+      } else {
+        alert(response.message || 'Failed to delete reminder');
+      }
+    } catch (error) {
+      console.error('Failed to delete reminder:', error);
+      alert(error.message || 'Failed to delete reminder');
+    }
   };
 
   const loadPaymentDetails = async () => {
@@ -1479,6 +1554,164 @@ Best regards`,
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reminders View */}
+      {activeAction === 'reminders' && (
+        <div className="p-6">
+          <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
+                  <Bell className="w-6 h-6 text-indigo-600" />
+                  Payment Reminders
+                </h3>
+                <p className="text-slate-500 text-sm mt-1">
+                  Automatic email reminders before invoice due date
+                </p>
+              </div>
+              <button
+                onClick={handleCreateReminders}
+                disabled={creatingReminders || !currentInvoice?.invoiceMeta?.dueDate || !currentInvoice?.client?.email}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {creatingReminders ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Bell className="w-4 h-4" />
+                    Create Reminders
+                  </>
+                )}
+              </button>
+            </div>
+
+            {!currentInvoice?.invoiceMeta?.dueDate && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-amber-800 font-medium">Due Date Required</p>
+                  <p className="text-amber-700 text-sm mt-1">
+                    Please set a due date for this invoice to create payment reminders.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!currentInvoice?.client?.email && currentInvoice?.invoiceMeta?.dueDate && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-amber-800 font-medium">Client Email Required</p>
+                  <p className="text-amber-700 text-sm mt-1">
+                    Please send the invoice via email first to save the client's email address.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {loadingReminders ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+              </div>
+            ) : reminders.length === 0 ? (
+              <div className="text-center py-12">
+                <Bell className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500 text-lg font-medium">No Reminders Set</p>
+                <p className="text-slate-400 text-sm mt-2">
+                  Create automatic reminders to notify your client before the due date
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {reminders.map((reminder) => (
+                  <div
+                    key={reminder._id}
+                    className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            reminder.reminderType === 'first'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-purple-100 text-purple-700'
+                          }`}>
+                            {reminder.reminderType === 'first' ? 'First Reminder' : 'Second Reminder'}
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            reminder.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : reminder.status === 'sent'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {reminder.status === 'pending' && <Clock className="w-3 h-3 inline mr-1" />}
+                            {reminder.status === 'sent' && <CheckCircle className="w-3 h-3 inline mr-1" />}
+                            {reminder.status === 'failed' && <XCircle className="w-3 h-3 inline mr-1" />}
+                            {reminder.status.charAt(0).toUpperCase() + reminder.status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="text-sm text-slate-600 space-y-1">
+                          <p>
+                            <span className="font-medium">To:</span> {reminder.clientEmail}
+                          </p>
+                          <p>
+                            <span className="font-medium">Scheduled:</span>{' '}
+                            {new Date(reminder.scheduledDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          {reminder.sentAt && (
+                            <p>
+                              <span className="font-medium">Sent:</span>{' '}
+                              {new Date(reminder.sentAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteReminder(reminder._id)}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        title="Delete reminder"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-6 pt-6 border-t border-slate-200">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="text-blue-900 font-medium mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  How Reminders Work
+                </h4>
+                <ul className="text-blue-800 text-sm space-y-1 ml-6 list-disc">
+                  <li><strong>First Reminder:</strong> Sent 5 days before the due date</li>
+                  <li><strong>Second Reminder:</strong> Sent 3 days before the due date</li>
+                  <li>Reminders are only sent for unpaid invoices</li>
+                  <li>Reminders are automatically sent via email</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>

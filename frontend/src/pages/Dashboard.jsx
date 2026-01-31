@@ -15,7 +15,7 @@ const documentTypes = [
   { id: 'proforma-invoice', label: 'Proforma Invoice', icon: FileCheck },
   { id: 'receipt', label: 'Receipt', icon: CreditCard },
   { id: 'sales-receipt', label: 'Sales Receipt', icon: ShoppingCart },
-  { id: 'cash-receipt', label: 'Cash Receipt', icon: CreditCard },
+  // { id: 'cash-receipt', label: 'Cash Receipt', icon: CreditCard },
   { id: 'quote', label: 'Quote', icon: FileText },
   { id: 'estimate', label: 'Estimate', icon: FileCheck },
   { id: 'credit-memo', label: 'Credit Memo', icon: Receipt },
