@@ -522,38 +522,42 @@ Best regards`,
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with Action Tabs */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4 border-b">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/dashboard?tab=myInvoices')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Custom Invoice</h1>
-                <p className="text-sm text-gray-500">{templateConfig.templateName}</p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-100">
+      {/* Main Header */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+              onClick={() => navigate('/dashboard?tab=myInvoices')}
+              className="p-2 hover:bg-gray-100 rounded-lg transition"
             >
-              <Save className="w-4 h-4" />
-              {saving ? 'Saving...' : 'Save Template'}
+              <ArrowLeft className="w-5 h-5" />
             </button>
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900">Custom Invoice Builder</h1>
+              <p className="text-sm text-gray-500">{templateConfig.templateName}</p>
+            </div>
           </div>
-          
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-emerald-500 hover:shadow-lg text-white rounded-md text-sm font-medium transition-all disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? 'Saving...' : 'Save Template'}
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Content Card with Tabs */}
+        <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
           {/* Action Tabs */}
-          <div className="flex gap-2 pt-3">
+          <div className="flex gap-2 p-4 border-b border-slate-200 bg-gray-50">
             <button
               onClick={() => setActiveTab('preview')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'preview'
                   ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -564,7 +568,7 @@ Best regards`,
             </button>
             <button
               onClick={() => setActiveTab('edit')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'edit'
                   ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -575,7 +579,7 @@ Best regards`,
             </button>
             <button
               onClick={() => setActiveTab('email')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'email'
                   ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -590,7 +594,7 @@ Best regards`,
                 handleDownloadPDF();
               }}
               disabled={loading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'download'
                   ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -600,25 +604,24 @@ Best regards`,
               {loading ? 'Generating...' : 'Download PDF'}
             </button>
           </div>
-        </div>
-      </div>
 
-      {/* Email Tab Content */}
-      {activeTab === 'email' && (
-        <TemplateBuilderTabs
-          emailData={emailData}
-          setEmailData={setEmailData}
-          templateConfig={templateConfig}
-          sendingEmail={sendingEmail}
-          onSendEmail={handleSendEmail}
-          onCancel={() => setActiveTab('preview')}
-        />
-      )}
+          {/* Email Tab Content */}
+          {activeTab === 'email' && (
+            <div className="p-6">
+              <TemplateBuilderTabs
+                emailData={emailData}
+                setEmailData={setEmailData}
+                templateConfig={templateConfig}
+                sendingEmail={sendingEmail}
+                onSendEmail={handleSendEmail}
+                onCancel={() => setActiveTab('preview')}
+              />
+            </div>
+          )}
 
-      {/* Preview/Edit Content - Always rendered for PDF generation */}
-      <div className={activeTab === 'email' ? 'absolute left-[-9999px] top-0' : ''}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Preview/Edit Content - Always rendered for PDF generation */}
+          <div className={activeTab === 'email' ? 'hidden' : 'p-6'}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Customization Panel */}
           {!previewMode && activeTab === 'edit' && (
             <div className="lg:col-span-1 space-y-6">
@@ -1816,11 +1819,31 @@ Best regards`,
               </div>
             </div>
           </div>
+            </div>
+          </div>
         </div>
       </div>
-      </div>
+
+      {/* Footer */}
+      <footer className="bg-white mt-8 py-6">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mb-4">
+            <a href="/" className="hover:text-gray-700">Home</a>
+            <a href="/templates" className="hover:text-gray-700">Invoice Templates</a>
+            <a href="/features" className="hover:text-gray-700">Features</a>
+            <a href="/pricing" className="hover:text-gray-700">Pricing</a>
+            <a href="/testimonials" className="hover:text-gray-700">Testimonials</a>
+            <a href="/faq" className="hover:text-gray-700">FAQ</a>
+            <a href="/contact" className="hover:text-gray-700">Contact Us</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
+
+
+
+
 };
 
 export default TemplateBuilder;
