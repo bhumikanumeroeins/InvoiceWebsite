@@ -16,14 +16,9 @@ const itemSchema = new mongoose.Schema(
 
 const invoiceSchema = new mongoose.Schema({
   // 🔹 FORM META
-  formType: {
-    type: String,
-    enum: ["basic", "advanced"],
-    default: "basic"
-  },
+  formType: {type: String,enum: ["basic", "advanced"],default: "basic"},
 
-  documentType: {
-    type: String,
+  documentType: {type: String,
     enum: [
       "invoice",
       "taxInvoice",
@@ -42,17 +37,10 @@ const invoiceSchema = new mongoose.Schema({
   },
 
   // 🔹 CREATED BY (USER REFERENCE)
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Registration",
-    required: true
-  },
+  createdBy: {type: mongoose.Schema.Types.ObjectId,ref: "Registration",required: true},
 
   // 🔹 SOFT DELETE FLAG
-  isDeleted: {
-    type: Boolean,
-    default: false
-  },
+  isDeleted: {type: Boolean, default: false},
 
   // 🔹 BUSINESS
   business: {
@@ -125,10 +113,7 @@ const invoiceSchema = new mongoose.Schema({
     enum: ['unpaid', 'partiallyPaid', 'paid'],
     default: 'unpaid'
   },
-  paidAmount: {
-    type: Number,
-    default: 0
-  },
+  paidAmount: {type: Number,default: 0},
   paidDate: Date,
   paymentMethod: String,
   paymentNote: String,

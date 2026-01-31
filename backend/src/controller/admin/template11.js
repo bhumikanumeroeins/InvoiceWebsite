@@ -1,7 +1,7 @@
-import Template3 from "../../models/admin/template3.js";
+import Template11 from "../../models/admin/template11.js";
 import { createError, createResult } from "../../utils/utils.js";
 
-export const createOrUpdateTemplate3 = async (req, res) => {
+export const createOrUpdateTemplate11 = async (req, res) => {
   try {
     const { name, layout, isActive } = req.body;
 
@@ -15,7 +15,7 @@ export const createOrUpdateTemplate3 = async (req, res) => {
     }
 
     // create new template
-    const newTemplate = new Template3({
+    const newTemplate = new Template11({
       name,
       layout: parsedLayout,
       isActive: typeof isActive !== "undefined" ? isActive : true,
@@ -25,18 +25,18 @@ export const createOrUpdateTemplate3 = async (req, res) => {
 
     return res
       .status(200)
-      .json(createResult(newTemplate, "Template3 saved successfully"));
+      .json(createResult(newTemplate, "Template11 saved successfully"));
   } catch (error) {
     return res.status(500).json(createError(error.message));
   }
 };
 
 
-// get template3 by name
-export const getTemplate3ByName = async (req, res) => {
+// get template11 by name
+export const getTemplate11ByName = async (req, res) => {
   try {
     const { name } = req.params;    
-    const template = await Template3.findOne({ name, isActive: true });
+    const template = await Template11.findOne({ name, isActive: true });
 
     if (!template) {
       return res.status(404).json(createError("Template not found"));
@@ -44,7 +44,7 @@ export const getTemplate3ByName = async (req, res) => {
 
     return res
       .status(200)
-      .json(createResult(template, "Template3 fetched successfully"));
+      .json(createResult(template, "Template11 fetched successfully"));
   } catch (error) {
     return res.status(500).json(createError(error.message));
   }
