@@ -55,8 +55,10 @@ const templates = {
 };
 
 const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
+  const invoiceId = invoice?._id || invoice?.id;
+  
   const [activeAction, setActiveAction] = useState('invoice');
-  const [selectedTemplate, setSelectedTemplate] = useState(1);
+  const [selectedTemplate, setSelectedTemplate] = useState(invoice?.selectedTemplate || 1);
   const [currentInvoice, setCurrentInvoice] = useState(invoice);
   const [loading, setLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
@@ -80,17 +82,30 @@ const currentLayout = modifiedLayout || safeLayout;
           
           if (response.success && response.data) {
             setCurrentInvoice(response.data);
+            // Update selected template from invoice data
+            if (response.data.selectedTemplate) {
+              setSelectedTemplate(response.data.selectedTemplate);
+            }
           } else {
             setCurrentInvoice(invoice);
+            if (invoice.selectedTemplate) {
+              setSelectedTemplate(invoice.selectedTemplate);
+            }
           }
         } catch (error) {
           console.error('Failed to fetch full invoice:', error);
           setCurrentInvoice(invoice);
+          if (invoice.selectedTemplate) {
+            setSelectedTemplate(invoice.selectedTemplate);
+          }
         } finally {
           setLoading(false);
         }
       } else {
         setCurrentInvoice(invoice);
+        if (invoice?.selectedTemplate) {
+          setSelectedTemplate(invoice.selectedTemplate);
+        }
       }
     };
     
@@ -100,17 +115,44 @@ const currentLayout = modifiedLayout || safeLayout;
   useEffect(() => {
   const loadTemplate = async () => {
     try {
-      const res = await templateAPI.getByName(
-        `Template${selectedTemplate}`
-      );
-      console.log("📡 RAW TEMPLATE API:", res);
-      setTemplateMeta(res.data);
-      console.log("🔥 TEMPLATE META FROM API:", res.data);
+      // First, try to get user's saved layout for this template
+      const userLayoutsResponse = await fetch(`${API_BASE_URL}/user-template-layout/my-layouts`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (userLayoutsResponse.ok) {
+        const userLayoutsData = await userLayoutsResponse.json();
+        
+        // Find the most recent saved layout for this template
+        const userLayout = userLayoutsData.data?.layouts?.find(
+          layout => layout.templateName === `Template${selectedTemplate}`
+        );
+
+        if (userLayout) {
+          console.log("✅ Loading USER saved layout:", userLayout);
+          setTemplateMeta({
+            _id: userLayout._id,
+            layout: userLayout.layout,
+            name: userLayout.templateName,
+            isUserCustomized: true
+          });
+          return;
+        }
+      }
+
+      // If no user layout found, load admin default template
+      const res = await templateAPI.getByName(`Template${selectedTemplate}`);
+      console.log("📡 Loading ADMIN default template:", res);
+      setTemplateMeta({
+        ...res.data,
+        isUserCustomized: false
+      });
 
     } catch (err) {
-      // console.error("Template fetch failed", err);
       console.warn("⚠️ Template not found, using defaults");
-      setTemplateMeta({ layout: null });
+      setTemplateMeta({ layout: null, isUserCustomized: false });
     }
   };
 
@@ -500,7 +542,7 @@ Best regards`,
     }
 
     const confirmSave = confirm(
-      `Save layout changes for Template${selectedTemplate}?\n\nThis will update the template for all future invoices.`
+      `Save layout changes for Template${selectedTemplate}?\n\nThis will save your customized layout.`
     );
     
     if (!confirmSave) {
@@ -510,32 +552,16 @@ Best regards`,
     setSavingTemplateLayout(true);
     
     try {
-      if (!templateRef.current) {
-        throw new Error('Template reference not found');
-      }
-
-      const canvas = await html2canvas(templateRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-      });
-
-      const blob = await new Promise((resolve) => {
-        canvas.toBlob(resolve, 'image/png');
-      });
-
-      const formData = new FormData();
-      formData.append('name', `Template${selectedTemplate}`);
-      formData.append('background', blob, 'template-background.png');
-      formData.append('layout', JSON.stringify(layoutToSave));
-
-      const response = await fetch(`${API_BASE_URL}/invoice-template/create-invoice-template`, {
+      const response = await fetch(`${API_BASE_URL}/user-template-layout/save-layout`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify({
+          templateName: `Template${selectedTemplate}`,
+          layout: layoutToSave
+        }),
       });
 
       const data = await response.json();
@@ -543,8 +569,29 @@ Best regards`,
       if (response.ok) {
         alert(`Template${selectedTemplate} layout saved successfully!`);
         setModifiedLayout(null);
-        const res = await templateAPI.getByName(`Template${selectedTemplate}`);
-        setTemplateMeta(res.data);
+        
+        // Reload the template to get the saved layout
+        const userLayoutsResponse = await fetch(`${API_BASE_URL}/user-template-layout/my-layouts`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        if (userLayoutsResponse.ok) {
+          const userLayoutsData = await userLayoutsResponse.json();
+          const userLayout = userLayoutsData.data?.layouts?.find(
+            layout => layout.templateName === `Template${selectedTemplate}`
+          );
+
+          if (userLayout) {
+            setTemplateMeta({
+              _id: userLayout._id,
+              layout: userLayout.layout,
+              name: userLayout.templateName,
+              isUserCustomized: true
+            });
+          }
+        }
       } else {
         alert('Failed to save template: ' + (data.message || 'Unknown error'));
       }
@@ -891,8 +938,31 @@ Best regards`,
               return (
                 <div 
                   key={num}
-                  onClick={() => {
+                  onClick={async () => {
                     setSelectedTemplate(num);
+                    // Save template selection to backend
+                    if (invoiceId) {
+                      try {
+                        const response = await fetch(`${API_BASE_URL}/invoiceForms/update-template/${invoiceId}`, {
+                          method: 'PATCH',
+                          headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ selectedTemplate: num }),
+                        });
+                        
+                        if (response.ok) {
+                          // Update currentInvoice with new selectedTemplate
+                          setCurrentInvoice(prev => ({
+                            ...prev,
+                            selectedTemplate: num
+                          }));
+                        }
+                      } catch (error) {
+                        console.error('Failed to save template selection:', error);
+                      }
+                    }
                     setActiveAction('invoice');
                   }}
                   className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl bg-white ${

@@ -934,3 +934,54 @@ export const sendInvoiceEmailController = async (req, res) => {
     });
   }
 };
+
+
+/* ================= UPDATE SELECTED TEMPLATE ================= */
+export const updateSelectedTemplate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { selectedTemplate } = req.body;
+    const userId = req.user.userId;
+
+    // Validate template number
+    if (!selectedTemplate || selectedTemplate < 1 || selectedTemplate > 12) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid template number. Must be between 1 and 12."
+      });
+    }
+
+    // Find invoice and verify ownership
+    const invoice = await InvoiceTaxForm.findOne({
+      _id: id,
+      createdBy: userId,
+      isDeleted: false
+    });
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Invoice not found"
+      });
+    }
+
+    // Update selected template
+    invoice.selectedTemplate = selectedTemplate;
+    await invoice.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Template updated successfully",
+      data: {
+        _id: invoice._id,
+        selectedTemplate: invoice.selectedTemplate
+      }
+    });
+  } catch (error) {
+    console.error("Update selected template error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update template"
+    });
+  }
+};
