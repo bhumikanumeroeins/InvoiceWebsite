@@ -12,7 +12,7 @@ import PaymentQRBlock from "./PaymentQRBlock";
 import ThankYouBlock from "./ThankYouBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template6 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
+const Template6 = ({ data = {}, editorMode = true, backendLayout, templateId, onLayoutChange }) => {
   const invoice = getInvoiceData(data);
   const bgUrl = bgImage;
 
@@ -41,6 +41,9 @@ const Template6 = ({ data = {}, editorMode = true, backendLayout, templateId }) 
     const newLayout = { ...layout, [k]: { x, y } };
     console.log("Template6 - Layout updated:", newLayout);
     setLayout(newLayout);
+    if (onLayoutChange) {
+      onLayoutChange(newLayout);
+    }
   };
 
   return (

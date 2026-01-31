@@ -13,11 +13,8 @@ const InvoiceTemplateSchema = new mongoose.Schema(
     },
 
     layout: {
-      header: { x: Number, y: Number },
-      items: { x: Number, y: Number },
-      totals: { x: Number, y: Number },
-      payment: { x: Number, y: Number },
-      footer: { x: Number, y: Number },
+      type: mongoose.Schema.Types.Mixed, // Allow any object structure
+      default: {},
     },
 
     isActive: {

@@ -11,7 +11,7 @@ import PartyTotalsBlock from "./PartyTotalsBlock";
 import TermsPaymentQRBlock from "./TermsPaymentQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template4 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
+const Template4 = ({ data = {}, editorMode = true, backendLayout, templateId, onLayoutChange }) => {
   const bgUrl = bgImage;
 
   const invoice = getInvoiceData(data);
@@ -47,7 +47,9 @@ const Template4 = ({ data = {}, editorMode = true, backendLayout, templateId }) 
 
     setLayout(newLayout);
 
-    // later call save API here
+    if (onLayoutChange) {
+      onLayoutChange(newLayout);
+    }
   };
 
   console.log("🧭 current layout state:", layout);

@@ -12,7 +12,7 @@ import FooterBlock from "./FooterBlock";
 
 
 
-const Template1 = ({ data = {}, editorMode = true , backendLayout,  templateId}) => {
+const Template1 = ({ data = {}, editorMode = true , backendLayout,  templateId, onLayoutChange}) => {
 
 const bgUrl = bgImage;
 
@@ -54,7 +54,9 @@ const updatePos = (key, x, y) => {
 
   setLayout(newLayout);
 
-  // later call save API here
+  if (onLayoutChange) {
+    onLayoutChange(newLayout);
+  }
 };
 
 console.log("🧭 current layout state:", layout);

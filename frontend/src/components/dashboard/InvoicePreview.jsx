@@ -4,6 +4,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { templateAPI } from '../../services/templateService';
 import { reminderAPI } from '../../services/reminderService';
+import { API_BASE_URL } from '../../services/apiConfig';
 const getCurrencySymbol = (currency = 'INR') => {
   return currencyService.getSymbol(currency);
 };
@@ -60,11 +61,14 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
   const [loading, setLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
   const [templateMeta, setTemplateMeta] = useState(null);
+  const [savingTemplateLayout, setSavingTemplateLayout] = useState(false);
+  const [modifiedLayout, setModifiedLayout] = useState(null);
   const templateRef = useRef(null);
 
 
 const safeLayout = templateMeta?.layout || null;
 const safeTemplateId = templateMeta?._id || null;
+const currentLayout = modifiedLayout || safeLayout;
   
   // Update currentInvoice when invoice prop changes
   useEffect(() => {
@@ -487,6 +491,76 @@ Best regards`,
     }
   };
 
+  const handleSaveTemplateLayout = async () => {
+    const layoutToSave = modifiedLayout || safeLayout;
+    
+    if (!layoutToSave) {
+      alert('No layout changes to save.');
+      return;
+    }
+
+    const confirmSave = confirm(
+      `Save layout changes for Template${selectedTemplate}?\n\nThis will update the template for all future invoices.`
+    );
+    
+    if (!confirmSave) {
+      return;
+    }
+
+    setSavingTemplateLayout(true);
+    
+    try {
+      if (!templateRef.current) {
+        throw new Error('Template reference not found');
+      }
+
+      const canvas = await html2canvas(templateRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob(resolve, 'image/png');
+      });
+
+      const formData = new FormData();
+      formData.append('name', `Template${selectedTemplate}`);
+      formData.append('background', blob, 'template-background.png');
+      formData.append('layout', JSON.stringify(layoutToSave));
+
+      const response = await fetch(`${API_BASE_URL}/invoice-template/create-invoice-template`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Template${selectedTemplate} layout saved successfully!`);
+        setModifiedLayout(null);
+        const res = await templateAPI.getByName(`Template${selectedTemplate}`);
+        setTemplateMeta(res.data);
+      } else {
+        alert('Failed to save template: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Save template layout error:', error);
+      alert('Failed to save template layout: ' + error.message);
+    } finally {
+      setSavingTemplateLayout(false);
+    }
+  };
+
+  const handleLayoutChange = (newLayout) => {
+    console.log('📐 Layout changed:', newLayout);
+    setModifiedLayout(newLayout);
+  };
+
   const generatePDF = async (forDownload = false) => {
     if (!templateRef.current) return null;
     
@@ -755,8 +829,9 @@ Best regards`,
                   <TemplateComponent
                     data={previewData}
                     editorMode
-                    backendLayout={safeLayout}
+                    backendLayout={currentLayout}
                     templateId={safeTemplateId}
+                    onLayoutChange={handleLayoutChange}
                   />
                 );
 
@@ -768,6 +843,28 @@ Best regards`,
               <Download className="w-4 h-4" />
               First Page Preview Only, Click to Download PDF File
             </a>
+            <button
+              onClick={handleSaveTemplateLayout}
+              disabled={savingTemplateLayout}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition text-sm font-medium shadow-sm ${
+                modifiedLayout
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              } disabled:opacity-50`}
+              title={modifiedLayout ? 'Save layout changes' : 'Drag elements to modify layout'}
+            >
+              {savingTemplateLayout ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4" />
+                  {modifiedLayout ? 'Save Layout Changes' : 'Save Template'}
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}

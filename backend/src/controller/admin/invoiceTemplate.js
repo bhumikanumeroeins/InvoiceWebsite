@@ -1,7 +1,7 @@
 import InvoiceTemplate from "../../models/admin/invoiceTemplate.js";
 import bcrypt from "bcryptjs";
 
-// POST create new invoice template
+// POST create or update invoice template
 export const createInvoiceTemplate = async (req, res) => {
   try {
     const { name, layout } = req.body;
@@ -15,21 +15,32 @@ export const createInvoiceTemplate = async (req, res) => {
     }
 
     const background = `/uploads/${req.file.filename}`;
+    const parsedLayout = layout ? JSON.parse(layout) : {};
 
-    const newTemplate = new InvoiceTemplate({
-      name,
-      background,
-      layout: layout ? JSON.parse(layout) : {},
-    });
+    // Use findOneAndUpdate with upsert to update existing or create new
+    const template = await InvoiceTemplate.findOneAndUpdate(
+      { name, isActive: true }, // Find by name and isActive
+      {
+        name,
+        background,
+        layout: parsedLayout,
+        isActive: true,
+      },
+      {
+        new: true, // Return the updated document
+        upsert: true, // Create if doesn't exist
+        runValidators: true,
+      }
+    );
 
-    await newTemplate.save();
-
-    return res.status(201).json({
-      message: "Invoice template created",
-      template: newTemplate,
+    return res.status(200).json({
+      success: true,
+      message: template.isNew ? "Invoice template created" : "Invoice template updated",
+      data: template,
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: "Server error",
       error: error.message,
     });

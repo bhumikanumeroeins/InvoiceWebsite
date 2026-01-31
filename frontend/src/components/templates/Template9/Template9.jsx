@@ -11,7 +11,7 @@ import TermsTotalsBlock from "./TermsTotalsBlock";
 import PaymentQRBlock from "./PaymentQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template9 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
+const Template9 = ({ data = {}, editorMode = true, backendLayout, templateId, onLayoutChange }) => {
   const invoice = getInvoiceData(data);
 
   const DEFAULT_LAYOUT = {
@@ -39,6 +39,9 @@ const Template9 = ({ data = {}, editorMode = true, backendLayout, templateId }) 
     const newLayout = { ...layout, [k]: { x, y } };
     console.log("Template9 - Layout updated:", newLayout);
     setLayout(newLayout);
+    if (onLayoutChange) {
+      onLayoutChange(newLayout);
+    }
   };
 
   return (
