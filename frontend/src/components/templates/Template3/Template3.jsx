@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
 import bgImage from "../../../assets/templates/3_1.png";
@@ -12,10 +12,12 @@ import TermsPaymentBlock from "./TermsPaymentBlock";
 import TotalsQRBlock from "./TotalsQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template3 = ({ data = {}, editorMode = true }) => {
+const Template3 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
+  const bgUrl = bgImage;
+
   const invoice = getInvoiceData(data);
 
-  const [layout, setLayout] = useState({
+  const DEFAULT_LAYOUT = {
     header: { x: 0, y: 20 },
     party: { x: 0, y: 100 },
     details: { x: 0, y: 200 },
@@ -23,28 +25,59 @@ const Template3 = ({ data = {}, editorMode = true }) => {
     terms: { x: 50, y: 440 },
     totals: { x: 420, y: 420 },
     footer: { x: 50, y: 650 },
-  });
+  };
+
+  const [layout, setLayout] = useState(
+    backendLayout || DEFAULT_LAYOUT
+  );
+
+  useEffect(() => {
+    if (
+      backendLayout &&
+      Object.keys(backendLayout).length > 0
+    ) {
+      console.log("✅ Applying backend layout:", backendLayout);
+      setLayout(backendLayout);
+    }
+  }, [backendLayout]);
 
   const updatePos = (key, x, y) => {
-    setLayout((p) => ({
-      ...p,
-      [key]: { ...p[key], x, y },
-    }));
+    const newLayout = {
+      ...layout,
+      [key]: { x, y },
+    };
+
+    setLayout(newLayout);
+
+    // later call save API here
   };
+
+  console.log("🧭 current layout state:", layout);
 
   return (
     <div
       style={{
-        width: 794,
-        height: 1123,
+        width: "794px",
+        height: "1123px",
         position: "relative",
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: "794px 1123px",
-        backgroundRepeat: "no-repeat",
         overflow: "hidden",
+        background: "#fff",
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
+      {/* Background */}
+      <img
+        src={bgUrl}
+        alt=""
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 0,
+        }}
+      />
+
       {/* HEADER */}
       <Rnd
         bounds="parent"

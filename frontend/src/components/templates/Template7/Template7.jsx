@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
 import bgImage from "../../../assets/templates/7_1.jpg";
@@ -11,38 +11,55 @@ import TermsTotalsBlock from "./TermsTotalsBlock";
 import PaymentSignatureQRBlock from "./PaymentSignatureQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template7 = ({ data = {}, editorMode = true }) => {
+const Template7 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
   const invoice = getInvoiceData(data);
+  const bgUrl = bgImage;
 
-  const [layout, setLayout] = useState({
+  const DEFAULT_LAYOUT = {
     header: { x: 90, y: 90 },
     party: { x: 90, y: 230 },
     items: { x: 90, y: 360 },
     termsTotals: { x: 90, y: 480 },
     payment: { x: 90, y: 550 },
     footer: { x: 200, y: 750 },
-  });
+  };
 
-  const update = (k, x, y) =>
-    setLayout((p) => ({ ...p, [k]: { x, y } }));
+  const [layout, setLayout] = useState(backendLayout || DEFAULT_LAYOUT);
+
+  useEffect(() => {
+    console.log("Template7 - backendLayout received:", backendLayout);
+    console.log("Template7 - templateId:", templateId);
+    if (backendLayout) {
+      console.log("Template7 - Applying backend layout:", backendLayout);
+      setLayout(backendLayout);
+    }
+  }, [backendLayout, templateId]);
+
+  const update = (k, x, y) => {
+    const newLayout = { ...layout, [k]: { x, y } };
+    console.log("Template7 - Layout updated:", newLayout);
+    setLayout(newLayout);
+  };
 
   return (
     <div
       style={{
-        width: 794,
-        height: 1123,
+        width: "794px",
+        height: "1123px",
         position: "relative",
         overflow: "hidden",
+        background: "white",
       }}
     >
       <img
-        src={bgImage}
+        src={bgUrl}
         alt=""
         style={{
           position: "absolute",
           inset: 0,
           width: "100%",
           height: "100%",
+          zIndex: 0,
         }}
       />
 

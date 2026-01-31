@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
 import bg from "../../../assets/templates/12_1.png";
@@ -14,10 +14,11 @@ import PaymentBlock from "./PaymentBlock";
 import QRBlock from "./QRBlock";
 import ThankYouBlock from "./ThankYouBlock";
 
-const Template12 = ({ data = {}, editorMode = true }) => {
+const Template12 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
   const invoice = getInvoiceData(data);
+  const bgUrl = bg;
 
-  const [layout, setLayout] = useState({
+  const DEFAULT_LAYOUT = {
     header: { x: 250, y: 10 },
     party: { x: 140, y: 60 },
     title: { x: 460, y: 120 },
@@ -27,22 +28,47 @@ const Template12 = ({ data = {}, editorMode = true }) => {
     payment: { x: 120, y: 500 },
     qr: { x: 350, y: 520 },
     thankyou: { x: 250, y: 680 },
-  });
+  };
 
-  const update = (k, x, y) =>
-    setLayout((p) => ({ ...p, [k]: { x, y } }));
+  const [layout, setLayout] = useState(backendLayout || DEFAULT_LAYOUT);
+
+  useEffect(() => {
+    console.log("Template12 - backendLayout received:", backendLayout);
+    console.log("Template12 - templateId:", templateId);
+    if (backendLayout) {
+      console.log("Template12 - Applying backend layout:", backendLayout);
+      setLayout(backendLayout);
+    }
+  }, [backendLayout, templateId]);
+
+  const update = (k, x, y) => {
+    const newLayout = { ...layout, [k]: { x, y } };
+    console.log("Template12 - Layout updated:", newLayout);
+    setLayout(newLayout);
+  };
 
   return (
     <div
       style={{
-        width: 835,
-        height: 1050,
-        backgroundImage: `url(${bg})`,
-        backgroundSize: "cover",
+        width: "835px",
+        height: "1050px",
         position: "relative",
         fontFamily: "'DM Sans', sans-serif",
+        background: "white",
       }}
     >
+      <img
+        src={bgUrl}
+        alt=""
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 0,
+        }}
+      />
+
       <Rnd
         bounds="parent"
         position={layout.header}

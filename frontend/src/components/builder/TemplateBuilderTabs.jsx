@@ -1,7 +1,6 @@
 import { Mail, FileText } from 'lucide-react';
 
 const TemplateBuilderTabs = ({ 
-  activeTab, 
   emailData, 
   setEmailData, 
   templateConfig, 

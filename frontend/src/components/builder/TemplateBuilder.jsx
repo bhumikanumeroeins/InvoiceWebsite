@@ -77,12 +77,11 @@ const TemplateBuilder = () => {
   const customInvoiceId = searchParams.get('id');
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
-  const [activeTab, setActiveTab] = useState('preview'); // 'preview', 'edit', 'email', 'download'
+  const [activeTab, setActiveTab] = useState('preview'); 
   const templateRef = useRef(null);
   const currentUser = getCurrentUser();
   const userEmail = currentUser?.email || '';
   
-  // Email state
   const [emailData, setEmailData] = useState({
     from: userEmail,
     to: '',
@@ -101,14 +100,12 @@ Best regards`,
   const [templateConfig, setTemplateConfig] = useState({
     templateName: 'My Custom Template',
     
-    // Colors - match backend field names
     primaryColor: '#4F46E5',
     secondaryColor: '#10B981',
     textColor: '#1F2937',
     backgroundColor: '#FFFFFF',
     borderColor: '#E5E7EB',
     
-    // Typography - match backend structure
     typography: {
       headingFont: 'Inter',
       bodyFont: 'Inter',
@@ -116,7 +113,6 @@ Best regards`,
       bodySize: '14px'
     },
     
-    // Content - match backend structure (all editable fields)
     content: {
       logoText: 'LOGO',
       logoImage: '',
@@ -180,7 +176,6 @@ Best regards`,
       footerWebsite: 'www.business.com'
     },
     
-    // Section visibility - match backend structure (nested in visibility object)
     visibility: {
       businessInfo: true,
       clientInfo: true,
@@ -195,12 +190,10 @@ Best regards`,
       logoSection: true
     },
     
-    // Background pattern - match backend field names
     backgroundPattern: 'none',
     backgroundHeaderColor: '#4F46E5',
     backgroundFooterColor: '#4F46E5',
     
-    // Positioning - match backend field names
     logoPosition: { x: 50, y: 50, width: 120, height: 120 },
     invoiceMetaPosition: { x: 500, y: 50, width: 250, height: 120 },
     invoiceTitlePosition: { x: 50, y: 190, width: 300, height: 40 },
@@ -219,37 +212,29 @@ Best regards`,
   const [previewMode, setPreviewMode] = useState(false);
   const [saving, setSaving] = useState(false);
   
-  // Computed: disable editing when in preview tab
   const isEditMode = activeTab === 'edit';
 
-  // Generate PDF using screenshot approach (captures exact design)
   const generatePDF = async (forDownload = false) => {
     try {
       if (!templateRef.current) {
         throw new Error('Template reference not found');
       }
 
-      // Dynamically import libraries
       const { domToPng } = await import('modern-screenshot');
       const { jsPDF } = await import('jspdf');
 
-      // Temporarily enable preview mode to hide drag handles
       const wasPreviewMode = previewMode;
       setPreviewMode(true);
       
-      // Wait for React to re-render
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Capture using modern-screenshot (supports modern CSS including oklch)
       const dataUrl = await domToPng(templateRef.current, {
         scale: 2,
         backgroundColor: templateConfig.backgroundColor,
         filter: (node) => {
-          // Skip hidden elements (opacity-0)
           if (node.classList && node.classList.contains('opacity-0')) {
             return false;
           }
-          // Skip drag handles
           if (node.classList && (
             node.classList.contains('react-draggable-handle') ||
             node.classList.contains('react-resizable-handle')
@@ -260,21 +245,17 @@ Best regards`,
         }
       });
 
-      // Restore preview mode
       setPreviewMode(wasPreviewMode);
 
-      // Create PDF (A4 size)
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
 
-      // A4 dimensions in mm
       const pdfWidth = 210;
       const pdfHeight = 297;
 
-      // Load image to get dimensions
       const img = new Image();
       await new Promise((resolve, reject) => {
         img.onload = resolve;
@@ -282,30 +263,24 @@ Best regards`,
         img.src = dataUrl;
       });
 
-      // Calculate image dimensions to fit A4
       const imgWidth = pdfWidth;
       const imgHeight = (img.height * pdfWidth) / img.width;
 
-      // Add image to PDF
       pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight);
 
       if (forDownload) {
-        // Download the PDF
         pdf.save(`${templateConfig.templateName || 'Custom-Invoice'}.pdf`);
         return true;
       } else {
-        // Return base64 for email
         const pdfBase64 = pdf.output('datauristring').split(',')[1];
         return pdfBase64;
       }
     } catch (error) {
-      // Restore preview mode on error
       setPreviewMode(false);
       throw new Error('Failed to generate PDF: ' + error.message);
     }
   };
 
-  // Handle download PDF
   const handleDownloadPDF = async () => {
     setLoading(true);
     try {
@@ -317,7 +292,6 @@ Best regards`,
     }
   };
 
-  // Handle send email
   const handleSendEmail = async () => {
     if (!emailData.to) {
       alert('Please enter recipient email address.');
@@ -332,10 +306,8 @@ Best regards`,
     setSendingEmail(true);
     
     try {
-      // Generate PDF using screenshot approach
       const pdfBase64 = await generatePDF(false);
       
-      // Send email via API
       const response = await apiCall(`/build-invoice/send-email/${customInvoiceId}`, {
         method: 'POST',
         body: JSON.stringify({
@@ -410,7 +382,6 @@ Best regards`,
     }));
   };
 
-  // Load existing custom invoice data if ID is provided
   useEffect(() => {
     const loadCustomInvoice = async () => {
       if (!customInvoiceId) return;
@@ -421,7 +392,6 @@ Best regards`,
         if (response.success && response.data) {
           const data = response.data;
           
-          // Parse stringified fields if needed
           const parseIfString = (value) => {
             if (typeof value === 'string') {
               try {
@@ -433,7 +403,6 @@ Best regards`,
             return value;
           };
           
-          // Merge loaded data with existing config (to preserve position defaults)
           setTemplateConfig(prev => ({
             ...prev,
             templateName: data.templateName || prev.templateName,
@@ -451,7 +420,6 @@ Best regards`,
             backgroundPattern: data.backgroundPattern || prev.backgroundPattern,
             backgroundHeaderColor: data.backgroundHeaderColor || prev.backgroundHeaderColor,
             backgroundFooterColor: data.backgroundFooterColor || prev.backgroundFooterColor,
-            // Position fields from backend (if they exist)
             logoPosition: data.logoPosition || prev.logoPosition,
             invoiceMetaPosition: data.invoiceMetaPosition || prev.invoiceMetaPosition,
             businessInfoPosition: data.businessInfoPosition || prev.businessInfoPosition,
@@ -483,7 +451,6 @@ Best regards`,
     try {
       const formData = new FormData();
       
-      // Position field keys
       const positionFields = [
         'logoPosition', 'invoiceMetaPosition', 'businessInfoPosition',
         'clientInfoPosition', 'shipToPosition', 'itemsTablePosition',
@@ -491,28 +458,22 @@ Best regards`,
         'qrCodePosition', 'signaturePosition', 'footerPosition', 'invoiceTitlePosition'
       ];
       
-      // Add all fields to FormData
       Object.keys(templateConfig).forEach(key => {
         const value = templateConfig[key];
         
         if (value === null || value === undefined || value === '') {
-          // Skip null/undefined/empty values
           return;
         }
         
-        // Skip position fields - let backend use defaults
         if (positionFields.includes(key)) {
           return;
         }
         
         if (typeof value === 'object' && !Array.isArray(value)) {
-          // Stringify objects (typography, content, visibility)
           formData.append(key, JSON.stringify(value));
         } else if (Array.isArray(value)) {
-          // Arrays
           formData.append(key, JSON.stringify(value));
         } else {
-          // Primitive values
           formData.append(key, value);
         }
       });
@@ -549,7 +510,6 @@ Best regards`,
     'Courier New'
   ];
 
-  // Show loading state while fetching data
   if (loadingData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -646,7 +606,6 @@ Best regards`,
       {/* Email Tab Content */}
       {activeTab === 'email' && (
         <TemplateBuilderTabs
-          activeTab={activeTab}
           emailData={emailData}
           setEmailData={setEmailData}
           templateConfig={templateConfig}
@@ -1060,7 +1019,7 @@ Best regards`,
                           className="w-full h-full object-contain rounded"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center text-gray-500">
+                        <div className="w-full h-full rounded flex items-center justify-center text-gray-500 border-2 border-dashed border-gray-300">
                           <EditableText
                             value={templateConfig.content.logoText}
                             onChange={(val) => handleContentChange('logoText', val)}
@@ -1676,7 +1635,7 @@ Best regards`,
                               className="w-32 h-32 object-contain rounded"
                             />
                           ) : (
-                            <div className="w-32 h-32 mb-2 bg-gray-200 rounded flex items-center justify-center">
+                            <div className="w-32 h-32 mb-2 rounded flex items-center justify-center border-2 border-dashed border-gray-300">
                               <span className="text-gray-500 text-xs">QR Code</span>
                             </div>
                           )}

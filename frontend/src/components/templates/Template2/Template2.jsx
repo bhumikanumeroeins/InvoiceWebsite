@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
 import bgImage from "../../../assets/templates/1_4.jpeg";
@@ -11,36 +11,70 @@ import TermsPaymentBlock from "./TermsPaymentBlock";
 import TotalsQRBlock from "./TotalsQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template2 = ({ data = {}, editorMode = true }) => {
+const Template2 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
+  const bgUrl = bgImage;
+
   const invoice = getInvoiceData(data);
 
-  const [layout, setLayout] = useState({
+  const DEFAULT_LAYOUT = {
     header: { x: 380, y: 30 },
     party: { x: 60, y: 250 },
     items: { x: 60, y: 320 },
     terms: { x: 60, y: 550 },
     totals: { x: 380, y: 550 },
     footer: { x: 0, y: 780 },
-  });
+  };
+
+  const [layout, setLayout] = useState(
+    backendLayout || DEFAULT_LAYOUT
+  );
+
+  useEffect(() => {
+    if (
+      backendLayout &&
+      Object.keys(backendLayout).length > 0
+    ) {
+      console.log("✅ Applying backend layout:", backendLayout);
+      setLayout(backendLayout);
+    }
+  }, [backendLayout]);
 
   const updatePos = (key, x, y) => {
-    setLayout((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], x, y },
-    }));
+    const newLayout = {
+      ...layout,
+      [key]: { x, y },
+    };
+
+    setLayout(newLayout);
+
+    // later call save API here
   };
+
+  console.log("🧭 current layout state:", layout);
 
   return (
     <div
       style={{
-        width: 794,
-        height: 1123,
+        width: "794px",
+        height: "1123px",
         position: "relative",
         overflow: "hidden",
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: "794px 1123px",
+        background: "#fff",
       }}
     >
+      {/* Background */}
+      <img
+        src={bgUrl}
+        alt=""
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 0,
+        }}
+      />
+
       {/* HEADER */}
       <Rnd
         bounds="parent"

@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
-import qrCodeImg from "../../../assets/templates/images (1).png";
 import { getInvoiceData } from "../../../utils/invoiceDefaults";
 
 import HeaderBlock from "./HeaderBlock";
@@ -12,10 +11,10 @@ import TermsTotalsBlock from "./TermsTotalsBlock";
 import PaymentQRBlock from "./PaymentQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template9 = ({ data = {}, editorMode = true }) => {
+const Template9 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
   const invoice = getInvoiceData(data);
 
-  const [layout, setLayout] = useState({
+  const DEFAULT_LAYOUT = {
     header: { x: 80, y: 40 },
     pill: { x: 0, y: 110 },
     party: { x: 80, y: 200 },
@@ -23,16 +22,30 @@ const Template9 = ({ data = {}, editorMode = true }) => {
     termsTotals: { x: 80, y: 450 },
     paymentQR: { x: 80, y: 520 },
     footer: { x: 0, y: 650 },
-  });
+  };
 
-  const update = (k, x, y) =>
-    setLayout((p) => ({ ...p, [k]: { x, y } }));
+  const [layout, setLayout] = useState(backendLayout || DEFAULT_LAYOUT);
+
+  useEffect(() => {
+    console.log("Template9 - backendLayout received:", backendLayout);
+    console.log("Template9 - templateId:", templateId);
+    if (backendLayout) {
+      console.log("Template9 - Applying backend layout:", backendLayout);
+      setLayout(backendLayout);
+    }
+  }, [backendLayout, templateId]);
+
+  const update = (k, x, y) => {
+    const newLayout = { ...layout, [k]: { x, y } };
+    console.log("Template9 - Layout updated:", newLayout);
+    setLayout(newLayout);
+  };
 
   return (
     <div
       style={{
-        width: 794,
-        height: 965,
+        width: "794px",
+        height: "965px",
         position: "relative",
         overflow: "hidden",
         background: "#fff",

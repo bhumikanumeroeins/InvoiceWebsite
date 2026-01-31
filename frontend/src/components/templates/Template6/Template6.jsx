@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
 import bgImage from "../../../assets/templates/6_1.jpg";
@@ -12,10 +12,11 @@ import PaymentQRBlock from "./PaymentQRBlock";
 import ThankYouBlock from "./ThankYouBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template6 = ({ data = {}, editorMode = true }) => {
+const Template6 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
   const invoice = getInvoiceData(data);
+  const bgUrl = bgImage;
 
-  const [layout, setLayout] = useState({
+  const DEFAULT_LAYOUT = {
     header: { x: 0, y: 0 },
     party: { x: 50, y: 160 },
     items: { x: 50, y: 270 },
@@ -23,23 +24,37 @@ const Template6 = ({ data = {}, editorMode = true }) => {
     paymentQR: { x: 50, y: 500 },
     thankyou: { x: 400, y: 650 },
     footer: { x: 0, y: 760 },
-  });
+  };
 
+  const [layout, setLayout] = useState(backendLayout || DEFAULT_LAYOUT);
 
-  const update = (k, x, y) =>
-    setLayout((p) => ({ ...p, [k]: { x, y } }));
+  useEffect(() => {
+    console.log("Template6 - backendLayout received:", backendLayout);
+    console.log("Template6 - templateId:", templateId);
+    if (backendLayout) {
+      console.log("Template6 - Applying backend layout:", backendLayout);
+      setLayout(backendLayout);
+    }
+  }, [backendLayout, templateId]);
+
+  const update = (k, x, y) => {
+    const newLayout = { ...layout, [k]: { x, y } };
+    console.log("Template6 - Layout updated:", newLayout);
+    setLayout(newLayout);
+  };
 
   return (
     <div
       style={{
-        width: 794,
-        height: 1123,
+        width: "794px",
+        height: "1123px",
         position: "relative",
         overflow: "hidden",
+        background: "white",
       }}
     >
       <img
-        src={bgImage}
+        src={bgUrl}
         alt=""
         style={{
           position: "absolute",

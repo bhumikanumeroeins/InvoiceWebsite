@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
 import { getInvoiceData } from "../../../utils/invoiceDefaults";
@@ -10,26 +10,40 @@ import TermsTotalsBlock from "./TermsTotalsBlock";
 import PaymentQRBlock from "./PaymentQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template10 = ({ data = {}, editorMode = true }) => {
+const Template10 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
   const invoice = getInvoiceData(data);
 
-  const [layout, setLayout] = useState({
+  const DEFAULT_LAYOUT = {
     header: { x: 0, y: 0 },
     party: { x: 80, y: 150 },
     items: { x: 80, y: 250 },
     termsTotals: { x: 80, y: 400 },
     paymentQR: { x: 80, y: 500 },
     footer: { x: 0, y: 700 },
-  });
+  };
 
-  const update = (k, x, y) =>
-    setLayout((p) => ({ ...p, [k]: { x, y } }));
+  const [layout, setLayout] = useState(backendLayout || DEFAULT_LAYOUT);
+
+  useEffect(() => {
+    console.log("Template10 - backendLayout received:", backendLayout);
+    console.log("Template10 - templateId:", templateId);
+    if (backendLayout) {
+      console.log("Template10 - Applying backend layout:", backendLayout);
+      setLayout(backendLayout);
+    }
+  }, [backendLayout, templateId]);
+
+  const update = (k, x, y) => {
+    const newLayout = { ...layout, [k]: { x, y } };
+    console.log("Template10 - Layout updated:", newLayout);
+    setLayout(newLayout);
+  };
 
   return (
     <div
       style={{
-        width: 794,
-        height: 1050,
+        width: "794px",
+        height: "1050px",
         position: "relative",
         overflow: "hidden",
         background: "#fff",

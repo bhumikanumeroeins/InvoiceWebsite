@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
 import bgImage from "../../../assets/templates/5_1.jpg";
@@ -11,39 +11,67 @@ import TermsTotalsBlock from "./TermsTotalsBlock";
 import PaymentQRBlock from "./PaymentQRBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template5 = ({ data = {}, editorMode = true }) => {
+const Template5 = ({ data = {}, editorMode = true, backendLayout, templateId }) => {
+  const bgUrl = bgImage;
+
   const invoice = getInvoiceData(data);
 
-  const [layout, setLayout] = useState({
-        header: { x: 80, y: 40 },
-        details: { x: 90, y: 210 },
-        items: { x: 80, y: 330 },
-        termsTotals: { x: 80, y: 440 },
-        paymentQR: { x: 80, y: 530 },
-        footer: { x: 80, y: 750 },
-    });
+  const DEFAULT_LAYOUT = {
+    header: { x: 80, y: 40 },
+    details: { x: 90, y: 210 },
+    items: { x: 80, y: 330 },
+    termsTotals: { x: 80, y: 440 },
+    paymentQR: { x: 80, y: 530 },
+    footer: { x: 80, y: 750 },
+  };
 
+  const [layout, setLayout] = useState(
+    backendLayout || DEFAULT_LAYOUT
+  );
 
-  const update = (k, x, y) =>
-    setLayout((p) => ({ ...p, [k]: { x, y } }));
+  useEffect(() => {
+    if (
+      backendLayout &&
+      Object.keys(backendLayout).length > 0
+    ) {
+      console.log("✅ Applying backend layout:", backendLayout);
+      setLayout(backendLayout);
+    }
+  }, [backendLayout]);
+
+  const update = (k, x, y) => {
+    const newLayout = {
+      ...layout,
+      [k]: { x, y },
+    };
+
+    setLayout(newLayout);
+
+    // later call save API here
+  };
+
+  console.log("🧭 current layout state:", layout);
 
   return (
     <div
       style={{
-        width: 794,
-        height: 1123,
+        width: "794px",
+        height: "1123px",
         position: "relative",
         overflow: "hidden",
+        background: "#fff",
       }}
     >
+      {/* Background */}
       <img
-        src={bgImage}
+        src={bgUrl}
         alt=""
         style={{
           position: "absolute",
           inset: 0,
           width: "100%",
           height: "100%",
+          zIndex: 0,
         }}
       />
 
