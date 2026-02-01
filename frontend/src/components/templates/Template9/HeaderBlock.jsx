@@ -1,4 +1,4 @@
-const HeaderBlock = ({ companyName, companyAddress }) => {
+const HeaderBlock = ({ logo, companyName, companyAddress }) => {
   return (
     <div
       style={{
@@ -9,16 +9,30 @@ const HeaderBlock = ({ companyName, companyAddress }) => {
       }}
     >
       {/* LEFT — LOGO */}
-      <p
-        style={{
-          fontFamily: "Bebas Neue",
-          fontSize: 32,
-          margin: 0,
-          letterSpacing: 1,
-        }}
-      >
-        LOGO
-      </p>
+      {logo ? (
+        <img
+          src={logo}
+          alt="logo"
+          style={{
+            height: 32,
+            width: "auto",
+            display: "block",
+            objectFit: "contain",
+          }}
+        />
+      ) : (
+        <p
+          style={{
+            fontFamily: "Bebas Neue",
+            fontSize: 32,
+            margin: 0,
+            letterSpacing: 1,
+          }}
+        >
+          LOGO
+        </p>
+      )}
+
 
       {/* RIGHT — COMPANY */}
       <div

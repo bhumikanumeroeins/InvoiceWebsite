@@ -1,4 +1,5 @@
 const HeaderBlock = ({
+  logo,
   companyName,
   companyAddress,
   billToName,
@@ -16,7 +17,21 @@ const HeaderBlock = ({
       }}
     >
       <div>
-        <p style={{ fontSize: 24, margin: 0 }}>LOGO</p>
+        {logo ? (
+          <img
+            src={logo}
+            alt="logo"
+            style={{
+              height: 40,
+              width: "auto",
+              display: "block",
+              objectFit: "contain",
+            }}
+          />
+        ) : (
+          <p style={{ fontSize: 24, margin: 0 }}>LOGO</p>
+        )}
+
         <p
           style={{
             whiteSpace: "pre-line",

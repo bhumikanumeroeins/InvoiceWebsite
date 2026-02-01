@@ -1,4 +1,5 @@
 const HeaderBlock = ({
+  logo,
   companyName,
   companyAddress,
   billToName,
@@ -24,15 +25,40 @@ const HeaderBlock = ({
       >
         {/* LEFT — LOGO + COMPANY */}
         <div>
-          <p style={{ color: "#fff", fontSize: 22, margin: 0 }}>LOGO</p>
+          {/* LOGO */}
+          {logo ? (
+            <img
+              src={logo}
+              alt="logo"
+              style={{
+                height: 42,
+                width: "auto",
+                display: "block",
+                objectFit: "contain",
+                marginBottom: 4,
+              }}
+            />
+          ) : (
+            <p
+              style={{
+                color: "#fff",
+                fontSize: 22,
+                margin: 0,
+                fontWeight: 700,
+              }}
+            >
+              LOGO
+            </p>
+          )}
 
+          {/* COMPANY NAME */}
           <p
             style={{
               color: orange,
               fontSize: 22,
               fontWeight: 700,
               margin: "4px 0",
-              maxWidth: 210,          
+              maxWidth: 210,
               lineHeight: 1.25,
               wordBreak: "break-word",
             }}
@@ -40,6 +66,7 @@ const HeaderBlock = ({
             {companyName}
           </p>
 
+          {/* ADDRESS */}
           <p
             style={{
               whiteSpace: "pre-line",
@@ -58,16 +85,18 @@ const HeaderBlock = ({
           <p
             style={{
               color: "#fff",
-              fontSize: 15,          
-              fontWeight: 800,      
+              fontSize: 15,
+              fontWeight: 800,
               margin: "0 0 4px",
             }}
           >
             Bill To
           </p>
+
           <p style={{ color: "#fff", fontSize: 13, margin: 0 }}>
             {billToName}
           </p>
+
           <p style={{ color: "#fff", fontSize: 12, margin: "0 0 10px" }}>
             {billToAddress}
           </p>
@@ -86,6 +115,7 @@ const HeaderBlock = ({
           <p style={{ color: "#fff", fontSize: 13, margin: 0 }}>
             {shipToName}
           </p>
+
           <p style={{ color: "#fff", fontSize: 12, margin: 0 }}>
             {shipToAddress}
           </p>

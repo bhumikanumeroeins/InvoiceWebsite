@@ -1,4 +1,4 @@
-const HeaderBlock = () => {
+const HeaderBlock = ({logo}) => {
   return (
     <div
       style={{
@@ -6,7 +6,24 @@ const HeaderBlock = () => {
         width: 720,
       }}
     >
-      <div style={{ fontSize: 28, fontWeight: 700 }}>LOGO</div>
+      {logo ? (
+          <img
+            src={logo}
+            alt="logo"
+            style={{
+              height: 40,
+              width: "auto",
+              display: "block",
+              margin: "0 auto",
+              objectFit: "contain",
+            }}
+          />
+        ) : (
+          <div style={{ fontSize: 28, fontWeight: 700 }}>
+            LOGO
+          </div>
+        )}
+
     </div>
   );
 };

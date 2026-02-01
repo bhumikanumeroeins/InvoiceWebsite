@@ -1,4 +1,4 @@
-const HeaderBlock = ({ companyName, companyAddress }) => {
+const HeaderBlock = ({ logo, companyName, companyAddress }) => {
   const navy = "#12498e";
 
   return (
@@ -9,17 +9,31 @@ const HeaderBlock = ({ companyName, companyAddress }) => {
             maxWidth: 260,   
           }}
         >
-        <h1
-          style={{
-            color: navy,
-            fontSize: 28,
-            fontWeight: 700,
-            margin: "0 0 2px",
-            fontFamily: "'Syne', sans-serif",
-          }}
-        >
-          LOGO
-        </h1>
+        {logo ? (
+          <img
+            src={logo}
+            alt="logo"
+            style={{
+              height: 46,
+              width: "auto",
+              display: "block",
+              objectFit: "contain",
+              marginBottom: 4,
+            }}
+          />
+        ) : (
+          <h1
+            style={{
+              color: navy,
+              fontSize: 28,
+              fontWeight: 700,
+              margin: "0 0 2px",
+              fontFamily: "'Syne', sans-serif",
+            }}
+          >
+            LOGO
+          </h1>
+        )}
 
         <p
           style={{

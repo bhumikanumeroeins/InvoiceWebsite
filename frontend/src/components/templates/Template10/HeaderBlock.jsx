@@ -1,4 +1,4 @@
-const HeaderBlock = ({ companyName, companyAddress }) => {
+const HeaderBlock = ({ logo, companyName, companyAddress }) => {
   return (
     <div style={{ width: 794 }}>
       {/* Grey header */}
@@ -13,7 +13,22 @@ const HeaderBlock = ({ companyName, companyAddress }) => {
         }}
       >
         <div>
-          <p style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>LOGO</p>
+          {logo ? (
+            <img
+              src={logo}
+              alt="logo"
+              style={{
+                height: 40,
+                width: "auto",
+                display: "block",
+                objectFit: "contain",
+              }}
+            />
+          ) : (
+            <p style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
+              LOGO
+            </p>
+          )}
           <p style={{ fontWeight: 700, marginTop: 10 }}>{companyName}</p>
           <p style={{ whiteSpace: "pre-line", fontSize: 14 }}>
             {companyAddress}

@@ -1,4 +1,4 @@
-const HeaderBlock = ({ companyName, companyAddress }) => {
+const HeaderBlock = ({ logo, companyName, companyAddress }) => {
   return (
     <div style={{ width: 700, display: "flex", justifyContent: "space-between" }}>
       <div
@@ -6,7 +6,21 @@ const HeaderBlock = ({ companyName, companyAddress }) => {
             maxWidth: 190,          
           }}
         >
-          <h1 style={{ margin: 0 }}>LOGO</h1>
+          {logo ? (
+            <img
+              src={logo}
+              alt="logo"
+              style={{
+                height: 46,
+                width: "auto",
+                display: "block",
+                objectFit: "contain",
+              }}
+            />
+          ) : (
+            <h1 style={{ margin: 0 }}>LOGO</h1>
+          )}
+
 
           <p
             style={{

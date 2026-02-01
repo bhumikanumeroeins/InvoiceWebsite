@@ -1,4 +1,5 @@
 const HeaderBlock = ({
+  logo,
   companyName,
   companyAddress,
   invoiceNumber,
@@ -17,16 +18,32 @@ const HeaderBlock = ({
     >
       {/* LEFT */}
       <div>
-        <p
-          style={{
-            fontWeight: 800,
-            fontSize: 26,
-            margin: 0,
-          }}
-        >
-          LOGO
-        </p>
+        {/* LOGO */}
+        {logo ? (
+          <img
+            src={logo}
+            alt="logo"
+            style={{
+              height: 46,
+              width: "auto",
+              objectFit: "contain",
+              display: "block",
+              marginBottom: 4,
+            }}
+          />
+        ) : (
+          <p
+            style={{
+              fontWeight: 800,
+              fontSize: 26,
+              margin: 0,
+            }}
+          >
+            LOGO
+          </p>
+        )}
 
+        {/* COMPANY NAME */}
         <p
           style={{
             fontSize: 22,
@@ -37,13 +54,15 @@ const HeaderBlock = ({
           {companyName}
         </p>
 
+        {/* ADDRESS */}
         <p
           style={{
-            maxWidth: 190,          // 👈 forces wrap
+            maxWidth: 190,
             lineHeight: 1.45,
             fontSize: 14,
             margin: 0,
             wordBreak: "break-word",
+            whiteSpace: "pre-line",
           }}
         >
           {companyAddress}
@@ -54,8 +73,9 @@ const HeaderBlock = ({
       <div
         style={{
           fontSize: 13,
-          lineHeight: 1.55,
+          lineHeight: 1.6,
           textAlign: "left",
+          minWidth: 200,
         }}
       >
         {[
@@ -67,9 +87,9 @@ const HeaderBlock = ({
           <div
             key={l}
             style={{
-              display: "flex",
-              gap: 6,
-              marginBottom: 2,
+              display: "grid",
+              gridTemplateColumns: "110px 1fr", // 👈 locks alignment
+              marginBottom: 3,
             }}
           >
             <span style={{ fontWeight: 600 }}>{l}:</span>
