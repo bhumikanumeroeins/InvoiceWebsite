@@ -49,22 +49,31 @@ const PaymentQRBlock = ({
             <img
               src={signature}
               alt="signature"
-              height={40}
-              style={{ display: "block", margin: "0 auto 6px" }}
+              style={{
+                height: 56,          
+                display: "block",
+                margin: "0 auto 8px",
+              }}
             />
           )}
 
           <div
             style={{
-              borderTop: "2px solid #333",
-              width: 140,
-              margin: "0 auto 4px",
+              borderTop: "3px solid #3b2c80", 
+              width: 180,                     
+              margin: "0 auto 6px",
             }}
           />
 
-          <p style={{ fontWeight: 600, margin: 0 }}>
+          <p
+            style={{
+              fontWeight: 700,
+              margin: 0,
+            }}
+          >
             Authorised Sign
           </p>
+
         </div>
       </div>
     </div>

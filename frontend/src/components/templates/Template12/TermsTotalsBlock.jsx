@@ -7,7 +7,7 @@ const TermsTotalsBlock = ({
   total,
 }) => {
   return (
-    <div style={{ display: "flex", gap: 80 }}>
+    <div style={{ display: "flex", gap: 205 }}>
       <div>
         <b>Terms & Conditions</b>
         {terms.map((t, i) => (

@@ -15,10 +15,10 @@ const Template10 = ({ data = {}, editorMode = true, backendLayout, templateId, o
 
   const DEFAULT_LAYOUT = {
     header: { x: 0, y: 0 },
-    party: { x: 80, y: 150 },
-    items: { x: 80, y: 250 },
-    termsTotals: { x: 80, y: 400 },
-    paymentQR: { x: 80, y: 500 },
+    party: { x: 80, y: 300 },
+    items: { x: 80, y: 290 },
+    termsTotals: { x: 80, y: 600 },
+    paymentQR: { x: 80, y: 750 },
     footer: { x: 0, y: 700 },
   };
 

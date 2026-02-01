@@ -29,9 +29,12 @@ const HeaderBlock = ({
           <p
             style={{
               color: orange,
-              fontSize: 32,
-              fontWeight: 600,
+              fontSize: 22,
+              fontWeight: 700,
               margin: "4px 0",
+              maxWidth: 210,          
+              lineHeight: 1.25,
+              wordBreak: "break-word",
             }}
           >
             {companyName}
@@ -55,8 +58,8 @@ const HeaderBlock = ({
           <p
             style={{
               color: "#fff",
-              fontSize: 13,
-              fontWeight: 700,
+              fontSize: 15,          
+              fontWeight: 800,      
               margin: "0 0 4px",
             }}
           >
@@ -72,13 +75,14 @@ const HeaderBlock = ({
           <p
             style={{
               color: "#fff",
-              fontSize: 13,
-              fontWeight: 700,
+              fontSize: 15,
+              fontWeight: 800,
               margin: "0 0 4px",
             }}
           >
             Ship To
           </p>
+
           <p style={{ color: "#fff", fontSize: 13, margin: 0 }}>
             {shipToName}
           </p>

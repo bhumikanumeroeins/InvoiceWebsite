@@ -9,9 +9,17 @@ const FooterBlock = ({ email, website, phone }) => {
         padding: "15px 50px",
       }}
     >
-      <p style={{ textAlign: "center", fontWeight: 700 }}>
+      <p
+        style={{
+          textAlign: "center",
+          fontWeight: 700,
+          fontSize: 18,
+          marginBottom: 14,
+        }}
+      >
         Thank for your business!
       </p>
+
 
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <span>{email}</span>

@@ -7,20 +7,20 @@ const TotalsQRBlock = ({ subtotal, taxAmount, total, qrCode }) => {
   return (
     <div
       style={{
-        width: 300, // ✅ prevents collapse
+        width: 300,
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
       {/* Subtotal */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-        <span style={{ color: navy }}>Sub Total</span>
-        <span style={{ color: coral }}>{subtotal}</span>
+        <span style={{ color: navy, fontWeight: 700 }}>Sub Total</span>
+        <span style={{ color: coral, fontWeight: 700 }}>{subtotal}</span>
       </div>
 
       {/* Tax */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-        <span style={{ color: navy }}>Tax</span>
-        <span style={{ color: coral }}>{taxAmount}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+        <span style={{ color: navy, fontWeight: 700 }}>Tax</span>
+        <span style={{ color: coral, fontWeight: 700 }}>{taxAmount}</span>
       </div>
 
       {/* TOTAL */}
@@ -28,25 +28,45 @@ const TotalsQRBlock = ({ subtotal, taxAmount, total, qrCode }) => {
         style={{
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
           background: "#fef3e2",
-          padding: "12px 14px",
-          marginBottom: 10,
+          padding: "14px 16px",
+          marginBottom: 14,
         }}
       >
-        <strong style={{ color: navy }}>TOTAL</strong>
-        <strong style={{ color: coral }}>{total}</strong>
+        <span
+          style={{
+            color: navy,
+            fontSize: 20,
+            fontWeight: 900,
+            letterSpacing: 1,
+          }}
+        >
+          TOTAL
+        </span>
+
+        <span
+          style={{
+            color: coral,
+            fontSize: 18,
+            fontWeight: 800,
+          }}
+        >
+          {total}
+        </span>
       </div>
 
       {/* QR BOX */}
       <div
         style={{
           background: "#fef3e2",
-          padding: 12,
+          padding: 16,
+          textAlign: "center",
         }}
       >
         <p
           style={{
-            margin: "0 0 8px",
+            margin: "0 0 10px",
             fontWeight: 700,
             color: navy,
             fontSize: 13,
@@ -59,11 +79,22 @@ const TotalsQRBlock = ({ subtotal, taxAmount, total, qrCode }) => {
           src={qrCode || qrCodeImg}
           alt=""
           style={{
-            width: 70,
-            height: 70,
+            width: 90,
+            height: 90,
             display: "block",
+            margin: "0 auto",
           }}
         />
+
+        <p
+          style={{
+            marginTop: 8,
+            fontSize: 11,
+            color: coral,
+          }}
+        >
+          Dynamic QR Code will be inserted here
+        </p>
       </div>
     </div>
   );

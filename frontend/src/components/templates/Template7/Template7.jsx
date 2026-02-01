@@ -16,11 +16,11 @@ const Template7 = ({ data = {}, editorMode = true, backendLayout, templateId, on
   const bgUrl = bgImage;
 
   const DEFAULT_LAYOUT = {
-    header: { x: 90, y: 90 },
+    header: { x: 90, y: 0 },
     party: { x: 90, y: 230 },
-    items: { x: 90, y: 360 },
-    termsTotals: { x: 90, y: 480 },
-    payment: { x: 90, y: 550 },
+    items: { x: 90, y: 300 },
+    termsTotals: { x: 90, y: 750 },
+    payment: { x: 90, y: 450 },
     footer: { x: 200, y: 750 },
   };
 

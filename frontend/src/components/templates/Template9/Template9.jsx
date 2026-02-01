@@ -15,13 +15,13 @@ const Template9 = ({ data = {}, editorMode = true, backendLayout, templateId, on
   const invoice = getInvoiceData(data);
 
   const DEFAULT_LAYOUT = {
-    header: { x: 80, y: 40 },
-    pill: { x: 0, y: 110 },
+    header: { x: 80, y: -70 },
+    pill: { x: 0, y: 90 },
     party: { x: 80, y: 200 },
-    items: { x: 0, y: 300 },
-    termsTotals: { x: 80, y: 450 },
-    paymentQR: { x: 80, y: 520 },
-    footer: { x: 0, y: 650 },
+    items: { x: 0, y: 220 },
+    termsTotals: { x: 80, y: 510 },
+    paymentQR: { x: 80, y: 630 },
+    footer: { x: 0, y: 590 },
   };
 
   const [layout, setLayout] = useState(backendLayout || DEFAULT_LAYOUT);

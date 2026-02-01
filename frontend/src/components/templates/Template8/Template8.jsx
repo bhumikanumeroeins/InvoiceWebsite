@@ -16,11 +16,11 @@ const Template8 = ({ data = {}, editorMode = true, backendLayout, templateId, on
   const bgUrl = bgImage;
 
   const DEFAULT_LAYOUT = {
-    header: { x: 80, y: 36 },
+    header: { x: 80, y: -50 },
     invoiceTitle: { x: 80, y: 200 },
-    items: { x: 80, y: 300 },
-    termsTotals: { x: 80, y: 450 },
-    paymentQR: { x: 80, y: 500 },
+    items: { x: 80, y: 220 },
+    termsTotals: { x: 80, y: 600 },
+    paymentQR: { x: 80, y: 700 },
     footer: { x: 0, y: 760 },
   };
 

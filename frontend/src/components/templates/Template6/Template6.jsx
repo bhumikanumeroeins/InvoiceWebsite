@@ -17,12 +17,12 @@ const Template6 = ({ data = {}, editorMode = true, backendLayout, templateId, on
   const bgUrl = bgImage;
 
   const DEFAULT_LAYOUT = {
-    header: { x: 0, y: 0 },
-    party: { x: 50, y: 160 },
+    header: { x: 0, y: -80 },
+    party: { x: 50, y: 230 },
     items: { x: 50, y: 270 },
-    termsTotals: { x: 50, y: 400 },
-    paymentQR: { x: 50, y: 500 },
-    thankyou: { x: 400, y: 650 },
+    termsTotals: { x: 50, y: 650 },
+    paymentQR: { x: 50, y: 750 },
+    thankyou: { x: 550, y: 950 },
     footer: { x: 0, y: 760 },
   };
 

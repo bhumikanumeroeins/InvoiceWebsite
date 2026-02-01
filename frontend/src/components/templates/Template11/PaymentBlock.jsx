@@ -13,18 +13,26 @@ const PaymentBlock = ({
       <p><b>IFSC Code:</b> {ifscCode}</p>
 
       <div style={{ marginTop: 30, textAlign: "center" }}>
-        {signature ? (
-          <img src={signature} style={{ height: 40 }} />
-        ) : (
-          <div
+        {signature && (
+          <img
+            src={signature}
             style={{
-              borderBottom: "1px solid #000",
-              width: 150,
-              margin: "0 auto",
+              height: 35,
+              display: "block",
+              margin: "0 auto 6px",
+              objectFit: "contain",
             }}
           />
         )}
 
+        <div
+          style={{
+            width: 150,
+            height: 2,
+            background: "#000",
+            margin: "0 auto 6px",
+          }}
+        />
         <p>Authorised Sign</p>
       </div>
     </div>

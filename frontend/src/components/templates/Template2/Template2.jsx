@@ -17,12 +17,12 @@ const Template2 = ({ data = {}, editorMode = true, backendLayout, templateId, on
   const invoice = getInvoiceData(data);
 
   const DEFAULT_LAYOUT = {
-    header: { x: 380, y: 30 },
-    party: { x: 60, y: 250 },
+    header: { x: 500, y: -50 },
+    party: { x: 60, y: 350 },
     items: { x: 60, y: 320 },
-    terms: { x: 60, y: 550 },
+    terms: { x: 60, y: 700 },
     totals: { x: 380, y: 550 },
-    footer: { x: 0, y: 780 },
+    footer: { x: 0, y: 830 },
   };
 
   const [layout, setLayout] = useState(

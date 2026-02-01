@@ -33,14 +33,23 @@ const TermsTotalsBlock = ({
             Payment Info
           </p>
 
-          <p>Bank Name: {bankName}</p>
-          <p>Account No: {accountNo}</p>
-          <p>IFSC Code: {ifscCode}</p>
+          <p>
+            <strong>Bank Name:</strong> {bankName}
+          </p>
+
+          <p>
+            <strong>Account No:</strong> {accountNo}
+          </p>
+
+          <p>
+            <strong>IFSC Code:</strong> {ifscCode}
+          </p>
         </div>
+
       </div>
 
       {/* RIGHT — TOTALS */}
-      <div style={{ width: "40%" }}>
+      <div style={{ width: "25%" }}>
         {[
           ["Sub total", subtotal],
           ["Tax", taxAmount],

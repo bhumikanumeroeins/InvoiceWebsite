@@ -9,17 +9,24 @@ const ItemsBlock = ({ items }) => {
           fontWeight: 700,
         }}
       >
-        {["Qty", "Description", "Unit Price", "Amount"].map((h, i) => (
-          <div
-            key={h}
-            style={{
-              width: ["10%", "45%", "20%", "25%"][i],
-              textAlign: i === 0 || i === 2 ? "center" : i === 3 ? "right" : "left",
-            }}
-          >
-            {h}
-          </div>
-        ))}
+       {["Qty", "Description", "Unit Price", "Amount"].map((h, i) => (
+        <div
+          key={h}
+          style={{
+            width: ["10%", "45%", "20%", "25%"][i],
+            textAlign:
+              i === 0 || i === 2 ? "center" : i === 3 ? "right" : "left",
+
+            fontFamily: "'Bebas Neue', sans-serif",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            fontSize: 16,
+            color: "#1f2a5a",
+          }}
+        >
+          {h}
+        </div>
+      ))}
       </div>
 
       {items.map((item, i) => (

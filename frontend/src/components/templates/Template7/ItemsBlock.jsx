@@ -23,8 +23,8 @@ const ItemsBlock = ({ items }) => {
           >
             <div style={{ width: "10%" }}>{idx + 1}.</div>
             <div style={{ width: "45%" }}>{i.description}</div>
-            <div style={{ width: "20%", textAlign: "center" }}>{i.rate}</div>
-            <div style={{ width: "25%", textAlign: "right" }}>{i.amount}</div>
+            <div style={{ width: "20%" }}>{i.rate}</div>
+            <div style={{ width: "25%" }}>{i.amount}</div>
           </div>
         ))}
       </div>

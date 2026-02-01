@@ -13,24 +13,94 @@ const PaymentSignatureQRBlock = ({
         width: 600,
         display: "grid",
         gridTemplateColumns: "40% 20% 40%",
+        alignItems: "flex-start",
       }}
     >
+      {/* LEFT — PAYMENT INFO */}
       <div>
-        <strong>Payment Info</strong>
-        <p>{bankName}</p>
-        <p>{accountNo}</p>
-        <p>{ifscCode}</p>
+        {/* top divider */}
+        <div
+          style={{
+            width: 160,
+            borderTop: "2px solid #000",
+            marginBottom: 10,
+          }}
+        />
+
+        <p style={{ fontWeight: 800, marginBottom: 6 }}>
+          Payment Info
+        </p>
+
+        <p style={{ margin: "2px 0" }}>
+          <strong>Bank Name:</strong> {bankName}
+        </p>
+
+        <p style={{ margin: "2px 0" }}>
+          <strong>Account No:</strong> {accountNo}
+        </p>
+
+        <p style={{ margin: "2px 0" }}>
+          <strong>IFSC Code:</strong> {ifscCode}
+        </p>
       </div>
 
-      <div style={{ textAlign: "center" }}>
-        {signature && <img src={signature} height={40} />}
-        <p>Authorised Sign</p>
+      {/* CENTER — SIGNATURE */}
+      <div style={{ textAlign: "center", marginTop: 22 }}>
+        {signature && (
+          <img
+            src={signature}
+            alt="signature"
+            style={{
+              height: 48,
+              display: "block",
+              margin: "0 auto 6px",
+            }}
+          />
+        )}
+
+        <div
+          style={{
+            width: 150,
+            borderTop: "2px solid #000",
+            margin: "0 auto 4px",
+          }}
+        />
+
+        <p style={{ fontWeight: 700, margin: 0 }}>
+          Authorised Sign
+        </p>
       </div>
 
-      <div style={{ textAlign: "center" }}>
-        <strong>Scan To Pay</strong>
-        <img src={qrCode || qrFallback} width={90} />
-        <p style={{ fontSize: 10 }}>
+      {/* RIGHT — QR */}
+      <div
+        style={{
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <p style={{ fontWeight: 800, marginBottom: 6 }}>
+          Scan To Pay
+        </p>
+
+        <img
+          src={qrCode || qrFallback}
+          alt=""
+          width={90}
+          style={{
+            display: "block",
+            margin: "6px auto",
+          }}
+        />
+
+        <p
+          style={{
+            fontSize: 11,
+            marginTop: 4,
+            textAlign: "center",
+          }}
+        >
           Dynamic QR Code will <br /> be inserted here
         </p>
       </div>

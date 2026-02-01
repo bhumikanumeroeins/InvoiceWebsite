@@ -4,10 +4,12 @@ const ItemsBlock = ({ items }) => {
       <div
         style={{
           display: "flex",
-          fontWeight: 700,
+          fontWeight: 800,
           padding: "12px 20px",
           background: "#fdeccd",
           borderRadius: 30,
+          fontFamily: "'Cabin', sans-serif", 
+          color: "#4a415d",  
         }}
       >
         {["Qty", "Description", "Unit Price", "Amount"].map((h, i) => (
@@ -29,12 +31,14 @@ const ItemsBlock = ({ items }) => {
             marginTop: 6,
             background: i % 2 ? "#fdeccd" : "transparent",
             borderRadius: 30,
+            fontFamily: "'Cabin', sans-serif",
+            color: "#4a415d",
           }}
         >
           <div style={{ width: "10%" }}>{item.quantity}</div>
           <div style={{ width: "45%" }}>{item.description}</div>
-          <div style={{ width: "20%", textAlign: "center" }}>{item.rate}</div>
-          <div style={{ width: "25%", textAlign: "right" }}>{item.amount}</div>
+          <div style={{ width: "20%" }}>{item.rate}</div>
+          <div style={{ width: "25%" }}>{item.amount}</div>
         </div>
       ))}
     </div>

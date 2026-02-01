@@ -17,11 +17,11 @@ const Template5 = ({ data = {}, editorMode = true, backendLayout, templateId, on
   const invoice = getInvoiceData(data);
 
   const DEFAULT_LAYOUT = {
-    header: { x: 80, y: 40 },
-    details: { x: 90, y: 210 },
+    header: { x: 80, y: -50 },
+    details: { x: 90, y: 290 },
     items: { x: 80, y: 330 },
-    termsTotals: { x: 80, y: 440 },
-    paymentQR: { x: 80, y: 530 },
+    termsTotals: { x: 30, y: 600 },
+    paymentQR: { x: 200, y: 690 },
     footer: { x: 80, y: 750 },
   };
 

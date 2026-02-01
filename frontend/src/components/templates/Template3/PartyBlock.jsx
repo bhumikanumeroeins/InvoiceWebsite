@@ -15,7 +15,7 @@ const PartyBlock = ({
       }}
     >
       <div style={{ width: "45%" }}>
-        <p style={{ color: navy, fontWeight: 800 }}>INVOICE TO</p>
+        <p style={{ color: navy, fontWeight: 800, fontFamily: "'Orbitron', sans-serif", }}>INVOICE TO</p>
         <p style={{ color: navy }}>
           {billToName}
           <br />
@@ -24,7 +24,7 @@ const PartyBlock = ({
       </div>
 
       <div style={{ width: "45%" }}>
-        <p style={{ color: navy, fontWeight: 800 }}>Ship To</p>
+        <p style={{ color: navy, fontWeight: 800, fontFamily: "'Orbitron', sans-serif", }}>Ship To</p>
         <p style={{ color: navy }}>
           {shipToName}
           <br />

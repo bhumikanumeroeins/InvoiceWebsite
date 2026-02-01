@@ -3,7 +3,12 @@ const HeaderBlock = ({ companyName, companyAddress }) => {
 
   return (
     <div style={{ padding: "35px 50px 0" }}>
-      <div style={{ marginLeft: 130 }}>
+      <div
+          style={{
+            marginLeft: 130,
+            maxWidth: 260,   
+          }}
+        >
         <h1
           style={{
             color: navy,
@@ -20,9 +25,11 @@ const HeaderBlock = ({ companyName, companyAddress }) => {
           style={{
             color: navy,
             fontSize: 15,
-            fontWeight: 800,
+            fontWeight: 600,
             margin: "0 0 2px",
-            fontFamily: "'Orbitron', sans-serif",
+            fontFamily: "'DM Sans', sans-serif",
+            lineHeight: 1.25,
+            wordBreak: "break-word",
           }}
         >
           {companyName}
@@ -33,6 +40,7 @@ const HeaderBlock = ({ companyName, companyAddress }) => {
             color: navy,
             fontSize: 14,
             margin: 0,
+            fontFamily: "'DM Sans', sans-serif",
             whiteSpace: "pre-line",
             lineHeight: 1.4,
           }}

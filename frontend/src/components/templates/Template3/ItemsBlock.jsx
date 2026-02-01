@@ -15,6 +15,7 @@ const ItemsBlock = ({ items }) => {
             key={h}
             style={{
               width: ["10%", "40%", "25%", "25%"][i],
+              fontFamily: "'Orbitron', sans-serif",
               fontWeight: 800,
               color: navy,
             }}
@@ -33,12 +34,12 @@ const ItemsBlock = ({ items }) => {
               padding: "15px",
             }}
           >
-            <div style={{ width: "10%" }}>{item.quantity}</div>
-            <div style={{ width: "40%" }}>{item.description}</div>
-            <div style={{ width: "25%", textAlign: "center" }}>
+            <div style={{ width: "10%", color: navy }}>{item.quantity}</div>
+            <div style={{ width: "40%", color: navy}}>{item.description}</div>
+            <div style={{ width: "25%", color: navy }}>
               {item.rate}
             </div>
-            <div style={{ width: "25%", textAlign: "right" }}>
+            <div style={{ width: "25%", color: navy }}>
               {item.amount}
             </div>
           </div>

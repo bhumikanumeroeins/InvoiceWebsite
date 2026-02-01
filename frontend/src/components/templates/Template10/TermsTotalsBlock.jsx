@@ -5,11 +5,21 @@ const TermsTotalsBlock = ({ terms, subtotal, taxAmount, total }) => {
         width: 630,
         display: "flex",
         justifyContent: "space-between",
+        marginTop: 20,
       }}
     >
       {/* TERMS */}
       <div>
-        <p style={{ fontWeight: 700 }}>Terms and Conditions</p>
+        <p
+          style={{
+            fontWeight: 700,
+            fontSize: 15,
+            color: "#374151",
+            marginBottom: 10,
+          }}
+        >
+          Terms and Conditions
+        </p>
 
         {terms.map((t, i) => (
           <div
@@ -17,55 +27,84 @@ const TermsTotalsBlock = ({ terms, subtotal, taxAmount, total }) => {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
-              marginBottom: 6,
+              gap: 10,
+              marginBottom: 8,
+              fontSize: 13,
+              color: "#374151",
             }}
           >
             <span
               style={{
-                width: 10,
-                height: 10,
+                width: 9,
+                height: 9,
                 transform: "rotate(45deg)",
                 background:
-                  "linear-gradient(135deg, red, orange, yellow, green, cyan, blue, violet)",
+                  "linear-gradient(135deg,#ff004c,#ff9500,#ffd400,#00d084,#00c2ff,#6a5cff,#b400ff)",
                 display: "inline-block",
               }}
             />
-            <span>{t}</span>
+            {t}
           </div>
         ))}
       </div>
 
       {/* TOTALS */}
-      <div style={{ minWidth: 240 }}>
-        <div>
-          <strong>SUBTOTAL:</strong> {subtotal}
-        </div>
-        <div>
-          <strong>TAX:</strong> {taxAmount}
+      <div style={{ minWidth: 250 }}>
+        {/* Sub + Tax */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 14,
+            marginBottom: 6,
+          }}
+        >
+          <strong>SUBTOTAL:</strong>
+          <span>{subtotal}</span>
         </div>
 
-        {/* grey bar */}
-        <div style={{ height: 8, background: "#9ca3af", margin: "10px 0" }} />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 14,
+          }}
+        >
+          <strong>TAX:</strong>
+          <span>{taxAmount}</span>
+        </div>
 
-        {/* total */}
+        {/* Grey bar */}
+        <div
+          style={{
+            height: 10,
+            background: "#9ca3af",
+            margin: "12px 0",
+          }}
+        />
+
+        {/* TOTAL BAR */}
         <div
           style={{
             background: "#2f343a",
             color: "#fff",
-            padding: 12,
+            padding: "12px 14px",
             fontWeight: 700,
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 15,
           }}
         >
-          TOTAL: {total}
+          <span>TOTAL:</span>
+          <span>{total}</span>
         </div>
 
-        {/* rainbow */}
+        {/* Rainbow strip */}
         <div
           style={{
             height: 4,
             background:
-              "linear-gradient(to right, red, orange, yellow, green, cyan, blue, violet)",
+              "linear-gradient(to right,#ff004c,#ff9500,#ffd400,#00d084,#00c2ff,#6a5cff,#b400ff)",
           }}
         />
       </div>

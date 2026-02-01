@@ -12,6 +12,7 @@ const ItemsBlock = ({ items }) => {
               width: ["10%", "45%", "22%", "23%"][i],
               color: pink,
               fontWeight: 700,
+              textTransform: "uppercase",
             }}
           >
             {h}
@@ -30,8 +31,8 @@ const ItemsBlock = ({ items }) => {
         >
           <div style={{ width: "10%" }}>{item.quantity}</div>
           <div style={{ width: "45%" }}>{item.description}</div>
-          <div style={{ width: "22%", textAlign: "center" }}>{item.rate}</div>
-          <div style={{ width: "23%", textAlign: "right" }}>{item.amount}</div>
+          <div style={{ width: "22%" }}>{item.rate}</div>
+          <div style={{ width: "23%" }}>{item.amount}</div>
         </div>
       ))}
     </div>

@@ -23,6 +23,8 @@ const PartyTitleBlock = ({
           fontSize: 72,
           fontWeight: 900,
           letterSpacing: "-1px",
+          fontFamily: "'Anton', sans-serif", 
+          marginLeft: "auto", 
         }}
       >
         Invoice

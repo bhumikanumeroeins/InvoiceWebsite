@@ -19,14 +19,14 @@ const Template12 = ({ data = {}, editorMode = true, backendLayout, templateId, o
   const bgUrl = bg;
 
   const DEFAULT_LAYOUT = {
-    header: { x: 250, y: 10 },
-    party: { x: 140, y: 60 },
-    title: { x: 460, y: 120 },
-    meta: { x: 130, y: 220 },
-    items: { x: 90, y: 290 },
-    termsTotals: { x: 120, y: 420 },
-    payment: { x: 120, y: 500 },
-    qr: { x: 350, y: 520 },
+    header: { x: 100, y: -50 },
+    party: { x: 140, y: 110 },
+    title: { x: 470, y: 180 },
+    meta: { x: 130, y: 310 },
+    items: { x: 90, y: 320 },
+    termsTotals: { x: 120, y: 730 },
+    payment: { x: 80, y: 450 },
+    qr: { x: 600, y: 850 },
     thankyou: { x: 250, y: 680 },
   };
 

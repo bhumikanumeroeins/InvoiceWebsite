@@ -4,8 +4,18 @@ const InvoiceDetailsBlock = ({
   poNumber,
   dueDate,
 }) => {
+  const purple = "#6b5cff"; // adjust slightly if needed to match curve bg
+
   return (
-    <div style={{ width: 555, display: "flex", justifyContent: "space-between" }}>
+    <div
+      style={{
+        width: 555,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+      }}
+    >
+      {/* LEFT DETAILS */}
       <div>
         {[
           ["Invoice#", invoiceNumber],
@@ -13,14 +23,32 @@ const InvoiceDetailsBlock = ({
           ["P.O#", poNumber],
           ["Due Date", dueDate],
         ].map(([l, v]) => (
-          <div key={l} style={{ display: "flex", gap: 8 }}>
-            <strong>{l}</strong>
+          <div
+            key={l}
+            style={{
+              display: "flex",
+              gap: 8,
+              marginBottom: 4,
+            }}
+          >
+            <strong style={{ color: purple }}>{l}</strong>
             <span>{v}</span>
           </div>
         ))}
       </div>
 
-      <p style={{ fontSize: 48 }}>INVOICE</p>
+      {/* RIGHT TITLE */}
+      <p
+        style={{
+          fontSize: 48,
+          margin: 0,
+          fontWeight: 700,
+          color: purple,
+          letterSpacing: 1,
+        }}
+      >
+        INVOICE
+      </p>
     </div>
   );
 };

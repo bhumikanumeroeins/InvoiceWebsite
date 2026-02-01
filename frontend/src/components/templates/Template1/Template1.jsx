@@ -23,7 +23,7 @@ const bgUrl = bgImage;
 
   const DEFAULT_LAYOUT = {
       header: { x: 0, y: 0 },
-      items: { x: 0, y: 250 },
+      items: { x: 0, y: 150 },
       totals: { x: 0, y: 400 },
       payment: { x: 0, y: 550 },
       footer: { x: 0, y: 750 },

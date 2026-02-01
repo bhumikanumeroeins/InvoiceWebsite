@@ -17,14 +17,14 @@ const Template11 = ({ data = {}, editorMode = true, backendLayout, templateId, o
   const invoice = getInvoiceData(data);
 
   const DEFAULT_LAYOUT = {
-    header: { x: 30, y: 50 },
+    header: { x: 0, y: -50 },
     invoiceInfo: { x: 500, y: 120 },
     party: { x: 30, y: 350 },
-    items: { x: 110, y: 220 },
-    terms: { x: 180, y: 350 },
-    totals: { x: 350, y: 350 },
-    payment: { x: 180, y: 450 },
-    qr: { x: 350, y: 450 },
+    items: { x: 160, y: 190 },
+    terms: { x: 250, y: 500 },
+    totals: { x: 530, y: 350 },
+    payment: { x: 210, y: 400 },
+    qr: { x: 600, y: 650 },
     footer: { x: 0, y: 700 },
   };
 
