@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 import UserTemplateLayout from "../../models/users/userTemplateLayout.js"; import { createError, createResult } from "../../utils/utils.js";
 
-import InvoiceTemplate from "../../models/admin/template1.js";
+import Template1 from "../../models/admin/template1.js";
 import Template2 from "../../models/admin/template2.js";
 import Template3 from "../../models/admin/template3.js";
 import Template4 from "../../models/admin/template4.js";
@@ -17,7 +17,7 @@ import Template12 from "../../models/admin/template12.js";
 
 // ✅ map all template names to their models
 const TEMPLATE_MODELS = {
-  Template1: InvoiceTemplate,
+  Template1: Template1,
   Template2: Template2,
   Template3: Template3,
   Template4: Template4,
@@ -171,7 +171,7 @@ export const getAllTemplatesForUser = async (req, res) => {
       template11,
       template12
     ] = await Promise.all([
-      InvoiceTemplate.find({ isActive: true }).select("name background layout isActive createdAt"),
+      Template1.find({ isActive: true }).select("name background layout isActive createdAt"),
       Template2.find({ isActive: true }).select("name layout isActive createdAt"),
       Template3.find({ isActive: true }).select("name layout isActive createdAt"),
       Template4.find({ isActive: true }).select("name layout isActive createdAt"),
