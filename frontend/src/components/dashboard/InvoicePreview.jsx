@@ -990,6 +990,30 @@ Best regards`,
                     key={num}
                     onClick={async () => {
                       setSelectedTemplate(num);
+                      
+                      // Fetch template layout from backend
+                      try {
+                        const templateResponse = await fetch(`${API_BASE_URL}/user-template-layout/default/Template${num}`, {
+                          headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                          },
+                        });
+                        
+                        if (templateResponse.ok) {
+                          const templateData = await templateResponse.json();
+                          if (templateData.success && templateData.data) {
+                            setTemplateMeta({
+                              _id: templateData.data._id,
+                              layout: templateData.data.layout,
+                              name: templateData.data.name,
+                              background: templateData.data.background,
+                            });
+                          }
+                        }
+                      } catch (error) {
+                        console.error('Failed to load template layout:', error);
+                      }
+                      
                       // Save template selection to backend
                       if (invoiceId) {
                         try {
