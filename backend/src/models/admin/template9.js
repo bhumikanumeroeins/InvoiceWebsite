@@ -10,11 +10,11 @@ const template9Schema = new mongoose.Schema(
     layout: {
       header: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 40 }
+        y: { type: Number, default: -70 }
       },
       pill: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 110 }
+        y: { type: Number, default: 90 }
       },
       party: {
         x: { type: Number, default: 80 },
@@ -22,19 +22,19 @@ const template9Schema = new mongoose.Schema(
       },
       items: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 300 }
+        y: { type: Number, default: 220 }
       },
       termsTotals: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 450 }
+        y: { type: Number, default: 510 }
       },
       paymentQR: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 520 }
+        y: { type: Number, default: 630 }
       },
       footer: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 650 }
+        y: { type: Number, default: 590 }
       }
     },
 

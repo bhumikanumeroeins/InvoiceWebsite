@@ -9,12 +9,12 @@ const template2Schema = new mongoose.Schema(
 
     layout: {
       header: {
-        x: { type: Number, default: 380 },
-        y: { type: Number, default: 30 }
+        x: { type: Number, default: 500 },
+        y: { type: Number, default: -50 }
       },
       party: {
         x: { type: Number, default: 60 },
-        y: { type: Number, default: 250 }
+        y: { type: Number, default: 350 }
       },
       items: {
         x: { type: Number, default: 60 },
@@ -22,7 +22,7 @@ const template2Schema = new mongoose.Schema(
       },
       terms: {
         x: { type: Number, default: 60 },
-        y: { type: Number, default: 550 }
+        y: { type: Number, default: 700 }
       },
       totals: {
         x: { type: Number, default: 380 },
@@ -30,7 +30,7 @@ const template2Schema = new mongoose.Schema(
       },
       footer: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 780 }
+        y: { type: Number, default: 830 }
       }
     },
 
