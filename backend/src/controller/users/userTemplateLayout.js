@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 import UserTemplateLayout from "../../models/users/userTemplateLayout.js"; import { createError, createResult } from "../../utils/utils.js";
 
-import InvoiceTemplate from "../../models/admin/invoiceTemplate.js";
+import InvoiceTemplate from "../../models/admin/template1.js";
 import Template2 from "../../models/admin/template2.js";
 import Template3 from "../../models/admin/template3.js";
 import Template4 from "../../models/admin/template4.js";
