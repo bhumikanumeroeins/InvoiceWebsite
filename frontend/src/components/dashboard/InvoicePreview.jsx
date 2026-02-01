@@ -65,6 +65,8 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
   const [templateMeta, setTemplateMeta] = useState(null);
   const [savingTemplateLayout, setSavingTemplateLayout] = useState(false);
   const [modifiedLayout, setModifiedLayout] = useState(null);
+  const [availableTemplates, setAvailableTemplates] = useState([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const templateRef = useRef(null);
 
 
@@ -414,7 +416,47 @@ Best regards`,
       return;
     }
     
+    if (actionId === 'template') {
+      setActiveAction('template');
+      await loadAvailableTemplates();
+      return;
+    }
+    
     setActiveAction(actionId);
+  };
+
+  const loadAvailableTemplates = async () => {
+    try {
+      setLoadingTemplates(true);
+      const response = await fetch(`${API_BASE_URL}/user-template-layout/templates`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          // Group templates by templateNo (in case there are multiple)
+          const groupedTemplates = {};
+          data.data.forEach(template => {
+            if (!groupedTemplates[template.templateNo]) {
+              groupedTemplates[template.templateNo] = template;
+            }
+          });
+          
+          // Convert to array sorted by templateNo
+          const templatesArray = Object.values(groupedTemplates).sort((a, b) => a.templateNo - b.templateNo);
+          setAvailableTemplates(templatesArray);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load templates:', error);
+      // Fallback to empty array - will show hardcoded templates
+      setAvailableTemplates([]);
+    } finally {
+      setLoadingTemplates(false);
+    }
   };
 
   const loadReminders = async () => {
@@ -932,76 +974,85 @@ Best regards`,
       {activeAction === 'template' && (
         <div className="p-6">
           <h3 className="text-lg font-semibold text-slate-800 mb-4">Select a Template</h3>
-          <div className="grid grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => {
-              const TemplateComponent = templates[num];
-              return (
-                <div 
-                  key={num}
-                  onClick={async () => {
-                    setSelectedTemplate(num);
-                    // Save template selection to backend
-                    if (invoiceId) {
-                      try {
-                        const response = await fetch(`${API_BASE_URL}/invoiceForms/update-template/${invoiceId}`, {
-                          method: 'PATCH',
-                          headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({ selectedTemplate: num }),
-                        });
-                        
-                        if (response.ok) {
-                          // Update currentInvoice with new selectedTemplate
-                          setCurrentInvoice(prev => ({
-                            ...prev,
-                            selectedTemplate: num
-                          }));
-                        }
-                      } catch (error) {
-                        console.error('Failed to save template selection:', error);
-                      }
-                    }
-                    setActiveAction('invoice');
-                  }}
-                  className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl bg-white ${
-                    selectedTemplate === num 
-                      ? 'ring-3 ring-indigo-500 shadow-lg' 
-                      : 'shadow-md hover:ring-2 hover:ring-indigo-300'
-                  }`}
-                  style={{ width: '220px', height: '340px' }}
-                >
+          
+          {loadingTemplates ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+              <span className="ml-3 text-gray-600">Loading templates...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
+              {(availableTemplates.length > 0 ? availableTemplates : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => ({ templateNo: num }))).map((template) => {
+                const num = template.templateNo;
+                const TemplateComponent = templates[num];
+                return (
                   <div 
-                    className="overflow-hidden"
-                    style={{ width: '220px', height: '311px' }}
+                    key={num}
+                    onClick={async () => {
+                      setSelectedTemplate(num);
+                      // Save template selection to backend
+                      if (invoiceId) {
+                        try {
+                          const response = await fetch(`${API_BASE_URL}/invoiceForms/update-template/${invoiceId}`, {
+                            method: 'PATCH',
+                            headers: {
+                              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ selectedTemplate: num }),
+                          });
+                          
+                          if (response.ok) {
+                            // Update currentInvoice with new selectedTemplate
+                            setCurrentInvoice(prev => ({
+                              ...prev,
+                              selectedTemplate: num
+                            }));
+                          }
+                        } catch (error) {
+                          console.error('Failed to save template selection:', error);
+                        }
+                      }
+                      setActiveAction('invoice');
+                    }}
+                    className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl bg-white ${
+                      selectedTemplate === num 
+                        ? 'ring-3 ring-indigo-500 shadow-lg' 
+                        : 'shadow-md hover:ring-2 hover:ring-indigo-300'
+                    }`}
+                    style={{ width: '220px', height: '340px' }}
                   >
                     <div 
-                      style={{ 
-                        transform: 'scale(0.277)', 
-                        transformOrigin: 'top left', 
-                        width: '794px', 
-                        height: '1123px' 
-                      }}
-                    >                      
-                      <TemplateComponent
-                        data={previewData}
-                        editorMode={true}
-                        backendLayout={safeLayout}
-                      />
+                      className="overflow-hidden"
+                      style={{ width: '220px', height: '311px' }}
+                    >
+                      <div 
+                        style={{ 
+                          transform: 'scale(0.277)', 
+                          transformOrigin: 'top left', 
+                          width: '794px', 
+                          height: '1123px' 
+                        }}
+                      >                      
+                        <TemplateComponent
+                          data={previewData}
+                          editorMode={true}
+                          backendLayout={safeLayout}
+                        />
+                      </div>
                     </div>
+                    <p className={`text-center text-sm py-2 font-medium ${
+                      selectedTemplate === num 
+                        ? 'bg-indigo-500 text-white' 
+                        : 'bg-slate-50 text-slate-600'
+                    }`}>
+                      Template {num} {selectedTemplate === num && '(Current)'}
+                    </p>
                   </div>
-                  <p className={`text-center text-sm py-2 font-medium ${
-                    selectedTemplate === num 
-                      ? 'bg-indigo-500 text-white' 
-                      : 'bg-slate-50 text-slate-600'
-                  }`}>
-                    Template {num} {selectedTemplate === num && '(Current)'}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
