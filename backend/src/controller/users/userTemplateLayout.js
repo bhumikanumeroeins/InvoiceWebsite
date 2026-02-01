@@ -156,7 +156,7 @@ export const getAllUserSavedLayouts = async (req, res) => {
 
 export const getAllTemplatesForUser = async (req, res) => {
   try {
-    // fetch all active templates from all models
+    // fetch only ONE (most recent) active template from each model
     const [
       template1,
       template2,
@@ -171,35 +171,34 @@ export const getAllTemplatesForUser = async (req, res) => {
       template11,
       template12
     ] = await Promise.all([
-      Template1.find({ isActive: true }).select("name background layout isActive createdAt"),
-      Template2.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template3.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template4.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template5.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template6.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template7.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template8.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template9.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template10.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template11.find({ isActive: true }).select("name layout isActive createdAt"),
-      Template12.find({ isActive: true }).select("name layout isActive createdAt")
+      Template1.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name background layout isActive createdAt"),
+      Template2.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template3.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template4.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template5.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template6.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template7.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template8.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template9.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template10.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template11.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt"),
+      Template12.findOne({ isActive: true }).sort({ createdAt: -1 }).select("name layout isActive createdAt")
     ]);
 
-    // merge all templates
-    const templates = [
-      ...template1.map((t) => ({ ...t.toObject(), templateNo: 1 })),
-      ...template2.map((t) => ({ ...t.toObject(), templateNo: 2 })),
-      ...template3.map((t) => ({ ...t.toObject(), templateNo: 3 })),
-      ...template4.map((t) => ({ ...t.toObject(), templateNo: 4 })),
-      ...template5.map((t) => ({ ...t.toObject(), templateNo: 5 })),
-      ...template6.map((t) => ({ ...t.toObject(), templateNo: 6 })),
-      ...template7.map((t) => ({ ...t.toObject(), templateNo: 7 })),
-      ...template8.map((t) => ({ ...t.toObject(), templateNo: 8 })),
-      ...template9.map((t) => ({ ...t.toObject(), templateNo: 9 })),
-      ...template10.map((t) => ({ ...t.toObject(), templateNo: 10 })),
-      ...template11.map((t) => ({ ...t.toObject(), templateNo: 11 })),
-      ...template12.map((t) => ({ ...t.toObject(), templateNo: 12 }))
-    ];
+    // build array with only templates that exist
+    const templates = [];
+    if (template1) templates.push({ ...template1.toObject(), templateNo: 1 });
+    if (template2) templates.push({ ...template2.toObject(), templateNo: 2 });
+    if (template3) templates.push({ ...template3.toObject(), templateNo: 3 });
+    if (template4) templates.push({ ...template4.toObject(), templateNo: 4 });
+    if (template5) templates.push({ ...template5.toObject(), templateNo: 5 });
+    if (template6) templates.push({ ...template6.toObject(), templateNo: 6 });
+    if (template7) templates.push({ ...template7.toObject(), templateNo: 7 });
+    if (template8) templates.push({ ...template8.toObject(), templateNo: 8 });
+    if (template9) templates.push({ ...template9.toObject(), templateNo: 9 });
+    if (template10) templates.push({ ...template10.toObject(), templateNo: 10 });
+    if (template11) templates.push({ ...template11.toObject(), templateNo: 11 });
+    if (template12) templates.push({ ...template12.toObject(), templateNo: 12 });
 
     return res.status(200).json(
       createResult(

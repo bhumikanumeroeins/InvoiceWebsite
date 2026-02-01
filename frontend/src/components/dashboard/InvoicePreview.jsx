@@ -117,43 +117,27 @@ const currentLayout = modifiedLayout || safeLayout;
   useEffect(() => {
   const loadTemplate = async () => {
     try {
-      // First, try to get user's saved layout for this template
-      const userLayoutsResponse = await fetch(`${API_BASE_URL}/user-template-layout/my-layouts`, {
+      // Load admin default template using user-template-layout API
+      const response = await fetch(`${API_BASE_URL}/user-template-layout/default/Template${selectedTemplate}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
 
-      if (userLayoutsResponse.ok) {
-        const userLayoutsData = await userLayoutsResponse.json();
-        
-        // Find the most recent saved layout for this template
-        const userLayout = userLayoutsData.data?.layouts?.find(
-          layout => layout.templateName === `Template${selectedTemplate}`
-        );
-
-        if (userLayout) {
-          console.log("✅ Loading USER saved layout:", userLayout);
-          setTemplateMeta({
-            _id: userLayout._id,
-            layout: userLayout.layout,
-            name: userLayout.templateName,
-            isUserCustomized: true
-          });
-          return;
-        }
+      if (response.ok) {
+        const data = await response.json();
+        console.log("📡 Loading ADMIN default template for Template" + selectedTemplate + ":", data);
+        setTemplateMeta({
+          ...data.data,
+          isUserCustomized: false
+        });
+      } else {
+        console.warn("⚠️ Template not found, using defaults");
+        setTemplateMeta({ layout: null, isUserCustomized: false });
       }
 
-      // If no user layout found, load admin default template
-      const res = await templateAPI.getByName(`Template${selectedTemplate}`);
-      console.log("📡 Loading ADMIN default template:", res);
-      setTemplateMeta({
-        ...res.data,
-        isUserCustomized: false
-      });
-
     } catch (err) {
-      console.warn("⚠️ Template not found, using defaults");
+      console.warn("⚠️ Template load error:", err);
       setTemplateMeta({ layout: null, isUserCustomized: false });
     }
   };
@@ -989,30 +973,8 @@ Best regards`,
                   <div 
                     key={num}
                     onClick={async () => {
+                      // Just update selectedTemplate - let useEffect handle loading the layout
                       setSelectedTemplate(num);
-                      
-                      // Fetch template layout from backend
-                      try {
-                        const templateResponse = await fetch(`${API_BASE_URL}/user-template-layout/default/Template${num}`, {
-                          headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                          },
-                        });
-                        
-                        if (templateResponse.ok) {
-                          const templateData = await templateResponse.json();
-                          if (templateData.success && templateData.data) {
-                            setTemplateMeta({
-                              _id: templateData.data._id,
-                              layout: templateData.data.layout,
-                              name: templateData.data.name,
-                              background: templateData.data.background,
-                            });
-                          }
-                        }
-                      } catch (error) {
-                        console.error('Failed to load template layout:', error);
-                      }
                       
                       // Save template selection to backend
                       if (invoiceId) {
