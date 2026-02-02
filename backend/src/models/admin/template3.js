@@ -10,27 +10,27 @@ const template3Schema = new mongoose.Schema(
     layout: {
       header: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 20 }
+        y: { type: Number, default: 0 }
       },
       party: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 100 }
+        y: { type: Number, default: 110 }
       },
       details: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 200 }
+        y: { type: Number, default: 230 }
       },
       items: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 260 }
+        y: { type: Number, default: 210 }
       },
       terms: {
         x: { type: Number, default: 50 },
-        y: { type: Number, default: 440 }
+        y: { type: Number, default: 700 }
       },
       totals: {
         x: { type: Number, default: 420 },
-        y: { type: Number, default: 420 }
+        y: { type: Number, default: 450 }
       },
       footer: {
         x: { type: Number, default: 50 },

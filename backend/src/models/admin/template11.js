@@ -9,8 +9,8 @@ const template11Schema = new mongoose.Schema(
 
     layout: {
       header: {
-        x: { type: Number, default: 30 },
-        y: { type: Number, default: 50 }
+        x: { type: Number, default: 0 },
+        y: { type: Number, default: -50 }
       },
       invoiceInfo: {
         x: { type: Number, default: 500 },
@@ -21,24 +21,24 @@ const template11Schema = new mongoose.Schema(
         y: { type: Number, default: 350 }
       },
       items: {
-        x: { type: Number, default: 110 },
-        y: { type: Number, default: 220 }
+        x: { type: Number, default: 160 },
+        y: { type: Number, default: 190 }
       },
       terms: {
-        x: { type: Number, default: 180 },
-        y: { type: Number, default: 350 }
+        x: { type: Number, default: 250 },
+        y: { type: Number, default: 500 }
       },
       totals: { 
-        x: { type: Number, default: 350 },
+        x: { type: Number, default: 530 },
         y: { type: Number, default: 350 }
       },
       payment: {
-        x: { type: Number, default: 180 },
-        y: { type: Number, default: 450 }
+        x: { type: Number, default: 210 },
+        y: { type: Number, default: 400 }
       },
       qr: {
-        x: { type: Number, default: 350 },
-        y: { type: Number, default: 450 }
+        x: { type: Number, default: 600 },
+        y: { type: Number, default: 650 }
       },
       footer: {
         x: { type: Number, default: 0 },

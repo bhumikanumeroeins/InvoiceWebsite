@@ -5,12 +5,11 @@ import SignUp from './pages/SignUp';
 import CreateInvoice from './pages/CreateInvoice';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
-
-
+import TemplateBuilder from './components/builder/TemplateBuilder';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
-// import Template1 from './components/templates/Template1/Template1';
-import Template2 from './components/templates/Template2/Template2';
+
+
 
 function App() {
   return (
@@ -24,7 +23,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />        
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path='/template' element={<Template2 />} />
+        <Route path="/template-builder" element={<TemplateBuilder />} />        
       </Routes>
     </BrowserRouter>
   );

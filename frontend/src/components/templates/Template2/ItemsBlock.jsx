@@ -4,9 +4,9 @@ const ItemsBlock = ({ items }) => {
       style={{
         position: "absolute",
         top: 35,
-        left: "50%",
+        left: "43%",
         transform: "translateX(-50%)",
-        width: "100%",
+        width: "87%",
       }}
     >
       <div style={{ display: "flex" }}>
@@ -15,8 +15,10 @@ const ItemsBlock = ({ items }) => {
             key={h}
             style={{
               width: ["12%", "38%", "25%", "25%"][i],
-              padding: 10,
+              padding: "10px 12px",
               background: ["#009ba0", "#009ba0", "#ffb701", "#ff76aa"][i],
+              fontWeight: 700,
+              color: "#000",
             }}
           >
             {h}
@@ -30,10 +32,27 @@ const ItemsBlock = ({ items }) => {
             {item.quantity}
           </div>
           <div style={{ width: "38%" }}>{item.description}</div>
-          <div style={{ width: "25%", textAlign: "center" }}>{item.rate}</div>
-          <div style={{ width: "25%", textAlign: "center" }}>
+          <div
+            style={{
+              width: "25%",
+              textAlign: "center",
+              paddingRight: 12,
+            }}
+          >
+            {item.rate}
+          </div>
+
+          <div
+            style={{
+              width: "25%",
+              textAlign: "center",
+              paddingRight: 12,
+              fontWeight: 600,
+            }}
+          >
             {item.amount}
           </div>
+
         </div>
       ))}
     </div>

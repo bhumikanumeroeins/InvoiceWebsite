@@ -125,6 +125,14 @@ const invoiceSchema = new mongoose.Schema({
   default: null
 },
 
+  // 🔹 SELECTED TEMPLATE
+  selectedTemplate: {
+    type: Number,
+    min: 1,
+    max: 12,
+    default: 1
+  },
+
   createdAt: {
     type: Date,
     default: Date.now

@@ -11,7 +11,8 @@ import {
   getTrashInvoices,
   restoreInvoice,
   permanentDeleteInvoice,
-  sendInvoiceEmailController
+  sendInvoiceEmailController,
+  updateSelectedTemplate
 } from "../../controller/forms/invoiceTaxForm.js";
 
 import { authenticateUser } from "../../middleware/auth.middleware.js";
@@ -47,6 +48,9 @@ router.patch(
 );
 router.post("/copy/:id", authenticateUser, copyInvoice);
 router.post("/send-email/:id", authenticateUser, sendInvoiceEmailController);
+
+/* ---------------- TEMPLATE SELECTION ---------------- */
+router.patch("/update-template/:id", authenticateUser, updateSelectedTemplate);
 
 /* ---------------- TRASH ROUTES ---------------- */
 router.get("/trash", authenticateUser, getTrashInvoices);

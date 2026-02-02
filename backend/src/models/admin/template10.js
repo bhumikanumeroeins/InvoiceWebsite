@@ -14,19 +14,19 @@ const template10Schema = new mongoose.Schema(
       },
       party: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 150 }
+        y: { type: Number, default: 300 }
       },
       items: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 250 }
+        y: { type: Number, default: 290 }
       },
       termsTotals: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 400 }
+        y: { type: Number, default: 600 }
       },
       paymentQR: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 500 }
+        y: { type: Number, default: 750 }
       },
       footer: {
         x: { type: Number, default: 0 },

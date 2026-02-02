@@ -24,7 +24,13 @@ const PartyBlock = ({
         ["Ship To", shipToName, shipToAddress],
       ].map(([title, name, addr]) => (
         <div key={title} style={{ width: "100%" }}>
-          <p style={{ fontWeight: 700 }}>{title}</p>
+          <p
+            style={{
+              fontWeight: 700,
+              fontFamily: "'Fira Sans', sans-serif",
+              letterSpacing: 0.3,
+            }}
+          >{title}</p>
           <p>{name}</p>
           <p style={{ whiteSpace: "pre-line" }}>{addr}</p>
         </div>

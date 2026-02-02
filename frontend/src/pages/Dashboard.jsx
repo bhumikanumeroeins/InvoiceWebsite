@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ChevronDown, Settings, LogOut, Plus, FileText, Users, BarChart3, UserPlus, X, Receipt, CreditCard, FileCheck, Truck, ShoppingCart, Eye, Edit } from 'lucide-react';
+import { Search, ChevronDown, Settings, LogOut, Plus, FileText, Users, BarChart3, UserPlus, X, Receipt, CreditCard, FileCheck, Truck, ShoppingCart, Eye, Edit, Palette } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import InvoiceForm from '../components/invoice/InvoiceForm';
 import MyInvoices from '../components/dashboard/MyInvoices';
@@ -11,11 +11,12 @@ import { getCurrentUser, authAPI } from '../services/authService';
 
 const documentTypes = [
   { id: 'invoice', label: 'Invoice', icon: FileText },
+  { id: 'custom-invoice', label: 'Custom Invoice', icon: Palette, isCustom: true },
   { id: 'tax-invoice', label: 'Tax Invoice', icon: Receipt },
   { id: 'proforma-invoice', label: 'Proforma Invoice', icon: FileCheck },
   { id: 'receipt', label: 'Receipt', icon: CreditCard },
   { id: 'sales-receipt', label: 'Sales Receipt', icon: ShoppingCart },
-  { id: 'cash-receipt', label: 'Cash Receipt', icon: CreditCard },
+  // { id: 'cash-receipt', label: 'Cash Receipt', icon: CreditCard },
   { id: 'quote', label: 'Quote', icon: FileText },
   { id: 'estimate', label: 'Estimate', icon: FileCheck },
   { id: 'credit-memo', label: 'Credit Memo', icon: Receipt },
@@ -113,6 +114,12 @@ const Dashboard = () => {
   const tabs = [...baseTabs, ...extraTabs];
 
   const handleDocTypeClick = (docId) => {
+    // Check if it's custom invoice
+    if (docId === 'custom-invoice') {
+      navigate('/template-builder');
+      return;
+    }
+    
     setSelectedDocType(docId);
     setShowExtraTabs(true);
     updateTab('newInvoice');

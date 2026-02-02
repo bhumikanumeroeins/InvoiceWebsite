@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X, Copy, ArrowRight, Loader2, Trash2 } from 'lucide-react';
+import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X, Copy, ArrowRight, Loader2, Trash2, Bell, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { templateAPI } from '../../services/templateService';
+import { reminderAPI } from '../../services/reminderService';
+import { API_BASE_URL } from '../../services/apiConfig';
 const getCurrencySymbol = (currency = 'INR') => {
   return currencyService.getSymbol(currency);
 };
 
 const formatAmount = (amount, currency = 'INR') => {
-  // Use basic formatting since we don't have locale config
   return Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
 };
 
@@ -19,16 +21,16 @@ const formatCurrency = (amount, currency = 'INR') => {
 
 import Template1 from '../templates/Template1/Template1';
 import Template2 from '../templates/Template2/Template2';
-import Template3 from '../templates/Template3';
-import Template4 from '../templates/Template4';
-import Template5 from '../templates/Template5';
-import Template6 from '../templates/Template6';
-import Template7 from '../templates/Template7';
-import Template8 from '../templates/Template8';
-import Template9 from '../templates/Template9';
-import Template10 from '../templates/Template10';
-import Template11 from '../templates/Template11';
-import Template12 from '../templates/Template12';
+import Template3 from '../templates/Template3/Template3';
+import Template4 from '../templates/Template4/Template4';
+import Template5 from '../templates/Template5/Template5';
+import Template6 from '../templates/Template6/Template6';
+import Template7 from '../templates/Template7/Template7';
+import Template8 from '../templates/Template8/Template8';
+import Template9 from '../templates/Template9/Template9';
+import Template10 from '../templates/Template10/Template10';
+import Template11 from '../templates/Template11/Template11';
+import Template12 from '../templates/Template12/Template12';
 import InvoiceForm from '../invoice/InvoiceForm';
 import InvoiceActionTabs from '../invoice/InvoiceActionTabs';
 import { invoiceAPI } from '../../services/invoiceService';
@@ -53,12 +55,25 @@ const templates = {
 };
 
 const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
+  const invoiceId = invoice?._id || invoice?.id;
+  
   const [activeAction, setActiveAction] = useState('invoice');
-  const [selectedTemplate, setSelectedTemplate] = useState(1);
+  const [selectedTemplate, setSelectedTemplate] = useState(invoice?.selectedTemplate || 1);
   const [currentInvoice, setCurrentInvoice] = useState(invoice);
   const [loading, setLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
+  const [templateMeta, setTemplateMeta] = useState(null);
+  const [savingTemplateLayout, setSavingTemplateLayout] = useState(false);
+  const [modifiedLayout, setModifiedLayout] = useState(null);
+  const [availableTemplates, setAvailableTemplates] = useState([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const templateRef = useRef(null);
+
+
+const safeLayout = templateMeta?.layout || null;
+const safeTemplateId = templateMeta?._id || null;
+const currentLayout = modifiedLayout || safeLayout;
+
   
   // Update currentInvoice when invoice prop changes
   useEffect(() => {
@@ -70,22 +85,97 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
           
           if (response.success && response.data) {
             setCurrentInvoice(response.data);
+            // Update selected template from invoice data
+            if (response.data.selectedTemplate) {
+              setSelectedTemplate(response.data.selectedTemplate);
+            }
           } else {
             setCurrentInvoice(invoice);
+            if (invoice.selectedTemplate) {
+              setSelectedTemplate(invoice.selectedTemplate);
+            }
           }
         } catch (error) {
           console.error('Failed to fetch full invoice:', error);
           setCurrentInvoice(invoice);
+          if (invoice.selectedTemplate) {
+            setSelectedTemplate(invoice.selectedTemplate);
+          }
         } finally {
           setLoading(false);
         }
       } else {
         setCurrentInvoice(invoice);
+        if (invoice?.selectedTemplate) {
+          setSelectedTemplate(invoice.selectedTemplate);
+        }
       }
     };
     
     fetchFullInvoice();
   }, [invoice]);
+
+  useEffect(() => {
+  const loadTemplate = async () => {
+    try {
+      // First, load admin default template
+      const response = await fetch(`${API_BASE_URL}/user-template-layout/default/Template${selectedTemplate}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("📡 Loaded ADMIN default template for Template" + selectedTemplate + ":", data);
+        
+        // Now check if user has saved customizations
+        const userLayoutsResponse = await fetch(`${API_BASE_URL}/user-template-layout/my-layouts`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        if (userLayoutsResponse.ok) {
+          const userLayoutsData = await userLayoutsResponse.json();
+          
+          // Find saved layout for this template
+          const userLayout = userLayoutsData.data?.layouts?.find(
+            layout => layout.templateName === `Template${selectedTemplate}`
+          );
+
+          if (userLayout) {
+            console.log("✅ Found USER saved layout, using it instead:", userLayout);
+            setTemplateMeta({
+              _id: userLayout._id,
+              layout: userLayout.layout,
+              name: userLayout.templateName,
+              isUserCustomized: true
+            });
+            return;
+          }
+        }
+
+        // No user saved layout, use admin default
+        console.log("📋 No user saved layout found, using admin default");
+        setTemplateMeta({
+          ...data.data,
+          isUserCustomized: false
+        });
+      } else {
+        console.warn("⚠️ Template not found, using defaults");
+        setTemplateMeta({ layout: null, isUserCustomized: false });
+      }
+
+    } catch (err) {
+      console.warn("⚠️ Template load error:", err);
+      setTemplateMeta({ layout: null, isUserCustomized: false });
+    }
+  };
+
+  loadTemplate();
+}, [selectedTemplate]);
+
   
   // Payment state
   const [paymentTab, setPaymentTab] = useState('manual'); // 'manual' or 'cards'
@@ -118,6 +208,11 @@ If you need assistance or have any questions, please email: support@invoicepro.c
   const [savingRecurring, setSavingRecurring] = useState(false);
   const [hasExistingRecurring, setHasExistingRecurring] = useState(false);
   const [loadingRecurringData, setLoadingRecurringData] = useState(false);
+
+  // Reminders state
+  const [reminders, setReminders] = useState([]);
+  const [loadingReminders, setLoadingReminders] = useState(false);
+  const [creatingReminders, setCreatingReminders] = useState(false);
 
   const currentUser = getCurrentUser();
   const userEmail = currentUser?.email || '';
@@ -330,7 +425,116 @@ Best regards`,
       return;
     }
     
+    if (actionId === 'reminders') {
+      setActiveAction('reminders');
+      await loadReminders();
+      return;
+    }
+    
+    if (actionId === 'template') {
+      setActiveAction('template');
+      await loadAvailableTemplates();
+      return;
+    }
+    
     setActiveAction(actionId);
+  };
+
+  const loadAvailableTemplates = async () => {
+    try {
+      setLoadingTemplates(true);
+      const response = await fetch(`${API_BASE_URL}/user-template-layout/templates`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          // Group templates by templateNo (in case there are multiple)
+          const groupedTemplates = {};
+          data.data.forEach(template => {
+            if (!groupedTemplates[template.templateNo]) {
+              groupedTemplates[template.templateNo] = template;
+            }
+          });
+          
+          // Convert to array sorted by templateNo
+          const templatesArray = Object.values(groupedTemplates).sort((a, b) => a.templateNo - b.templateNo);
+          setAvailableTemplates(templatesArray);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load templates:', error);
+      // Fallback to empty array - will show hardcoded templates
+      setAvailableTemplates([]);
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
+  const loadReminders = async () => {
+    const invoiceId = currentInvoice?._id || currentInvoice?.id;
+    if (!invoiceId) {
+      return;
+    }
+
+    try {
+      setLoadingReminders(true);
+      const response = await reminderAPI.getByInvoiceId(invoiceId);
+      if (response.success) {
+        setReminders(response.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to load reminders:', error);
+      setReminders([]);
+    } finally {
+      setLoadingReminders(false);
+    }
+  };
+
+  const handleCreateReminders = async () => {
+    const invoiceId = currentInvoice?._id || currentInvoice?.id;
+    if (!invoiceId) {
+      alert('Invoice ID not found');
+      return;
+    }
+
+    try {
+      setCreatingReminders(true);
+      const response = await reminderAPI.create(invoiceId);
+      if (response.success) {
+        alert(response.message || 'Reminders created successfully!');
+        await loadReminders();
+      } else {
+        alert(response.message || 'Failed to create reminders');
+      }
+    } catch (error) {
+      console.error('Failed to create reminders:', error);
+      alert(error.message || 'Failed to create reminders');
+    } finally {
+      setCreatingReminders(false);
+    }
+  };
+
+  const handleDeleteReminder = async (reminderId) => {
+    if (!confirm('Are you sure you want to delete this reminder?')) {
+      return;
+    }
+
+    try {
+      const response = await reminderAPI.delete(reminderId);
+      if (response.success) {
+        alert('Reminder deleted successfully!');
+        await loadReminders();
+      } else {
+        alert(response.message || 'Failed to delete reminder');
+      }
+    } catch (error) {
+      console.error('Failed to delete reminder:', error);
+      alert(error.message || 'Failed to delete reminder');
+    }
   };
 
   const loadPaymentDetails = async () => {
@@ -384,6 +588,81 @@ Best regards`,
       setLoading(false);
       setLoadingAction(null);
     }
+  };
+
+  const handleSaveTemplateLayout = async () => {
+    const layoutToSave = modifiedLayout || safeLayout;
+    
+    if (!layoutToSave) {
+      alert('No layout changes to save.');
+      return;
+    }
+
+    const confirmSave = confirm(
+      `Save layout changes for Template${selectedTemplate}?\n\nThis will save your customized layout.`
+    );
+    
+    if (!confirmSave) {
+      return;
+    }
+
+    setSavingTemplateLayout(true);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/user-template-layout/save-layout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          templateName: `Template${selectedTemplate}`,
+          layout: layoutToSave
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Template${selectedTemplate} layout saved successfully!`);
+        setModifiedLayout(null);
+        
+        // Reload the template to get the saved layout
+        const userLayoutsResponse = await fetch(`${API_BASE_URL}/user-template-layout/my-layouts`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        if (userLayoutsResponse.ok) {
+          const userLayoutsData = await userLayoutsResponse.json();
+          const userLayout = userLayoutsData.data?.layouts?.find(
+            layout => layout.templateName === `Template${selectedTemplate}`
+          );
+
+          if (userLayout) {
+            setTemplateMeta({
+              _id: userLayout._id,
+              layout: userLayout.layout,
+              name: userLayout.templateName,
+              isUserCustomized: true
+            });
+          }
+        }
+      } else {
+        alert('Failed to save template: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Save template layout error:', error);
+      alert('Failed to save template layout: ' + error.message);
+    } finally {
+      setSavingTemplateLayout(false);
+    }
+  };
+
+  const handleLayoutChange = (newLayout) => {
+    console.log('📐 Layout changed:', newLayout);
+    setModifiedLayout(newLayout);
   };
 
   const generatePDF = async (forDownload = false) => {
@@ -649,10 +928,14 @@ Best regards`,
               >
               {(() => {
                 const TemplateComponent = templates[selectedTemplate];
+                if (!templateMeta) return null;
                 return (
                   <TemplateComponent
                     data={previewData}
-                    editorMode={true}
+                    editorMode
+                    backendLayout={currentLayout}
+                    templateId={safeTemplateId}
+                    onLayoutChange={handleLayoutChange}
                   />
                 );
 
@@ -664,6 +947,28 @@ Best regards`,
               <Download className="w-4 h-4" />
               First Page Preview Only, Click to Download PDF File
             </a>
+            <button
+              onClick={handleSaveTemplateLayout}
+              disabled={savingTemplateLayout}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition text-sm font-medium shadow-sm ${
+                modifiedLayout
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              } disabled:opacity-50`}
+              title={modifiedLayout ? 'Save layout changes' : 'Drag elements to modify layout'}
+            >
+              {savingTemplateLayout ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4" />
+                  {modifiedLayout ? 'Save Layout Changes' : 'Save Template'}
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}
@@ -684,53 +989,95 @@ Best regards`,
       {activeAction === 'template' && (
         <div className="p-6">
           <h3 className="text-lg font-semibold text-slate-800 mb-4">Select a Template</h3>
-          <div className="grid grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => {
-              const TemplateComponent = templates[num];
-              return (
-                <div 
-                  key={num}
-                  onClick={() => {
-                    setSelectedTemplate(num);
-                    setActiveAction('invoice');
-                  }}
-                  className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl bg-white ${
-                    selectedTemplate === num 
-                      ? 'ring-3 ring-indigo-500 shadow-lg' 
-                      : 'shadow-md hover:ring-2 hover:ring-indigo-300'
-                  }`}
-                  style={{ width: '220px', height: '340px' }}
-                >
-                  <div 
-                    className="overflow-hidden"
-                    style={{ width: '220px', height: '311px' }}
-                  >
-                    <div 
-                      style={{ 
-                        transform: 'scale(0.277)', 
-                        transformOrigin: 'top left', 
-                        width: '794px', 
-                        height: '1123px' 
-                      }}
-                    >
-                      <TemplateComponent
-                        data={previewData}
-                        editorMode={true}
-                      />
+          
+          {loadingTemplates ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+              <span className="ml-3 text-gray-600">Loading templates...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
+              {(availableTemplates.length > 0 ? availableTemplates : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => ({ templateNo: num }))).map((template) => {
+                const num = template.templateNo;
+                const TemplateComponent = templates[num];
+                return (
+                  <div
+                    key={num}
+                    onClick={async () => {
+                      // Just update selectedTemplate - let useEffect handle loading the layout
+                      setSelectedTemplate(num);
 
+                      // Save template selection to backend
+                      if (invoiceId) {
+                        try {
+                          const response = await fetch(
+                            `${API_BASE_URL}/invoiceForms/update-template/${invoiceId}`,
+                            {
+                              method: "PATCH",
+                              headers: {
+                                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({ selectedTemplate: num }),
+                            },
+                          );
+
+                          if (response.ok) {
+                            // Update currentInvoice with new selectedTemplate
+                            setCurrentInvoice((prev) => ({
+                              ...prev,
+                              selectedTemplate: num,
+                            }));
+                          }
+                        } catch (error) {
+                          console.error(
+                            "Failed to save template selection:",
+                            error,
+                          );
+                        }
+                      }
+                      setActiveAction("invoice");
+                    }}
+                    className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl bg-white ${
+                      selectedTemplate === num
+                        ? "ring-3 ring-indigo-500 shadow-lg"
+                        : "shadow-md hover:ring-2 hover:ring-indigo-300"
+                    }`}
+                    style={{ width: "220px", height: "340px" }}
+                  >
+                    <div
+                      className="overflow-hidden"
+                      style={{ width: "220px", height: "311px" }}
+                    >
+                      <div
+                        style={{
+                          transform: "scale(0.277)",
+                          transformOrigin: "top left",
+                          width: "794px",
+                          height: "1123px",
+                        }}
+                      >
+                        <TemplateComponent
+                          data={previewData}
+                          editorMode={true}
+                          backendLayout={safeLayout}
+                        />
+                      </div>
                     </div>
+                    <p
+                      className={`text-center text-sm py-2 font-medium ${
+                        selectedTemplate === num
+                          ? "bg-indigo-500 text-white"
+                          : "bg-slate-50 text-slate-600"
+                      }`}
+                    >
+                      Template {num} {selectedTemplate === num && "(Current)"}
+                    </p>
                   </div>
-                  <p className={`text-center text-sm py-2 font-medium ${
-                    selectedTemplate === num 
-                      ? 'bg-indigo-500 text-white' 
-                      : 'bg-slate-50 text-slate-600'
-                  }`}>
-                    Template {num} {selectedTemplate === num && '(Current)'}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -1246,10 +1593,11 @@ Best regards`,
                       return (
                         <TemplateComponent
                           data={previewData}
-                          editorMode={false}
+                          editorMode={true}
+                          backendLayout={safeLayout}
+                          templateId={safeTemplateId}
                         />
                       );
-
                     })()}
                   </div>
                 </div>
@@ -1454,6 +1802,164 @@ Best regards`,
         </div>
       )}
 
+      {/* Reminders View */}
+      {activeAction === 'reminders' && (
+        <div className="p-6">
+          <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
+                  <Bell className="w-6 h-6 text-indigo-600" />
+                  Payment Reminders
+                </h3>
+                <p className="text-slate-500 text-sm mt-1">
+                  Automatic email reminders before invoice due date
+                </p>
+              </div>
+              <button
+                onClick={handleCreateReminders}
+                disabled={creatingReminders || !currentInvoice?.invoiceMeta?.dueDate || !currentInvoice?.client?.email}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {creatingReminders ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Bell className="w-4 h-4" />
+                    Create Reminders
+                  </>
+                )}
+              </button>
+            </div>
+
+            {!currentInvoice?.invoiceMeta?.dueDate && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-amber-800 font-medium">Due Date Required</p>
+                  <p className="text-amber-700 text-sm mt-1">
+                    Please set a due date for this invoice to create payment reminders.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!currentInvoice?.client?.email && currentInvoice?.invoiceMeta?.dueDate && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-amber-800 font-medium">Client Email Required</p>
+                  <p className="text-amber-700 text-sm mt-1">
+                    Please send the invoice via email first to save the client's email address.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {loadingReminders ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+              </div>
+            ) : reminders.length === 0 ? (
+              <div className="text-center py-12">
+                <Bell className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500 text-lg font-medium">No Reminders Set</p>
+                <p className="text-slate-400 text-sm mt-2">
+                  Create automatic reminders to notify your client before the due date
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {reminders.map((reminder) => (
+                  <div
+                    key={reminder._id}
+                    className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            reminder.reminderType === 'first'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-purple-100 text-purple-700'
+                          }`}>
+                            {reminder.reminderType === 'first' ? 'First Reminder' : 'Second Reminder'}
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            reminder.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : reminder.status === 'sent'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {reminder.status === 'pending' && <Clock className="w-3 h-3 inline mr-1" />}
+                            {reminder.status === 'sent' && <CheckCircle className="w-3 h-3 inline mr-1" />}
+                            {reminder.status === 'failed' && <XCircle className="w-3 h-3 inline mr-1" />}
+                            {reminder.status.charAt(0).toUpperCase() + reminder.status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="text-sm text-slate-600 space-y-1">
+                          <p>
+                            <span className="font-medium">To:</span> {reminder.clientEmail}
+                          </p>
+                          <p>
+                            <span className="font-medium">Scheduled:</span>{' '}
+                            {new Date(reminder.scheduledDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          {reminder.sentAt && (
+                            <p>
+                              <span className="font-medium">Sent:</span>{' '}
+                              {new Date(reminder.sentAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteReminder(reminder._id)}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        title="Delete reminder"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-6 pt-6 border-t border-slate-200">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="text-blue-900 font-medium mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  How Reminders Work
+                </h4>
+                <ul className="text-blue-800 text-sm space-y-1 ml-6 list-disc">
+                  <li><strong>First Reminder:</strong> Sent 5 days before the due date</li>
+                  <li><strong>Second Reminder:</strong> Sent 3 days before the due date</li>
+                  <li>Reminders are only sent for unpaid invoices</li>
+                  <li>Reminders are automatically sent via email</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Download View */}
       {activeAction === 'download' && (
         <div className="p-6">
@@ -1528,7 +2034,13 @@ Best regards`,
         <div ref={templateRef}>
           {(() => {
             const TemplateComponent = templates[selectedTemplate];
-            return <TemplateComponent data={previewData} />;
+              return (
+                <TemplateComponent
+                  data={previewData}
+                  editorMode={false}
+                  backendLayout={safeLayout}
+                />
+              );
           })()}
         </div>
       </div>

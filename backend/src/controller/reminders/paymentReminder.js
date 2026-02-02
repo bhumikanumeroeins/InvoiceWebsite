@@ -160,3 +160,170 @@ Thank you!`;
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+// Get reminders for a specific invoice
+export const getInvoiceReminders = async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    const userId = req.user?.userId;
+
+    // Verify invoice belongs to user
+    const invoice = await InvoiceTaxForm.findOne({
+      _id: invoiceId,
+      createdBy: userId
+    });
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Invoice not found or access denied"
+      });
+    }
+
+    const reminders = await PaymentReminder.find({ invoiceId })
+      .sort({ scheduledDate: 1 });
+
+    return res.status(200).json({
+      success: true,
+      data: reminders
+    });
+
+  } catch (error) {
+    console.error("Get invoice reminders error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Create reminders for an invoice (user-triggered)
+export const createInvoiceReminders = async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    const userId = req.user?.userId;
+
+    // Verify invoice belongs to user
+    const invoice = await InvoiceTaxForm.findOne({
+      _id: invoiceId,
+      createdBy: userId
+    });
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: "Invoice not found or access denied"
+      });
+    }
+
+    // Use existing createRemindersForInvoice function
+    const result = await createRemindersForInvoice(invoiceId);
+
+    if (result.success) {
+      return res.status(201).json(result);
+    } else {
+      return res.status(400).json(result);
+    }
+
+  } catch (error) {
+    console.error("Create invoice reminders error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Delete a reminder
+export const deleteReminder = async (req, res) => {
+  try {
+    const { reminderId } = req.params;
+    const userId = req.user?.userId;
+
+    // Find reminder and verify ownership through invoice
+    const reminder = await PaymentReminder.findById(reminderId).populate('invoiceId');
+
+    if (!reminder) {
+      return res.status(404).json({
+        success: false,
+        message: "Reminder not found"
+      });
+    }
+
+    // Verify invoice belongs to user
+    if (reminder.invoiceId.createdBy.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied"
+      });
+    }
+
+    await PaymentReminder.findByIdAndDelete(reminderId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Reminder deleted successfully"
+    });
+
+  } catch (error) {
+    console.error("Delete reminder error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Update reminder status
+export const updateReminderStatus = async (req, res) => {
+  try {
+    const { reminderId } = req.params;
+    const { status } = req.body;
+    const userId = req.user?.userId;
+
+    if (!['pending', 'sent', 'failed'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status"
+      });
+    }
+
+    // Find reminder and verify ownership through invoice
+    const reminder = await PaymentReminder.findById(reminderId).populate('invoiceId');
+
+    if (!reminder) {
+      return res.status(404).json({
+        success: false,
+        message: "Reminder not found"
+      });
+    }
+
+    // Verify invoice belongs to user
+    if (reminder.invoiceId.createdBy.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied"
+      });
+    }
+
+    reminder.status = status;
+    if (status === 'sent') {
+      reminder.sentAt = new Date();
+    }
+    await reminder.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Reminder status updated successfully",
+      data: reminder
+    });
+
+  } catch (error) {
+    console.error("Update reminder status error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

@@ -1,9 +1,6 @@
 import Registration from "../../models/users/registration.js";
 import InvoiceCustomization from "../../models/users/buildInvoice.js";
 import { sendInvoiceEmail } from "../../utils/emailService.js";
-
-import { createError } from "../../utils/utils.js";
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 
@@ -233,6 +230,13 @@ export const sendCustomInvoiceEmail = async (req, res) => {
         message: "Recipient email and subject are required"
       });
     }
+
+    if (!pdfBase64) {
+      return res.status(400).json({
+        success: false,
+        message: "PDF data is required"
+      });
+    }
  
     /* ---------------- FIND CUSTOM INVOICE ---------------- */
     const customInvoice = await InvoiceCustomization.findOne({ 
@@ -249,10 +253,15 @@ export const sendCustomInvoiceEmail = async (req, res) => {
  
     /* ---------------- PREPARE PDF BUFFER ---------------- */
     let pdfBuffer = null;
-    if (pdfBase64) {
+    try {
       // Remove data URL prefix if present
       const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
       pdfBuffer = Buffer.from(base64Data, 'base64');
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid PDF data"
+      });
     }
  
     /* ---------------- GET USER EMAIL FOR COPY ---------------- */

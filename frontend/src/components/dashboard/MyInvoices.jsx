@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
 import { currencyService } from '../../services/currencyService';
-import { FileText, Filter, Loader2, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
+import { FileText, Filter, Loader2, Trash2, RotateCcw, AlertTriangle, Palette } from 'lucide-react';
 import { invoiceAPI } from '../../services/invoiceService';
+import { buildInvoiceAPI } from '../../services/buildInvoiceService';
 import { getUploadsUrl } from '../../services/apiConfig';
+import { useNavigate } from 'react-router-dom';
 
 const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
+  const [customInvoices, setCustomInvoices] = useState([]);
   const [trashInvoices, setTrashInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [invoiceFilter, setInvoiceFilter] = useState('all');
+  const [invoiceType, setInvoiceType] = useState('standard'); // 'standard' or 'custom'
 
   // Helper function to format currency amount
   const formatCurrency = (amount, currencyCode) => {
@@ -92,23 +97,45 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch both active and trash invoices
-      const [activeResponse, trashResponse] = await Promise.all([
+      // Fetch standard invoices, trash, and custom invoices
+      const [activeResponse, trashResponse, customResponse] = await Promise.all([
         invoiceAPI.getAll(),
-        invoiceAPI.getTrash()
+        invoiceAPI.getTrash(),
+        buildInvoiceAPI.getAll()
       ]);
       
       const transformedInvoices = (activeResponse.data || []).map(inv => transformInvoice(inv, false));
       const transformedTrash = (trashResponse.data || []).map(inv => transformInvoice(inv, true));
+      const transformedCustom = (customResponse.data || []).map(inv => transformCustomInvoice(inv));
       
       setInvoices(transformedInvoices);
       setTrashInvoices(transformedTrash);
+      setCustomInvoices(transformedCustom);
     } catch (err) {
       console.error('Fetch invoices error:', err);
       setError('Failed to fetch invoices');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Transform custom invoice data
+  const transformCustomInvoice = (inv) => {
+    const content = inv.content || {};
+    return {
+      id: inv._id,
+      _id: inv._id,
+      templateName: inv.templateName || 'Untitled Template',
+      customer: content.clientName || content.businessName || '—',
+      number: content.invoiceNumber || content.invoiceNo || '—',
+      date: inv.createdAt 
+        ? new Date(inv.createdAt).toLocaleDateString('en-GB') 
+        : '',
+      total: content.total || content.grandTotal || '0.00',
+      currency: inv.currency || 'INR',
+      status: 'custom',
+      type: 'custom',
+    };
   };
 
   // Refetch when component mounts or refreshKey changes
@@ -213,6 +240,13 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
     if (invoiceFilter === 'trash') {
       return trashInvoices;
     }
+    
+    // For 'all' filter, show based on invoiceType sub-tab
+    if (invoiceFilter === 'all') {
+      return invoiceType === 'custom' ? customInvoices : invoices;
+    }
+    
+    // Other filters only apply to standard invoices
     switch (invoiceFilter) {
       case 'paid': return invoices.filter(inv => inv.status === 'paid');
       case 'unpaid': return invoices.filter(inv => inv.status === 'unpaid');
@@ -224,7 +258,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
   };
 
   const getFilterCounts = () => ({
-    all: invoices.length,
+    all: invoices.length + customInvoices.length,
     overdue: invoices.filter(inv => inv.status === 'overdue').length,
     partial: invoices.filter(inv => inv.status === 'partial').length,
     unpaid: invoices.filter(inv => inv.status === 'unpaid').length,
@@ -252,10 +286,15 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
     { id: 'trash', label: 'Trash', color: 'bg-red-500' },
   ];
 
-  // Clear selection when switching filters
+  // Clear selection when switching filters or invoice type
   useEffect(() => {
     setSelectedIds([]);
-  }, [invoiceFilter]);
+  }, [invoiceFilter, invoiceType]);
+
+  // Handle custom invoice click - navigate to template builder
+  const handleCustomInvoiceClick = (customInvoice) => {
+    navigate(`/template-builder?id=${customInvoice._id}`);
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
@@ -284,7 +323,12 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
           {invoiceFilters.map((filter) => (
             <button
               key={filter.id}
-              onClick={() => setInvoiceFilter(filter.id)}
+              onClick={() => {
+                setInvoiceFilter(filter.id);
+                if (filter.id !== 'all') {
+                  setInvoiceType('standard'); // Reset to standard for non-all filters
+                }
+              }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 invoiceFilter === filter.id
                   ? filter.id === 'trash' 
@@ -305,6 +349,48 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
             </button>
           ))}
         </div>
+
+        {/* Sub-tabs for Standard/Custom when "All Invoices" is selected */}
+        {invoiceFilter === 'all' && (
+          <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
+            <button
+              onClick={() => setInvoiceType('standard')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                invoiceType === 'standard'
+                  ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-500'
+                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-2 border-transparent'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              Standard Invoices
+              <span className={`px-2 py-0.5 rounded-full text-xs ${
+                invoiceType === 'standard' 
+                  ? 'bg-indigo-500 text-white' 
+                  : 'bg-slate-200 text-slate-600'
+              }`}>
+                {invoices.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setInvoiceType('custom')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                invoiceType === 'custom'
+                  ? 'bg-purple-100 text-purple-700 border-2 border-purple-500'
+                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-2 border-transparent'
+              }`}
+            >
+              <Palette className="w-4 h-4" />
+              Custom Invoices
+              <span className={`px-2 py-0.5 rounded-full text-xs ${
+                invoiceType === 'custom' 
+                  ? 'bg-purple-500 text-white' 
+                  : 'bg-slate-200 text-slate-600'
+              }`}>
+                {customInvoices.length}
+              </span>
+            </button>
+          </div>
+        )}
         
         {/* Action Buttons */}
         {selectedIds.length > 0 && (
@@ -395,37 +481,54 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredInvoices.map((invoice, index) => (
-                  <tr 
-                    key={invoice.id}
-                    onClick={() => !isTrashView && onInvoiceClick && onInvoiceClick(invoice)}
-                    className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${!isTrashView ? 'cursor-pointer' : ''} ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-                    }`}
-                  >
-                    <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                      <input 
-                        type="checkbox" 
-                        className="rounded border-slate-300"
-                        checked={selectedIds.includes(invoice.id)}
-                        onChange={() => handleSelectInvoice(invoice.id)}
-                      />
-                    </td>
-                    <td className="p-4 text-sm text-slate-700 font-medium">{invoice.customer || '—'}</td>
-                    <td className="p-4 text-sm text-slate-600">{invoice.number}</td>
-                    <td className="p-4 text-sm text-slate-600">{isTrashView ? invoice.deletedAt : invoice.date}</td>
-                    {!isTrashView && (
-                      <td className="p-4 text-sm">
-                        <span className={`font-medium ${invoice.paid > 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
-                          {formatCurrency(invoice.paid, invoice.currency)}
-                        </span>
+                {filteredInvoices.map((invoice, index) => {
+                  const isCustom = invoice.type === 'custom';
+                  return (
+                    <tr 
+                      key={invoice.id}
+                      onClick={() => {
+                        if (isTrashView) return;
+                        if (isCustom) {
+                          handleCustomInvoiceClick(invoice);
+                        } else {
+                          onInvoiceClick && onInvoiceClick(invoice);
+                        }
+                      }}
+                      className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${!isTrashView ? 'cursor-pointer' : ''} ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
+                      } ${isCustom ? 'bg-purple-50/30' : ''}`}
+                    >
+                      <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-slate-300"
+                          checked={selectedIds.includes(invoice.id)}
+                          onChange={() => handleSelectInvoice(invoice.id)}
+                        />
                       </td>
-                    )}
-                    <td className="p-4 text-sm text-slate-700 text-right font-medium">
-                      {formatCurrency(invoice.total, invoice.currency)}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="p-4 text-sm text-slate-700 font-medium">
+                        {isCustom && <Palette className="w-3 h-3 inline mr-1 text-purple-500" />}
+                        {invoice.customer || '—'}
+                      </td>
+                      <td className="p-4 text-sm text-slate-600">{invoice.number}</td>
+                      <td className="p-4 text-sm text-slate-600">{isTrashView ? invoice.deletedAt : invoice.date}</td>
+                      {!isTrashView && (
+                        <td className="p-4 text-sm">
+                          {isCustom ? (
+                            <span className="text-purple-600 font-medium text-xs">Custom Design</span>
+                          ) : (
+                            <span className={`font-medium ${invoice.paid > 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
+                              {formatCurrency(invoice.paid, invoice.currency)}
+                            </span>
+                          )}
+                        </td>
+                      )}
+                      <td className="p-4 text-sm text-slate-700 text-right font-medium">
+                        {isCustom ? invoice.total : formatCurrency(invoice.total, invoice.currency)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

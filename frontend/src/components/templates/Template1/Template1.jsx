@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rnd } from "react-rnd";
 
 import bgImage from "../../../assets/templates/1_1.jpg";
@@ -10,23 +10,58 @@ import TotalsBlock from "./TotalsBlock";
 import PaymentBlock from "./PaymentBlock";
 import FooterBlock from "./FooterBlock";
 
-const Template1 = ({ data = {}, editorMode = true }) => {
+
+
+const Template1 = ({ data = {}, editorMode = true , backendLayout,  templateId, onLayoutChange}) => {
+
+const bgUrl = bgImage;
+
+
+
+
   const invoice = getInvoiceData(data);
 
-  const [layout, setLayout] = useState({
-    header: { x: 0, y: 0 },
-    items: { x: 0, y: 250 },
-    totals: { x: 0, y: 400 },
-    payment: { x: 0, y: 550 },
-    footer: { x: 0, y: 750 },
-  });
+  const DEFAULT_LAYOUT = {
+      header: { x: 0, y: 0 },
+      items: { x: 0, y: 150 },
+      totals: { x: 0, y: 400 },
+      payment: { x: 0, y: 550 },
+      footer: { x: 0, y: 750 },
+    };
+    const [layout, setLayout] = useState(
+      backendLayout || DEFAULT_LAYOUT
+    );
 
-  const updatePos = (key, x, y) => {
-    setLayout((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], x, y },
-    }));
+
+    useEffect(() => {
+      if (
+        backendLayout &&
+        Object.keys(backendLayout).length > 0
+      ) {
+        console.log("✅ Applying backend layout:", backendLayout);
+        setLayout(backendLayout);
+      }
+    }, [backendLayout]);
+
+
+
+
+const updatePos = (key, x, y) => {
+  const newLayout = {
+    ...layout,
+    [key]: { x, y },
   };
+
+  setLayout(newLayout);
+
+  if (onLayoutChange) {
+    onLayoutChange(newLayout);
+  }
+};
+
+console.log("🧭 current layout state:", layout);
+
+
 
   return (
     <div
@@ -40,7 +75,7 @@ const Template1 = ({ data = {}, editorMode = true }) => {
     >
       {/* Background */}
       <img
-        src={bgImage}
+        src={bgUrl}
         alt=""
         style={{
           position: "absolute",

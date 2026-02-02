@@ -10,7 +10,7 @@ const template7Schema = new mongoose.Schema(
     layout: {
       header: {
         x: { type: Number, default: 90 },
-        y: { type: Number, default: 90 }
+        y: { type: Number, default: 0 }
       },
       party: {
         x: { type: Number, default: 90 },
@@ -18,15 +18,15 @@ const template7Schema = new mongoose.Schema(
       },
       items: {
         x: { type: Number, default: 90 },
-        y: { type: Number, default: 360 }
+        y: { type: Number, default: 350 }
       },
       termsTotals: {
         x: { type: Number, default: 90 },
-        y: { type: Number, default: 480 }
+        y: { type: Number, default: 750 }
       },
       payment: {
         x: { type: Number, default: 90 },
-        y: { type: Number, default: 550 }
+        y: { type: Number, default: 800 }
       },
       footer: {
         x: { type: Number, default: 200 },

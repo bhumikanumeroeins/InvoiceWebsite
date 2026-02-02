@@ -9,40 +9,40 @@ const template12Schema = new mongoose.Schema(
 
     layout: {
       header: {
-        x: { type: Number, default: 250 },
-        y: { type: Number, default: 10 }
+        x: { type: Number, default: 100 },
+        y: { type: Number, default: -50 }
       },
       party: {
         x: { type: Number, default: 140 },
-        y: { type: Number, default: 60 }
+        y: { type: Number, default: 110 }
       },
       title: {
-        x: { type: Number, default: 460 },
-        y: { type: Number, default: 120 }
+        x: { type: Number, default: 470 },
+        y: { type: Number, default: 180 }
       },
       meta: {
         x: { type: Number, default: 130 },
-        y: { type: Number, default: 220 }
+        y: { type: Number, default: 310 }
       },
       items: {
         x: { type: Number, default: 90 },
-        y: { type: Number, default: 290 }
+        y: { type: Number, default: 320 }
       },
       termsTotals: {
         x: { type: Number, default:120 },
-        y: { type: Number, default:420 }  
+        y: { type: Number, default:730 }  
       },
       payment: {
-        x: { type: Number, default: 120 },
-        y: { type: Number, default: 500 }
+        x: { type: Number, default: 80 },
+        y: { type: Number, default: 450 }
       },
       qr: {
-        x: { type: Number, default: 350 },
-        y: { type: Number, default: 520 }
+        x: { type: Number, default: 600 },
+        y: { type: Number, default: 850 }
       },
       thankYou: {
-        x: { type: Number, default: 250 },
-        y: { type: Number, default: 680 }
+        x: { type: Number, default: 300 },
+        y: { type: Number, default: 500 }
       },
     },
 
