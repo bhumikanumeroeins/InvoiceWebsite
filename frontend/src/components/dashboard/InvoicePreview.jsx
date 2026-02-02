@@ -73,6 +73,7 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
 const safeLayout = templateMeta?.layout || null;
 const safeTemplateId = templateMeta?._id || null;
 const currentLayout = modifiedLayout || safeLayout;
+
   
   // Update currentInvoice when invoice prop changes
   useEffect(() => {
@@ -117,7 +118,7 @@ const currentLayout = modifiedLayout || safeLayout;
   useEffect(() => {
   const loadTemplate = async () => {
     try {
-      // Load admin default template using user-template-layout API
+      // First, load admin default template
       const response = await fetch(`${API_BASE_URL}/user-template-layout/default/Template${selectedTemplate}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -126,7 +127,37 @@ const currentLayout = modifiedLayout || safeLayout;
 
       if (response.ok) {
         const data = await response.json();
-        console.log("📡 Loading ADMIN default template for Template" + selectedTemplate + ":", data);
+        console.log("📡 Loaded ADMIN default template for Template" + selectedTemplate + ":", data);
+        
+        // Now check if user has saved customizations
+        const userLayoutsResponse = await fetch(`${API_BASE_URL}/user-template-layout/my-layouts`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        if (userLayoutsResponse.ok) {
+          const userLayoutsData = await userLayoutsResponse.json();
+          
+          // Find saved layout for this template
+          const userLayout = userLayoutsData.data?.layouts?.find(
+            layout => layout.templateName === `Template${selectedTemplate}`
+          );
+
+          if (userLayout) {
+            console.log("✅ Found USER saved layout, using it instead:", userLayout);
+            setTemplateMeta({
+              _id: userLayout._id,
+              layout: userLayout.layout,
+              name: userLayout.templateName,
+              isUserCustomized: true
+            });
+            return;
+          }
+        }
+
+        // No user saved layout, use admin default
+        console.log("📋 No user saved layout found, using admin default");
         setTemplateMeta({
           ...data.data,
           isUserCustomized: false
@@ -970,56 +1001,62 @@ Best regards`,
                 const num = template.templateNo;
                 const TemplateComponent = templates[num];
                 return (
-                  <div 
+                  <div
                     key={num}
                     onClick={async () => {
                       // Just update selectedTemplate - let useEffect handle loading the layout
                       setSelectedTemplate(num);
-                      
+
                       // Save template selection to backend
                       if (invoiceId) {
                         try {
-                          const response = await fetch(`${API_BASE_URL}/invoiceForms/update-template/${invoiceId}`, {
-                            method: 'PATCH',
-                            headers: {
-                              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                              'Content-Type': 'application/json',
+                          const response = await fetch(
+                            `${API_BASE_URL}/invoiceForms/update-template/${invoiceId}`,
+                            {
+                              method: "PATCH",
+                              headers: {
+                                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({ selectedTemplate: num }),
                             },
-                            body: JSON.stringify({ selectedTemplate: num }),
-                          });
-                          
+                          );
+
                           if (response.ok) {
                             // Update currentInvoice with new selectedTemplate
-                            setCurrentInvoice(prev => ({
+                            setCurrentInvoice((prev) => ({
                               ...prev,
-                              selectedTemplate: num
+                              selectedTemplate: num,
                             }));
                           }
                         } catch (error) {
-                          console.error('Failed to save template selection:', error);
+                          console.error(
+                            "Failed to save template selection:",
+                            error,
+                          );
                         }
                       }
-                      setActiveAction('invoice');
+                      setActiveAction("invoice");
                     }}
                     className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl bg-white ${
-                      selectedTemplate === num 
-                        ? 'ring-3 ring-indigo-500 shadow-lg' 
-                        : 'shadow-md hover:ring-2 hover:ring-indigo-300'
+                      selectedTemplate === num
+                        ? "ring-3 ring-indigo-500 shadow-lg"
+                        : "shadow-md hover:ring-2 hover:ring-indigo-300"
                     }`}
-                    style={{ width: '220px', height: '340px' }}
+                    style={{ width: "220px", height: "340px" }}
                   >
-                    <div 
+                    <div
                       className="overflow-hidden"
-                      style={{ width: '220px', height: '311px' }}
+                      style={{ width: "220px", height: "311px" }}
                     >
-                      <div 
-                        style={{ 
-                          transform: 'scale(0.277)', 
-                          transformOrigin: 'top left', 
-                          width: '794px', 
-                          height: '1123px' 
+                      <div
+                        style={{
+                          transform: "scale(0.277)",
+                          transformOrigin: "top left",
+                          width: "794px",
+                          height: "1123px",
                         }}
-                      >                      
+                      >
                         <TemplateComponent
                           data={previewData}
                           editorMode={true}
@@ -1027,12 +1064,14 @@ Best regards`,
                         />
                       </div>
                     </div>
-                    <p className={`text-center text-sm py-2 font-medium ${
-                      selectedTemplate === num 
-                        ? 'bg-indigo-500 text-white' 
-                        : 'bg-slate-50 text-slate-600'
-                    }`}>
-                      Template {num} {selectedTemplate === num && '(Current)'}
+                    <p
+                      className={`text-center text-sm py-2 font-medium ${
+                        selectedTemplate === num
+                          ? "bg-indigo-500 text-white"
+                          : "bg-slate-50 text-slate-600"
+                      }`}
+                    >
+                      Template {num} {selectedTemplate === num && "(Current)"}
                     </p>
                   </div>
                 );

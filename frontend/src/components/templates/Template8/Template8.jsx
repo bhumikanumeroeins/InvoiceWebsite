@@ -16,7 +16,7 @@ const Template8 = ({ data = {}, editorMode = true, backendLayout, templateId, on
   const bgUrl = bgImage;
 
   const DEFAULT_LAYOUT = {
-    header: { x: 80, y: -50 },
+    header: { x: 80, y: 50 },
     invoiceTitle: { x: 80, y: 200 },
     items: { x: 80, y: 220 },
     termsTotals: { x: 80, y: 600 },

@@ -18,7 +18,7 @@ const template7Schema = new mongoose.Schema(
       },
       items: {
         x: { type: Number, default: 90 },
-        y: { type: Number, default: 300 }
+        y: { type: Number, default: 350 }
       },
       termsTotals: {
         x: { type: Number, default: 90 },
@@ -26,7 +26,7 @@ const template7Schema = new mongoose.Schema(
       },
       payment: {
         x: { type: Number, default: 90 },
-        y: { type: Number, default: 450 }
+        y: { type: Number, default: 800 }
       },
       footer: {
         x: { type: Number, default: 200 },

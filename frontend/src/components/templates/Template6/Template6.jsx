@@ -17,9 +17,9 @@ const Template6 = ({ data = {}, editorMode = true, backendLayout, templateId, on
   const bgUrl = bgImage;
 
   const DEFAULT_LAYOUT = {
-    header: { x: 0, y: -80 },
+    header: { x: 0, y: -50 },
     party: { x: 50, y: 230 },
-    items: { x: 50, y: 270 },
+    items: { x: 50, y: 290 },
     termsTotals: { x: 50, y: 650 },
     paymentQR: { x: 50, y: 750 },
     thankyou: { x: 550, y: 950 },

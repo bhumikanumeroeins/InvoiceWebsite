@@ -18,7 +18,7 @@ const Template3 = ({ data = {}, editorMode = true, backendLayout, templateId, on
   const invoice = getInvoiceData(data);
 
   const DEFAULT_LAYOUT = {
-    header: { x: -50, y: -80 },
+    header: { x: 0, y: 0 },
     party: { x: 0, y: 110 },
     details: { x: 0, y: 230 },
     items: { x: 0, y: 210 },

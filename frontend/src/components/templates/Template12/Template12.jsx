@@ -27,7 +27,7 @@ const Template12 = ({ data = {}, editorMode = true, backendLayout, templateId, o
     termsTotals: { x: 120, y: 730 },
     payment: { x: 80, y: 450 },
     qr: { x: 600, y: 850 },
-    thankyou: { x: 250, y: 680 },
+    thankyou: { x: 300, y: 500 },
   };
 
   const [layout, setLayout] = useState(backendLayout || DEFAULT_LAYOUT);

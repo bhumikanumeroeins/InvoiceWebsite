@@ -10,11 +10,11 @@ const template5Schema = new mongoose.Schema(
     layout: {
       header: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: -50 }
+        y: { type: Number, default: 0 }
       },
       details: {
-        x: { type: Number, default: 90 },
-        y: { type: Number, default: 290 }
+        x: { type: Number, default: 100 },
+        y: { type: Number, default: 250 }
       },
       items: {
         x: { type: Number, default: 80 },

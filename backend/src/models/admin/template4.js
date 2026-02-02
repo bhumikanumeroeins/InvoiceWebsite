@@ -9,8 +9,8 @@ const template4Schema = new mongoose.Schema(
 
     layout: {
       header: {
-        x: { type: Number, default: 0 },
-        y: { type: Number, default: 0 }
+        x: { type: Number, default: -50 },
+        y: { type: Number, default: 100 }
       },
       partyTotals: {
         x: { type: Number, default: 0 },
@@ -18,11 +18,11 @@ const template4Schema = new mongoose.Schema(
       },
       details: {
         x: { type: Number, default: 550 },
-        y: { type: Number, default: 100 }
+        y: { type: Number, default: 90 }
       },
       items: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: 150 }
+        y: { type: Number, default: 200 }
       },
       termsQR: {
         x: { type: Number, default: 0 },

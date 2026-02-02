@@ -34,15 +34,15 @@ const template12Schema = new mongoose.Schema(
       },
       payment: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: 750 }
+        y: { type: Number, default: 450 }
       },
       qr: {
         x: { type: Number, default: 600 },
         y: { type: Number, default: 850 }
       },
       thankYou: {
-        x: { type: Number, default: 250 },
-        y: { type: Number, default: 680 }
+        x: { type: Number, default: 300 },
+        y: { type: Number, default: 500 }
       },
     },
 

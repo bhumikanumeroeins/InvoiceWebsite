@@ -10,7 +10,7 @@ const template8Schema = new mongoose.Schema(
     layout: {
       header: {
         x: { type: Number, default: 80 },
-        y: { type: Number, default: -50 }
+        y: { type: Number, default: 50 }
       },
       invoiceTitle: {
         x: { type: Number, default: 80 },

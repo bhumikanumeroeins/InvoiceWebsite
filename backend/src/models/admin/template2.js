@@ -9,8 +9,8 @@ const template2Schema = new mongoose.Schema(
 
     layout: {
       header: {
-        x: { type: Number, default: 500 },
-        y: { type: Number, default: -50 }
+        x: { type: Number, default: 550 },
+        y: { type: Number, default: 0 }
       },
       party: {
         x: { type: Number, default: 60 },
@@ -18,7 +18,7 @@ const template2Schema = new mongoose.Schema(
       },
       items: {
         x: { type: Number, default: 60 },
-        y: { type: Number, default: 320 }
+        y: { type: Number, default: 360 }
       },
       terms: {
         x: { type: Number, default: 60 },

@@ -9,8 +9,8 @@ const template3Schema = new mongoose.Schema(
 
     layout: {
       header: {
-        x: { type: Number, default: -50 },
-        y: { type: Number, default: -80 }
+        x: { type: Number, default: 0 },
+        y: { type: Number, default: 0 }
       },
       party: {
         x: { type: Number, default: 0 },

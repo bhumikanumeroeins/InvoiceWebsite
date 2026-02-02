@@ -10,7 +10,7 @@ const template6Schema = new mongoose.Schema(
     layout: {
       header: {
         x: { type: Number, default: 0 },
-        y: { type: Number, default: -80 }
+        y: { type: Number, default: -50 }
       },
       party: {
         x: { type: Number, default: 50 },
@@ -18,7 +18,7 @@ const template6Schema = new mongoose.Schema(
       },
       items: {
         x: { type: Number, default: 50 },
-        y: { type: Number, default: 270 }
+        y: { type: Number, default: 290 }
       },
       termsTotals: {
         x: { type: Number, default: 50 },

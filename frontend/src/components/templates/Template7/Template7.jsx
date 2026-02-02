@@ -20,7 +20,7 @@ const Template7 = ({ data = {}, editorMode = true, backendLayout, templateId, on
     party: { x: 90, y: 230 },
     items: { x: 90, y: 300 },
     termsTotals: { x: 90, y: 750 },
-    payment: { x: 90, y: 450 },
+    payment: { x: 90, y: 800 },
     footer: { x: 200, y: 750 },
   };
 
