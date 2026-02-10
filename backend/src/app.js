@@ -28,6 +28,9 @@ import invoiceTemplate10 from "./routes/admin/template10.js";
 import invoieTemplate11 from "./routes/admin/template11.js";
 import invoiceTemplate12 from "./routes/admin/template12.js";
 import UserTemplateLayout from "./routes/users/userTemplateLayout.js";
+import adminFAQRoutes from "./routes/admin/faq.js";
+import userFAQRoutes from "./routes/users/faq.js";
+
 
 import path from "path";
 
@@ -68,6 +71,8 @@ app.use("/api/invoice-template10", invoiceTemplate10);
 app.use("/api/invoice-template11", invoieTemplate11);
 app.use("/api/invoice-template12", invoiceTemplate12);
 app.use("/api/user-template-layout", UserTemplateLayout);
+app.use("/api/admin/faq", adminFAQRoutes);
+app.use("/api/user/faq", userFAQRoutes);
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
