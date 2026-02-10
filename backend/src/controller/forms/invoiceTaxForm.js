@@ -726,7 +726,7 @@ export const updatePaymentStatus = async (req, res) => {
     const { paymentStatus } = req.body;
 
     /* ---------------- VALIDATION ---------------- */
-    const allowedStatuses = ["unpaid", "partiallyPaid", "paid"];
+    const allowedStatuses = ["unpaid", "partiallyPaid", "paid", "overdue"];
 
     if (!paymentStatus) {
       return res.status(400).json({

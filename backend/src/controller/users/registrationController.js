@@ -1,4 +1,5 @@
 import Registration from '../../models/users/registration.js';
+import ContactUs from '../../models/users/contact_us.js'; 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { createResult, createError } from '../../utils/utils.js';
@@ -170,6 +171,20 @@ export const changePassword = async (req, res) => {
         user.password = hashedNewPassword;
         await user.save();
         res.status(200).json(createResult({ message: 'Password changed successfully' }));
+    }
+    catch (error) {
+        res.status(500).json(createError('Server error'));  
+    }
+};  
+
+
+// post api for contact us form
+export const contactUs = async (req, res) => {
+    try {
+        const { name, email, message } = req.body;
+        const newContact = new ContactUs({ name, email, message });
+        await newContact.save();
+        res.status(201).json(createResult({ message: 'Contact message sent successfully' }));
     }
     catch (error) {
         res.status(500).json(createError('Server error'));  
