@@ -10,12 +10,10 @@ const MyReports = ({ onInvoiceClick }) => {
   const [error, setError] = useState(null);
   const [reportFilter, setReportFilter] = useState('all');
 
-  // Helper function to get currency symbol
   const getCurrencySymbol = (currencyCode) => {
     return currencyService.getSymbol(currencyCode || 'INR');
   };
 
-  // Helper function to format currency amount
   const formatCurrency = (amount, currencyCode) => {
     const symbol = getCurrencySymbol(currencyCode);
     const locale = currencyCode === 'USD' ? 'en-US' : 'en-IN';
@@ -390,13 +388,13 @@ const MyReports = ({ onInvoiceClick }) => {
               <FileText className="w-4 h-4 text-emerald-500" />
               Export to Excel
             </button>
-            <button
+            {/* <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all"
             >
               <Printer className="w-4 h-4 text-slate-500" />
               Print
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

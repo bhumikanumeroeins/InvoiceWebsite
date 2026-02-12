@@ -489,7 +489,7 @@ const Templates1 = ({ data = {} }) => {
         <div
           style={{
             position: "absolute",
-            bottom: "-130px",
+            bottom: "-180px",
             left: 0,
             right: 0,
             padding: "10px 50px",

@@ -10,7 +10,6 @@ const MyCustomers = ({ onCustomerClick, refreshKey }) => {
   const [error, setError] = useState(null);
   const [customerFilter, setCustomerFilter] = useState('all');
 
-  // Helper function to format currency amount
   const formatCurrency = (amount, currencyCode) => {
     const symbol = currencyService.getSymbol(currencyCode || 'INR');
     const locale = currencyCode === 'USD' ? 'en-US' : 'en-IN';

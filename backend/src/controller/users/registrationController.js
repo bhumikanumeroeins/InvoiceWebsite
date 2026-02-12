@@ -192,6 +192,92 @@ export const contactUs = async (req, res) => {
 };  
 
 
+// Get email report frequency
+export const getEmailReportFrequency = async (req, res) => {
+  try {
+    if (!req.user?.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+
+    const user = await Registration.findById(req.user.userId).select('emailReportFrequency');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        emailReportFrequency: user.emailReportFrequency || 'never'
+      }
+    });
+
+  } catch (error) {
+    console.error("GET EMAIL REPORT FREQUENCY ERROR 👉", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+
+// Update email report frequency
+export const updateEmailReportFrequency = async (req, res) => {
+  try {
+    if (!req.user?.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized"
+      });
+    }
+
+    const { emailReportFrequency } = req.body;
+
+    // Validate frequency value
+    if (!['weekly', 'monthly', 'never'].includes(emailReportFrequency)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid frequency. Must be 'weekly', 'monthly', or 'never'"
+      });
+    }
+
+    const user = await Registration.findById(req.user.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    user.emailReportFrequency = emailReportFrequency;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Email report frequency updated successfully",
+      data: {
+        emailReportFrequency: user.emailReportFrequency
+      }
+    });
+
+  } catch (error) {
+    console.error("UPDATE EMAIL REPORT FREQUENCY ERROR 👉", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};  
+
+
 
 // upgrade subscription ----->
 

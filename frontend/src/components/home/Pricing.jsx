@@ -3,31 +3,60 @@ import { motion } from 'framer-motion';
 
 const plans = [
   {
-    name: 'Free',
+    name: 'Starter',
     price: '$0',
-    period: 'forever',
-    description: 'Perfect for getting started',
-    features: ['5 invoices per month', 'Basic templates', 'Email support', 'PDF downloads'],
-    cta: 'Get Started',
+    period: 'one-time',
+    description: 'Create up to 2 invoices after sign up',
+    features: [
+      '2 invoices total',
+      'Basic templates',
+      'PDF download',
+      'Email sending',
+    ],
+    cta: 'Start Free',
     popular: false,
   },
   {
-    name: 'Pro',
-    price: '$12',
+    name: 'Monthly',
+    price: '$3',
     period: 'per month',
-    description: 'Best for growing businesses',
-    features: ['Unlimited invoices', 'All premium templates', 'Priority support', 'Custom branding', 'Payment tracking', 'Recurring invoices'],
-    cta: 'Start Free Trial',
+    description: 'Unlimited invoices for 1 month',
+    features: [
+      'Unlimited invoices',
+      'All templates',
+      'Email & reminders',
+      'Payment tracking',
+    ],
+    cta: 'Subscribe Monthly',
+    popular: false,
+  },
+  {
+    name: '6 Months',
+    price: '$15',
+    period: '6 months',
+    description: 'Best value short-term plan',
+    features: [
+      'Unlimited invoices',
+      'All templates',
+      'Priority support',
+      'Reminders & tracking',
+    ],
+    cta: 'Subscribe 6 Months',
+    popular: false,
+  },
+  {
+    name: 'Yearly',
+    price: '$25',
+    period: 'per year',
+    description: 'Best value long-term plan',
+    features: [
+      'Unlimited invoices',
+      'All templates',
+      'Full features access',
+      'Lowest cost per month',
+    ],
+    cta: 'Subscribe Yearly',
     popular: true,
-  },
-  {
-    name: 'Enterprise',
-    price: '$49',
-    period: 'per month',
-    description: 'For large teams & agencies',
-    features: ['Everything in Pro', 'Team collaboration', 'API access', 'Advanced analytics', 'Dedicated manager', 'Custom integrations'],
-    cta: 'Contact Sales',
-    popular: false,
   },
 ];
 
@@ -65,7 +94,7 @@ const Pricing = () => {
 
         {/* Pricing Cards */}
         <motion.div
-          className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto"
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"

@@ -64,6 +64,11 @@ export const invoiceAPI = {
     body: JSON.stringify({ paymentStatus }),
   }),
 
+  updateSelectedTemplate: (invoiceId, templateNumber) => apiCall(`/invoiceForms/update-template/${invoiceId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ selectedTemplate: templateNumber }),
+  }),
+
   // Trash operations
   getTrash: () => apiCall('/invoiceForms/trash'),
   

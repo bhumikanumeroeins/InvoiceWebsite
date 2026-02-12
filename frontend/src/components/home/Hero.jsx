@@ -51,6 +51,13 @@ const Hero = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
   };
 
+  const handleScrollToTemplates = () => {
+    const section = document.getElementById('templates');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section
       className="relative bg-slate-50 border-b border-slate-200 overflow-hidden"
@@ -79,14 +86,13 @@ const Hero = () => {
               for modern businesses
             </h1>
 
-            <p className="text-lg text-slate-600 max-w-xl mb-10">
-              Create clean, professional invoices, manage clients,
-              and track payments with a fast, secure invoicing platform.
+            <p className="text-sm text-slate-500 mt-4">
+              No credit card required • 2 free invoices included
             </p>
 
             {/* Buttons */}
             <motion.div
-              className="flex flex-wrap gap-4 mb-10"
+              className="flex flex-wrap gap-4 mb-10 mt-10"
               variants={buttonVariant}
               initial="hidden"
               whileInView="visible"
@@ -94,15 +100,8 @@ const Hero = () => {
             >
               <motion.button
                 whileHover={{ scale: 1.05 }}
+                onClick={handleScrollToTemplates}
                 className="inline-flex items-center gap-2 px-7 py-4 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition"
-              >
-                Create Invoice
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                className="px-7 py-4 rounded-lg border border-slate-300 text-slate-700 font-semibold hover:bg-white transition"
               >
                 View Templates
               </motion.button>

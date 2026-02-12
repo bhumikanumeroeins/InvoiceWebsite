@@ -25,7 +25,8 @@ const Contact = () => {
     setError('');
 
     try {
-      const response = await contactAPI.submitContact(formData);
+      // Use submitFull for the full contact form with subject field
+      const response = await contactAPI.submitFull(formData);
       
       if (response.success) {
         setSubmitted(true);

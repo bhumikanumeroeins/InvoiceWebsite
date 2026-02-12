@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, FileText, Upload, X, Copy, ArrowRight, Loader2, Trash2, Bell, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, X, Copy, ArrowRight, Loader2, Trash2, Bell, Clock, CheckCircle, XCircle, AlertCircle, FileText, Upload } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { templateAPI } from '../../services/templateService';
 import { reminderAPI } from '../../services/reminderService';
-import { API_BASE_URL } from '../../services/apiConfig';
 const getCurrencySymbol = (currency = 'INR') => {
   return currencyService.getSymbol(currency);
 };
@@ -19,18 +17,18 @@ const formatCurrency = (amount, currency = 'INR') => {
   return `${symbol}${formattedAmount}`;
 };
 
-import Template1 from '../templates/Template1/Template1';
-import Template2 from '../templates/Template2/Template2';
-import Template3 from '../templates/Template3/Template3';
-import Template4 from '../templates/Template4/Template4';
-import Template5 from '../templates/Template5/Template5';
-import Template6 from '../templates/Template6/Template6';
-import Template7 from '../templates/Template7/Template7';
-import Template8 from '../templates/Template8/Template8';
-import Template9 from '../templates/Template9/Template9';
-import Template10 from '../templates/Template10/Template10';
-import Template11 from '../templates/Template11/Template11';
-import Template12 from '../templates/Template12/Template12';
+import Templates1 from '../templates/Templates1';
+import Templates2 from '../templates/Templates2';
+import Templates3 from '../templates/Templates3';
+import Templates4 from '../templates/Templates4';
+import Templates5 from '../templates/Templates5';
+import Templates6 from '../templates/Templates6';
+import Templates7 from '../templates/Templates7';
+import Templates8 from '../templates/Templates8';
+import Templates9 from '../templates/Templates9';
+import Templates10 from '../templates/Templates10';
+import Templates11 from '../templates/Templates11';
+import Templates12 from '../templates/Templates12';
 import InvoiceForm from '../invoice/InvoiceForm';
 import InvoiceActionTabs from '../invoice/InvoiceActionTabs';
 import { invoiceAPI } from '../../services/invoiceService';
@@ -40,18 +38,18 @@ import { createRecurringInvoice, getRecurringInvoice } from '../../services/recu
 import { currencyService } from '../../services/currencyService';
 
 const templates = {
-  1: Template1,
-  2: Template2,
-  3: Template3,
-  4: Template4,
-  5: Template5,
-  6: Template6,
-  7: Template7,
-  8: Template8,
-  9: Template9,
-  10: Template10,
-  11: Template11,
-  12: Template12,
+  1: Templates1,
+  2: Templates2,
+  3: Templates3,
+  4: Templates4,
+  5: Templates5,
+  6: Templates6,
+  7: Templates7,
+  8: Templates8,
+  9: Templates9,
+  10: Templates10,
+  11: Templates11,
+  12: Templates12,
 };
 
 const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
@@ -62,17 +60,7 @@ const InvoicePreview = ({ invoice, onClose, onInvoiceUpdated }) => {
   const [currentInvoice, setCurrentInvoice] = useState(invoice);
   const [loading, setLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
-  const [templateMeta, setTemplateMeta] = useState(null);
-  const [savingTemplateLayout, setSavingTemplateLayout] = useState(false);
-  const [modifiedLayout, setModifiedLayout] = useState(null);
-  const [availableTemplates, setAvailableTemplates] = useState([]);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const templateRef = useRef(null);
-
-
-const safeLayout = templateMeta?.layout || null;
-const safeTemplateId = templateMeta?._id || null;
-const currentLayout = modifiedLayout || safeLayout;
 
   
   // Update currentInvoice when invoice prop changes
@@ -114,67 +102,6 @@ const currentLayout = modifiedLayout || safeLayout;
     
     fetchFullInvoice();
   }, [invoice]);
-
-  useEffect(() => {
-  const loadTemplate = async () => {
-    try {
-      // First, load admin default template
-      const response = await fetch(`${API_BASE_URL}/user-template-layout/default/Template${selectedTemplate}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("📡 Loaded ADMIN default template for Template" + selectedTemplate + ":", data);
-        
-        // Now check if user has saved customizations
-        const userLayoutsResponse = await fetch(`${API_BASE_URL}/user-template-layout/my-layouts`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-
-        if (userLayoutsResponse.ok) {
-          const userLayoutsData = await userLayoutsResponse.json();
-          
-          // Find saved layout for this template
-          const userLayout = userLayoutsData.data?.layouts?.find(
-            layout => layout.templateName === `Template${selectedTemplate}`
-          );
-
-          if (userLayout) {
-            console.log("✅ Found USER saved layout, using it instead:", userLayout);
-            setTemplateMeta({
-              _id: userLayout._id,
-              layout: userLayout.layout,
-              name: userLayout.templateName,
-              isUserCustomized: true
-            });
-            return;
-          }
-        }
-
-        // No user saved layout, use admin default
-        console.log("📋 No user saved layout found, using admin default");
-        setTemplateMeta({
-          ...data.data,
-          isUserCustomized: false
-        });
-      } else {
-        console.warn("⚠️ Template not found, using defaults");
-        setTemplateMeta({ layout: null, isUserCustomized: false });
-      }
-
-    } catch (err) {
-      console.warn("⚠️ Template load error:", err);
-      setTemplateMeta({ layout: null, isUserCustomized: false });
-    }
-  };
-
-  loadTemplate();
-}, [selectedTemplate]);
 
   
   // Payment state
@@ -221,11 +148,10 @@ If you need assistance or have any questions, please email: support@invoicepro.c
 
   // Load existing recurring data when invoice changes
   useEffect(() => {
-    // Temporarily disabled to prevent multiple calls
-    // if (currentInvoice?._id) {
-    //   loadRecurringData();
-    // }
-  }, [currentInvoice?._id]);
+    if (currentInvoice?._id && activeAction === 'recurring') {
+      loadRecurringData();
+    }
+  }, [currentInvoice?._id, activeAction]);
 
   // Set default email to client email if available and no email is set
   useEffect(() => {
@@ -433,45 +359,10 @@ Best regards`,
     
     if (actionId === 'template') {
       setActiveAction('template');
-      await loadAvailableTemplates();
       return;
     }
     
     setActiveAction(actionId);
-  };
-
-  const loadAvailableTemplates = async () => {
-    try {
-      setLoadingTemplates(true);
-      const response = await fetch(`${API_BASE_URL}/user-template-layout/templates`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          // Group templates by templateNo (in case there are multiple)
-          const groupedTemplates = {};
-          data.data.forEach(template => {
-            if (!groupedTemplates[template.templateNo]) {
-              groupedTemplates[template.templateNo] = template;
-            }
-          });
-          
-          // Convert to array sorted by templateNo
-          const templatesArray = Object.values(groupedTemplates).sort((a, b) => a.templateNo - b.templateNo);
-          setAvailableTemplates(templatesArray);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load templates:', error);
-      // Fallback to empty array - will show hardcoded templates
-      setAvailableTemplates([]);
-    } finally {
-      setLoadingTemplates(false);
-    }
   };
 
   const loadReminders = async () => {
@@ -588,81 +479,6 @@ Best regards`,
       setLoading(false);
       setLoadingAction(null);
     }
-  };
-
-  const handleSaveTemplateLayout = async () => {
-    const layoutToSave = modifiedLayout || safeLayout;
-    
-    if (!layoutToSave) {
-      alert('No layout changes to save.');
-      return;
-    }
-
-    const confirmSave = confirm(
-      `Save layout changes for Template${selectedTemplate}?\n\nThis will save your customized layout.`
-    );
-    
-    if (!confirmSave) {
-      return;
-    }
-
-    setSavingTemplateLayout(true);
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/user-template-layout/save-layout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          templateName: `Template${selectedTemplate}`,
-          layout: layoutToSave
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(`Template${selectedTemplate} layout saved successfully!`);
-        setModifiedLayout(null);
-        
-        // Reload the template to get the saved layout
-        const userLayoutsResponse = await fetch(`${API_BASE_URL}/user-template-layout/my-layouts`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-
-        if (userLayoutsResponse.ok) {
-          const userLayoutsData = await userLayoutsResponse.json();
-          const userLayout = userLayoutsData.data?.layouts?.find(
-            layout => layout.templateName === `Template${selectedTemplate}`
-          );
-
-          if (userLayout) {
-            setTemplateMeta({
-              _id: userLayout._id,
-              layout: userLayout.layout,
-              name: userLayout.templateName,
-              isUserCustomized: true
-            });
-          }
-        }
-      } else {
-        alert('Failed to save template: ' + (data.message || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Save template layout error:', error);
-      alert('Failed to save template layout: ' + error.message);
-    } finally {
-      setSavingTemplateLayout(false);
-    }
-  };
-
-  const handleLayoutChange = (newLayout) => {
-    console.log('📐 Layout changed:', newLayout);
-    setModifiedLayout(newLayout);
   };
 
   const generatePDF = async (forDownload = false) => {
@@ -928,47 +744,19 @@ Best regards`,
               >
               {(() => {
                 const TemplateComponent = templates[selectedTemplate];
-                if (!templateMeta) return null;
                 return (
                   <TemplateComponent
                     data={previewData}
-                    editorMode
-                    backendLayout={currentLayout}
-                    templateId={safeTemplateId}
-                    onLayoutChange={handleLayoutChange}
                   />
                 );
-
               })()}
             </div>
           </div>
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4 flex items-center justify-center">
             <a href="#" className="text-blue-600 text-sm hover:underline flex items-center gap-1">
               <Download className="w-4 h-4" />
               First Page Preview Only, Click to Download PDF File
             </a>
-            <button
-              onClick={handleSaveTemplateLayout}
-              disabled={savingTemplateLayout}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition text-sm font-medium shadow-sm ${
-                modifiedLayout
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              } disabled:opacity-50`}
-              title={modifiedLayout ? 'Save layout changes' : 'Drag elements to modify layout'}
-            >
-              {savingTemplateLayout ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <FileText className="w-4 h-4" />
-                  {modifiedLayout ? 'Save Layout Changes' : 'Save Template'}
-                </>
-              )}
-            </button>
           </div>
         </div>
       )}
@@ -990,94 +778,68 @@ Best regards`,
         <div className="p-6">
           <h3 className="text-lg font-semibold text-slate-800 mb-4">Select a Template</h3>
           
-          {loadingTemplates ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-              <span className="ml-3 text-gray-600">Loading templates...</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
-              {(availableTemplates.length > 0 ? availableTemplates : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => ({ templateNo: num }))).map((template) => {
-                const num = template.templateNo;
-                const TemplateComponent = templates[num];
-                return (
-                  <div
-                    key={num}
-                    onClick={async () => {
-                      // Just update selectedTemplate - let useEffect handle loading the layout
-                      setSelectedTemplate(num);
+          <div className="grid grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => {
+              const TemplateComponent = templates[num];
+              return (
+                <div
+                  key={num}
+                  onClick={async () => {
+                    setSelectedTemplate(num);
 
-                      // Save template selection to backend
-                      if (invoiceId) {
-                        try {
-                          const response = await fetch(
-                            `${API_BASE_URL}/invoiceForms/update-template/${invoiceId}`,
-                            {
-                              method: "PATCH",
-                              headers: {
-                                Authorization: `Bearer ${localStorage.getItem("token")}`,
-                                "Content-Type": "application/json",
-                              },
-                              body: JSON.stringify({ selectedTemplate: num }),
-                            },
-                          );
-
-                          if (response.ok) {
-                            // Update currentInvoice with new selectedTemplate
-                            setCurrentInvoice((prev) => ({
-                              ...prev,
-                              selectedTemplate: num,
-                            }));
-                          }
-                        } catch (error) {
-                          console.error(
-                            "Failed to save template selection:",
-                            error,
-                          );
+                    // Save template selection to backend
+                    if (invoiceId) {
+                      try {
+                        const response = await invoiceAPI.updateSelectedTemplate(invoiceId, num);
+                        if (response.success) {
+                          setCurrentInvoice((prev) => ({
+                            ...prev,
+                            selectedTemplate: num,
+                          }));
                         }
+                      } catch (error) {
+                        console.error("Failed to save template selection:", error);
                       }
-                      setActiveAction("invoice");
-                    }}
-                    className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl bg-white ${
-                      selectedTemplate === num
-                        ? "ring-3 ring-indigo-500 shadow-lg"
-                        : "shadow-md hover:ring-2 hover:ring-indigo-300"
-                    }`}
-                    style={{ width: "220px", height: "340px" }}
+                    }
+                    setActiveAction("invoice");
+                  }}
+                  className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-xl bg-white ${
+                    selectedTemplate === num
+                      ? "ring-3 ring-indigo-500 shadow-lg"
+                      : "shadow-md hover:ring-2 hover:ring-indigo-300"
+                  }`}
+                  style={{ width: "220px", height: "340px" }}
+                >
+                  <div
+                    className="overflow-hidden"
+                    style={{ width: "220px", height: "311px" }}
                   >
                     <div
-                      className="overflow-hidden"
-                      style={{ width: "220px", height: "311px" }}
+                      style={{
+                        transform: "scale(0.277)",
+                        transformOrigin: "top left",
+                        width: "794px",
+                        height: "1123px",
+                      }}
                     >
-                      <div
-                        style={{
-                          transform: "scale(0.277)",
-                          transformOrigin: "top left",
-                          width: "794px",
-                          height: "1123px",
-                        }}
-                      >
-                        <TemplateComponent
-                          data={previewData}
-                          editorMode={true}
-                          backendLayout={safeLayout}
-                        />
-                      </div>
+                      <TemplateComponent
+                        data={previewData}
+                      />
                     </div>
-                    <p
-                      className={`text-center text-sm py-2 font-medium ${
-                        selectedTemplate === num
-                          ? "bg-indigo-500 text-white"
-                          : "bg-slate-50 text-slate-600"
-                      }`}
-                    >
-                      Template {num} {selectedTemplate === num && "(Current)"}
-                    </p>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  <p
+                    className={`text-center text-sm py-2 font-medium ${
+                      selectedTemplate === num
+                        ? "bg-indigo-500 text-white"
+                        : "bg-slate-50 text-slate-600"
+                    }`}
+                  >
+                    Template {num} {selectedTemplate === num && "(Current)"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -1112,7 +874,7 @@ Best regards`,
               >
                 Manual Payments
               </button>
-              <button
+              {/* <button
                 onClick={() => setPaymentTab('cards')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   paymentTab === 'cards'
@@ -1125,7 +887,7 @@ Best regards`,
                   <span className="w-6 h-4 bg-blue-700 rounded text-white text-[6px] flex items-center justify-center font-bold">VISA</span>
                   <span className="w-6 h-4 bg-orange-500 rounded text-white text-[6px] flex items-center justify-center font-bold">MC</span>
                 </span>
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -1593,9 +1355,6 @@ Best regards`,
                       return (
                         <TemplateComponent
                           data={previewData}
-                          editorMode={true}
-                          backendLayout={safeLayout}
-                          templateId={safeTemplateId}
                         />
                       );
                     })()}
@@ -2037,8 +1796,6 @@ Best regards`,
               return (
                 <TemplateComponent
                   data={previewData}
-                  editorMode={false}
-                  backendLayout={safeLayout}
                 />
               );
           })()}

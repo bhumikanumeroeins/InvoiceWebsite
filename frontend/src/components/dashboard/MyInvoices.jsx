@@ -6,7 +6,7 @@ import { buildInvoiceAPI } from '../../services/buildInvoiceService';
 import { getUploadsUrl } from '../../services/apiConfig';
 import { useNavigate } from 'react-router-dom';
 
-const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
+const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [customInvoices, setCustomInvoices] = useState([]);
@@ -33,12 +33,19 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
       'partiallyPaid': 'partial',
       'paid': 'paid',
     };
+    
     const status = isTrash ? 'trash' : (statusMap[inv.paymentStatus] || 'unpaid');
+    
+    // Check if invoice is overdue (separate from status)
+    const isOverdue = !isTrash && 
+                      inv.paymentStatus !== 'paid' && 
+                      inv.invoiceMeta?.dueDate && 
+                      new Date(inv.invoiceMeta.dueDate) < new Date();
     
     const total = inv.totals?.grandTotal || 0;
     let paid = 0;
-    if (status === 'paid') paid = total;
-    else if (status === 'partial') paid = total * 0.5;
+    if (inv.paymentStatus === 'paid') paid = total;
+    else if (inv.paymentStatus === 'partiallyPaid') paid = inv.paidAmount || (total * 0.5);
     
     return {
       id: inv._id,
@@ -58,6 +65,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
       total: total,
       currency: inv.invoiceMeta?.currency || 'INR',
       status: status,
+      isOverdue: isOverdue,
       paymentStatus: inv.paymentStatus || 'unpaid',
       logo: inv.business?.logo ? `${getUploadsUrl()}/uploads/${inv.business.logo}` : null,
       companyName: inv.business?.name || '',
@@ -237,33 +245,45 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
   };
 
   const getFilteredInvoices = () => {
+    let filtered = [];
+    
     if (invoiceFilter === 'trash') {
-      return trashInvoices;
+      filtered = trashInvoices;
+    } else if (invoiceFilter === 'all') {
+      filtered = invoiceType === 'custom' ? customInvoices : invoices;
+    } else {
+      // Other filters only apply to standard invoices
+      switch (invoiceFilter) {
+        case 'paid': filtered = invoices.filter(inv => inv.status === 'paid'); break;
+        case 'unpaid': filtered = invoices.filter(inv => inv.status === 'unpaid'); break;
+        case 'partial': filtered = invoices.filter(inv => inv.status === 'partial'); break;
+        case 'overdue': filtered = invoices.filter(inv => inv.isOverdue); break;
+        default: filtered = invoices;
+      }
     }
     
-    // For 'all' filter, show based on invoiceType sub-tab
-    if (invoiceFilter === 'all') {
-      return invoiceType === 'custom' ? customInvoices : invoices;
+    // Apply search filter
+    if (searchQuery && searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(inv => 
+        (inv.customer && inv.customer.toLowerCase().includes(query)) ||
+        (inv.number && inv.number.toLowerCase().includes(query)) ||
+        (inv.billTo?.address && inv.billTo.address.toLowerCase().includes(query)) ||
+        (inv.items && inv.items.some(item => 
+          item.description && item.description.toLowerCase().includes(query)
+        ))
+      );
     }
     
-    // Other filters only apply to standard invoices
-    switch (invoiceFilter) {
-      case 'paid': return invoices.filter(inv => inv.status === 'paid');
-      case 'unpaid': return invoices.filter(inv => inv.status === 'unpaid');
-      case 'partial': return invoices.filter(inv => inv.status === 'partial');
-      case 'overdue': return invoices.filter(inv => inv.status === 'overdue');
-      case 'sent': return invoices.filter(inv => inv.status === 'sent');
-      default: return invoices;
-    }
+    return filtered;
   };
 
   const getFilterCounts = () => ({
     all: invoices.length + customInvoices.length,
-    overdue: invoices.filter(inv => inv.status === 'overdue').length,
+    overdue: invoices.filter(inv => inv.isOverdue).length,
     partial: invoices.filter(inv => inv.status === 'partial').length,
     unpaid: invoices.filter(inv => inv.status === 'unpaid').length,
     paid: invoices.filter(inv => inv.status === 'paid').length,
-    sent: invoices.filter(inv => inv.status === 'sent').length,
     trash: trashInvoices.length,
   });
 
@@ -282,7 +302,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey }) => {
     { id: 'partial', label: 'Partially Paid', color: 'bg-amber-500' },
     { id: 'unpaid', label: 'Unpaid', color: 'bg-blue-500' },
     { id: 'paid', label: 'Paid', color: 'bg-emerald-500' },
-    { id: 'sent', label: 'Sent by Email', color: 'bg-indigo-500' },
     { id: 'trash', label: 'Trash', color: 'bg-red-500' },
   ];
 

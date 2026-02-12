@@ -62,7 +62,7 @@ export const createRemindersForInvoice = async (invoiceId) => {
   }
 };
 
-// Process pending reminders
+// Process pending reminders (manual trigger for testing)
 export const processPendingReminders = async (req, res) => {
   try {
     const now = new Date();
