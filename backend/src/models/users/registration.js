@@ -60,11 +60,42 @@ const registrationSchema = new mongoose.Schema({
         default: 0
     },
 
+    // ✅ SUBSCRIPTION SECTION (INSIDE SCHEMA)
+  subscription: {
+    planName: {
+      type: String,
+      enum: ["free", "monthly", "halfYearly", "yearly"],
+      default: "free"
+    },
+    price: {
+      type: String,
+      default: '$0'
+    },
+    invoiceLimit: {
+      type: Number,
+      default: 2 // Free plan limit
+    },
+    startDate: {
+      type: Date,
+      default: Date.now
+    },
+    endDate: {
+      type: Date,
+      default: null
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    }
+  },
+
     createdAt: {
         type: Date,
         default: Date.now
     }
 });
+
+
 
 
 const Registration = mongoose.model('Registration', registrationSchema);

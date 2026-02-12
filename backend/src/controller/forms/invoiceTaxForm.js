@@ -144,6 +144,40 @@ export const createInvoice = async (req, res) => {
       });
     }
 
+    // Fetch user first
+    const user = await Registration.findById(req.user.userId);
+
+    /* ---------------- SUBSCRIPTION CHECK ---------------- */
+
+    // If subscription has expiry date and expired → downgrade to free
+    if (
+      user.subscription?.endDate &&
+      new Date() > new Date(user.subscription.endDate)
+    ) {
+      user.subscription = {
+        planName: "free",
+        price: "$0",
+        invoiceLimit: 2,
+        startDate: new Date(),
+        endDate: null,
+        isActive: true
+      };
+
+      await user.save();
+    }
+
+    // Now check invoice limit
+    if (
+      user.subscription.invoiceLimit !== -1 && // -1 means unlimited
+      user.totalInvoices >= user.subscription.invoiceLimit
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Invoice limit reached. Please upgrade your subscription plan."
+      });
+    }
+
+
     /* ---------------- PARSE JSON ---------------- */
     const data = JSON.parse(req.body.data || "{}");
 
@@ -273,6 +307,10 @@ export const createInvoice = async (req, res) => {
     data.createdBy = new mongoose.Types.ObjectId(req.user.userId);
     data.isDeleted = false;
     data.paymentStatus = "unpaid";
+
+    
+
+  
 
     /* ---------------- SAVE INVOICE ---------------- */
     const invoice = await InvoiceTaxForm.create(data);

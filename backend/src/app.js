@@ -14,20 +14,10 @@ import currency from "./routes/currency/currency.js";
 import recurring from "./routes/recurring/recurringInvoice.js";
 import reminders from "./routes/reminders/paymentReminder.js";
 import admin from "./routes/admin/admin_register.js";
-import invoiceTemplate1 from "./routes/admin/template1.js";
+
 import buildInvoice from "./routes/users/buildInvoice.js";
-import invoiceTemplate2 from "./routes/admin/template2.js"; 
-import invoiceTemplate3 from "./routes/admin/template3.js";
-import invoiceTemplate4 from "./routes/admin/template4.js"; 
-import invoiceTemplate5 from "./routes/admin/template5.js";
-import invoiceTemplate6 from "./routes/admin/template6.js";
-import invoiceTemplate7 from "./routes/admin/template7.js"; 
-import invoiceTemplate8 from "./routes/admin/template8.js";
-import invoiceTemplate9 from "./routes/admin/template9.js";
-import invoiceTemplate10 from "./routes/admin/template10.js";
-import invoieTemplate11 from "./routes/admin/template11.js";
-import invoiceTemplate12 from "./routes/admin/template12.js";
-import UserTemplateLayout from "./routes/users/userTemplateLayout.js";
+
+
 import adminFAQRoutes from "./routes/admin/faq.js";
 import userFAQRoutes from "./routes/users/faq.js";
 
@@ -57,20 +47,7 @@ app.use("/api/currencies", currency);
 app.use("/api/recurring", recurring);
 app.use("/api/reminders", reminders);
 app.use("/api/admin", admin);
-app.use("/api/invoice-template1", invoiceTemplate1);
 app.use("/api/build-invoice", buildInvoice);
-app.use("/api/invoice-template2", invoiceTemplate2);
-app.use("/api/invoice-template3", invoiceTemplate3);
-app.use("/api/invoice-template4", invoiceTemplate4);
-app.use("/api/invoice-template5", invoiceTemplate5);
-app.use("/api/invoice-template6", invoiceTemplate6);
-app.use("/api/invoice-template7", invoiceTemplate7);
-app.use("/api/invoice-template8", invoiceTemplate8);
-app.use("/api/invoice-template9", invoiceTemplate9);
-app.use("/api/invoice-template10", invoiceTemplate10);
-app.use("/api/invoice-template11", invoieTemplate11);
-app.use("/api/invoice-template12", invoiceTemplate12);
-app.use("/api/user-template-layout", UserTemplateLayout);
 app.use("/api/admin/faq", adminFAQRoutes);
 app.use("/api/user/faq", userFAQRoutes);
 

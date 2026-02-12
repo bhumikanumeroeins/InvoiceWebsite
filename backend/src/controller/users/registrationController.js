@@ -190,3 +190,64 @@ export const contactUs = async (req, res) => {
         res.status(500).json(createError('Server error'));  
     }
 };  
+
+
+
+// upgrade subscription ----->
+
+export const upgradeSubscription = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { plan } = req.body;
+
+    const user = await Registration.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    let invoiceLimit = 2;
+    let price ;
+    let months ;
+
+    if (plan === "monthly") {
+      invoiceLimit = -1; // unlimited
+      price = "$3";
+      months = 1;
+    } else if (plan === "halfYearly") {
+      invoiceLimit = -1;
+      price = "$15";
+      months = 6;
+    } else if (plan === "yearly") {
+      invoiceLimit = -1;
+      price = "$25";
+      months = 12;
+    } else {
+      return res.status(400).json({ message: "Invalid plan" });
+    }
+
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + months);
+
+    user.subscription = {
+      planName: plan,
+      price,
+      invoiceLimit,
+      startDate,
+      endDate,
+      isActive: true
+    };
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Subscription upgraded successfully",
+      subscription: user.subscription
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Error upgrading plan" });
+  }
+};
