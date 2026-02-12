@@ -1,5 +1,6 @@
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const CTA = () => {
   // Animation variants
@@ -58,13 +59,13 @@ const CTA = () => {
           variants={fadeUp}
           className="flex flex-col sm:flex-row gap-4 justify-center mt-6"
         >
-          <button className="group px-8 py-4 bg-linear-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-full hover:shadow-xl hover:shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
+          <Link
+            to="/create/invoice"
+            className="group px-8 py-4 bg-linear-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-full hover:shadow-xl hover:shadow-indigo-600/30 transition-all flex items-center justify-center gap-2"
+          >
             Create Your First Invoice
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </button>
-          <button className="px-8 py-4 bg-white/10 text-white font-semibold rounded-full hover:bg-white/20 transition-all border border-white/20">
-            View Demo
-          </button>
+          </Link>
         </motion.div>
 
         {/* Footnote */}
