@@ -226,11 +226,12 @@ Best regards`,
       const wasPreviewMode = previewMode;
       setPreviewMode(true);
       
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const dataUrl = await domToPng(templateRef.current, {
         scale: 2,
-        backgroundColor: templateConfig.backgroundColor,
+        backgroundColor: templateConfig.backgroundColor || '#ffffff',
+        quality: 0.95,
         filter: (node) => {
           if (node.classList && node.classList.contains('opacity-0')) {
             return false;
@@ -247,6 +248,10 @@ Best regards`,
 
       setPreviewMode(wasPreviewMode);
 
+      if (!dataUrl || dataUrl.length < 100) {
+        throw new Error('Failed to capture template - data URL too short. Element might be empty or hidden.');
+      }
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -257,16 +262,23 @@ Best regards`,
       const pdfHeight = 297;
 
       const img = new Image();
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = dataUrl;
-      });
+      img.crossOrigin = 'anonymous';
+      
+      await Promise.race([
+        new Promise((resolve, reject) => {
+          img.onload = () => resolve(true);
+          img.onerror = () => reject(new Error('Failed to load image from data URL'));
+          img.src = dataUrl;
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Image load timeout')), 10000)
+        )
+      ]);
 
       const imgWidth = pdfWidth;
       const imgHeight = (img.height * pdfWidth) / img.width;
 
-      pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, Math.min(imgHeight, pdfHeight));
 
       if (forDownload) {
         pdf.save(`${templateConfig.templateName || 'Custom-Invoice'}.pdf`);
@@ -277,7 +289,8 @@ Best regards`,
       }
     } catch (error) {
       setPreviewMode(false);
-      throw new Error('Failed to generate PDF: ' + error.message);
+      console.error('PDF Generation Error:', error);
+      throw new Error(error.message || 'Failed to generate PDF');
     }
   };
 
@@ -620,7 +633,7 @@ Best regards`,
           )}
 
           {/* Preview/Edit Content - Always rendered for PDF generation */}
-          <div className={activeTab === 'email' ? 'hidden' : 'p-6'}>
+          <div className={activeTab === 'email' ? 'absolute -left-[9999px] top-0' : 'p-6'}>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Customization Panel */}
           {!previewMode && activeTab === 'edit' && (
