@@ -23,6 +23,13 @@ export const authAPI = {
     body: JSON.stringify(data),
   }),
   
+  getEmailReportFrequency: () => apiCall('/invoices/email-report-frequency'),
+  
+  updateEmailReportFrequency: (data) => apiCall('/invoices/email-report-frequency', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

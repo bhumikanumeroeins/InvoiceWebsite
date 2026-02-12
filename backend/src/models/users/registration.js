@@ -60,6 +60,17 @@ const registrationSchema = new mongoose.Schema({
         default: 0
     },
 
+    emailReportFrequency: {
+        type: String,
+        enum: ['weekly', 'monthly', 'never'],
+        default: 'never'
+    },
+
+    lastReportSentAt: {
+        type: Date,
+        default: null
+    },
+
     createdAt: {
         type: Date,
         default: Date.now

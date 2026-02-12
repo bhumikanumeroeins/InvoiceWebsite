@@ -1,51 +1,9 @@
-import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
-
-const faqs = [
-  {
-    question: 'What is InvoicePro?',
-    answer: 'InvoicePro is a professional invoicing platform that helps businesses create, manage, and send invoices, quotes, receipts, and other financial documents quickly and easily.'
-  },
-  {
-    question: 'Is InvoicePro free to use?',
-    answer: 'Yes! We offer a free plan that allows you to create up to 5 invoices per month. For unlimited invoices and premium features, check out our Pro and Enterprise plans.'
-  },
-  {
-    question: 'Can I customize my invoices?',
-    answer: 'Absolutely! You can add your company logo, customize colors, add payment information, QR codes for payments, multiple terms and conditions, and choose from various document types.'
-  },
-  {
-    question: 'What document types can I create?',
-    answer: 'InvoicePro supports Invoice, Tax Invoice, Proforma Invoice, Receipt, Sales Receipt, Cash Receipt, Quote, Estimate, Credit Memo, Credit Note, Purchase Order, and Delivery Note.'
-  },
-  {
-    question: 'Can I add taxes to my invoices?',
-    answer: 'Yes! You can add multiple tax types (GST, CGST, SGST, VAT, etc.) with custom rates. Taxes are saved for future use and can be applied to individual line items.'
-  },
-  {
-    question: 'How do I add a payment QR code?',
-    answer: 'In the invoice form, scroll to the bottom and you\'ll find a "Scan to Pay" section where you can upload your UPI or payment QR code image.'
-  },
-  {
-    question: 'Can I save items for reuse?',
-    answer: 'Yes! You can save frequently used items to your library and quickly add them to new invoices using the "Add Saved Items" button.'
-  },
-  {
-    question: 'What currencies are supported?',
-    answer: 'We support INR, USD, EUR, GBP, AUD, CAD, SGD, AED, JPY, and CNY. You can select your preferred currency from the dropdown in the invoice form.'
-  },
-  {
-    question: 'Can I add my signature to invoices?',
-    answer: 'Yes! You can upload a signature image or draw your signature directly in the app. The signature will appear on your generated invoices.'
-  },
-  {
-    question: 'Is my data secure?',
-    answer: 'We take security seriously. All data is encrypted in transit and at rest. We never share your information with third parties.'
-  },
-];
+import { faqAPI } from '../services/faqService';
 
 const FAQItem = ({ question, answer, isOpen, onClick }) => (
   <div className="border border-slate-200 rounded-xl overflow-hidden">
@@ -70,6 +28,28 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => (
 
 const FAQ = () => {
   const [openIndex, setOpenIndex] = useState(0);
+  const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchFAQs = async () => {
+      try {
+        setLoading(true);
+        const response = await faqAPI.getAll();
+        if ((response.success || response.status === 'success') && response.data) {
+          setFaqs(response.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch FAQs:', err);
+        setError('Failed to load FAQs');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFAQs();
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -94,17 +74,32 @@ const FAQ = () => {
       {/* FAQ Section */}
       <section className="py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <FAQItem
-                key={index}
-                question={faq.question}
-                answer={faq.answer}
-                isOpen={openIndex === index}
-                onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+              <span className="ml-3 text-slate-600">Loading FAQs...</span>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 mb-4">{error}</p>
+            </div>
+          ) : faqs.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-slate-500">No FAQs available at the moment.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {faqs.map((faq, index) => (
+                <FAQItem
+                  key={faq._id || index}
+                  question={faq.question}
+                  answer={faq.answer}
+                  isOpen={openIndex === index}
+                  onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Still have questions */}
           <div className="mt-12 text-center p-8 bg-gradient-to-br from-indigo-50 to-emerald-50 rounded-2xl border border-indigo-100">

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { processAllDueRecurringInvoices } from "./controller/recurring/recurringInvoice.js";
 import { initReminderCron } from "./services/reminderCron.js";
+import { initEmailReportCron } from "./services/emailReportCron.js";
 
 dotenv.config();
 
@@ -48,4 +49,7 @@ app.listen(PORT, () => {
   
   // Start the payment reminder cron job
   initReminderCron();
+  
+  // Start the email report cron job
+  initEmailReportCron();
 });

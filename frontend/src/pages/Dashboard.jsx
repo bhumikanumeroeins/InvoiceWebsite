@@ -45,6 +45,7 @@ const Dashboard = () => {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [invoiceRefreshKey, setInvoiceRefreshKey] = useState(0);
   const [customerRefreshKey, setCustomerRefreshKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const updateTab = (tabId) => {
     setActiveTab(tabId);
@@ -186,10 +187,16 @@ const Dashboard = () => {
                 <input
                   type="text"
                   placeholder="Search by Customer, Address, or Item"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 rounded-l-md border border-slate-200 text-gray-800 text-sm focus:outline-none focus:border-indigo-500"
                 />
               </div>
-              <button className="bg-gradient-to-r from-indigo-600 to-emerald-500 hover:shadow-lg px-4 py-2 rounded-r-md text-sm font-medium text-white transition-all">
+              <button 
+                onClick={() => setSearchQuery(searchQuery)}
+                className="bg-gradient-to-r from-indigo-600 to-emerald-500 hover:shadow-lg px-4 py-2 rounded-r-md text-sm font-medium text-white transition-all"
+              >
                 Search
               </button>
             </div>
@@ -294,9 +301,9 @@ const Dashboard = () => {
           </div>
         )}
 
-        {activeTab === 'myInvoices' && <MyInvoices onInvoiceClick={handleInvoiceClick} refreshKey={invoiceRefreshKey} />}
+        {activeTab === 'myInvoices' && <MyInvoices onInvoiceClick={handleInvoiceClick} refreshKey={invoiceRefreshKey} searchQuery={searchQuery} />}
 
-        {activeTab === 'myCustomers' && <MyCustomers onCustomerClick={handleCustomerClick} refreshKey={customerRefreshKey} />}
+        {activeTab === 'myCustomers' && <MyCustomers onCustomerClick={handleCustomerClick} refreshKey={customerRefreshKey} searchQuery={searchQuery} />}
 
         {activeTab === 'myReports' && <MyReports onInvoiceClick={handleInvoiceClick} />}
 

@@ -15,7 +15,6 @@ import { getCurrentUser, authAPI } from "../services/authService";
 
 const tabs = [
   { id: "nameEmail", label: "My Name & Email", icon: User },
-  { id: "languageRegion", label: "Language & Region", icon: Globe },
   { id: "changePassword", label: "Security", icon: Lock },
   { id: "emailReports", label: "Email Reports", icon: BarChart3 },
 ];
@@ -35,14 +34,14 @@ const SettingsPage = () => {
     websiteLink: ''
   });
   
-  // Password state
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
   
-  // UI state
+  const [emailReportFrequency, setEmailReportFrequency] = useState('never');
+  
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -56,6 +55,7 @@ const SettingsPage = () => {
     const user = getCurrentUser();
     if (user?.email) setUserEmail(user.email);
     fetchProfile();
+    fetchEmailReportFrequency();
   }, []);
 
   const fetchProfile = async () => {
@@ -70,6 +70,17 @@ const SettingsPage = () => {
       console.error('Failed to fetch profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEmailReportFrequency = async () => {
+    try {
+      const response = await authAPI.getEmailReportFrequency();
+      if (response.success && response.data) {
+        setEmailReportFrequency(response.data.emailReportFrequency || 'never');
+      }
+    } catch (error) {
+      console.error('Failed to fetch email report frequency:', error);
     }
   };
 
@@ -131,7 +142,6 @@ const SettingsPage = () => {
         newPassword: passwordData.newPassword
       });
       
-      // Backend returns { status: "success", data: { message: '...' } }
       if (response.status === 'success' || response.success) {
         setMessage({ type: 'success', text: 'Password changed successfully!' });
         setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -140,8 +150,29 @@ const SettingsPage = () => {
         setMessage({ type: 'error', text: response.message || response.data?.message || 'Failed to change password' });
       }
     } catch (error) {
-      // Error thrown by apiCall when response is not ok (400, 404, 500, etc.)
       setMessage({ type: 'error', text: error.message || 'Failed to change password' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveEmailReportFrequency = async () => {
+    setMessage({ type: '', text: '' });
+    setSaving(true);
+    
+    try {
+      const response = await authAPI.updateEmailReportFrequency({
+        emailReportFrequency
+      });
+      
+      if (response.success) {
+        setMessage({ type: 'success', text: 'Email report preference updated successfully!' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } else {
+        setMessage({ type: 'error', text: response.message || 'Failed to update preference' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Failed to update preference' });
     } finally {
       setSaving(false);
     }
@@ -301,29 +332,6 @@ const SettingsPage = () => {
               </div>
             )}
 
-            {/* ================= LANGUAGE ================= */}
-            {activeTab === "languageRegion" && (
-              <div className="p-8 space-y-8">
-                <h2 className="text-xl font-semibold text-slate-800">
-                  Language & Region
-                </h2>
-
-                <div className="grid md:grid-cols-3 gap-6">
-                  {["Language", "Region", "Units"].map((label) => (
-                    <div key={label}>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">
-                        {label}
-                      </label>
-                      <select className="mt-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl">
-                        <option>English</option>
-                        <option>India</option>
-                        <option>Metric</option>
-                      </select>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* ================= PASSWORD ================= */}
             {activeTab === "changePassword" && (
@@ -364,19 +372,59 @@ const SettingsPage = () => {
             {/* ================= REPORTS ================= */}
             {activeTab === "emailReports" && (
               <div className="p-8 space-y-6">
-                <h2 className="text-xl font-semibold text-slate-800">
-                  Email Reports
-                </h2>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-800 mb-2">
+                    Email Reports
+                  </h2>
+                  <p className="text-slate-600 text-sm">
+                    Choose how often you'd like to receive automated invoice reports via email
+                  </p>
+                </div>
 
-                {["Weekly", "Monthly", "Never"].map((opt) => (
-                  <label
-                    key={opt}
-                    className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer"
-                  >
-                    <input type="radio" name="reports" />
-                    {opt}
-                  </label>
-                ))}
+                <div className="space-y-3">
+                  {[
+                    { value: 'weekly', label: 'Weekly', desc: 'Receive reports every Monday' },
+                    { value: 'monthly', label: 'Monthly', desc: 'Receive reports on the 1st of each month' },
+                    { value: 'never', label: 'Never', desc: 'Don\'t send me email reports' }
+                  ].map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        emailReportFrequency === opt.value
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="reports"
+                        value={opt.value}
+                        checked={emailReportFrequency === opt.value}
+                        onChange={(e) => setEmailReportFrequency(e.target.value)}
+                        className="mt-1 w-4 h-4 text-indigo-600"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-slate-800">{opt.label}</div>
+                        <div className="text-sm text-slate-500 mt-1">{opt.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex gap-3">
+                    <BarChart3 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">What's included in the report?</p>
+                      <ul className="list-disc list-inside space-y-1 text-blue-700">
+                        <li>Total invoices created</li>
+                        <li>Paid, unpaid, and overdue counts</li>
+                        <li>Total revenue and pending amounts</li>
+                        <li>Quick link to your dashboard</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -399,7 +447,13 @@ const SettingsPage = () => {
               )}
               
               <button 
-                onClick={activeTab === 'changePassword' ? handleChangePassword : handleSaveProfile}
+                onClick={
+                  activeTab === 'changePassword' 
+                    ? handleChangePassword 
+                    : activeTab === 'emailReports'
+                    ? handleSaveEmailReportFrequency
+                    : handleSaveProfile
+                }
                 disabled={saving}
                 className="w-full py-4 bg-slate-900 text-white rounded-xl font-semibold hover:shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
