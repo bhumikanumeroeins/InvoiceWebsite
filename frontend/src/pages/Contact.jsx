@@ -8,7 +8,6 @@ const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: '',
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
@@ -25,13 +24,12 @@ const Contact = () => {
     setError('');
 
     try {
-      // Use submitFull for the full contact form with subject field
-      const response = await contactAPI.submitFull(formData);
+      const response = await contactAPI.submit(formData);
       
-      if (response.success) {
+      if (response.status === 'success' || response.success) {
         setSubmitted(true);
         setTimeout(() => {
-          setFormData({ name: '', email: '', subject: '', message: '' });
+          setFormData({ name: '', email: '', message: '' });
           setSubmitted(false);
         }, 5000);
       } else {
@@ -177,20 +175,6 @@ const Contact = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Subject
-                      </label>
-                      <input
-                        type="text"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        required
-                        placeholder="How can we help?"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
                         Message
                       </label>
                       <textarea
@@ -198,7 +182,7 @@ const Contact = () => {
                         value={formData.message}
                         onChange={handleChange}
                         required
-                        rows={5}
+                        rows={6}
                         placeholder="Tell us more about your inquiry..."
                         className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
                       />

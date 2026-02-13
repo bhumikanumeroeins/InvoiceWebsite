@@ -284,9 +284,6 @@ const InvoicesList = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Created By
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -321,19 +318,6 @@ const InvoicesList = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {invoice.createdBy?.email || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-3">
-                            <Link
-                              to={`/invoices/${invoice._id}`}
-                              className="text-indigo-600 hover:text-indigo-800 transition"
-                            >
-                              View
-                            </Link>
-                            <button className="text-emerald-600 hover:text-emerald-800 transition">
-                              Download
-                            </button>
-                          </div>
                         </td>
                       </tr>
                     ))
