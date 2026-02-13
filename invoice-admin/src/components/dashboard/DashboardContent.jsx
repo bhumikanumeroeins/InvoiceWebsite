@@ -1,378 +1,198 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
+import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { getRecentInvoices } from '../../services/adminService';
 
 const DashboardContent = () => {
-  // Sample data for charts
-  const revenueData = [
-    { month: 'Jan', revenue: 8500 },
-    { month: 'Feb', revenue: 9200 },
-    { month: 'Mar', revenue: 7800 },
-    { month: 'Apr', revenue: 10500 },
-    { month: 'May', revenue: 11200 },
-    { month: 'Jun', revenue: 12500 },
-  ];
+  const [stats, setStats] = useState(null);
+  const [recentInvoices, setRecentInvoices] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const pieData = [
-    { name: 'Paid', value: 75, color: '#10B981' },
-    { name: 'Pending', value: 20, color: '#F59E0B' },
-    { name: 'Overdue', value: 5, color: '#EF4444' },
-  ];
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+
+        const res = await getRecentInvoices();
+
+        if (res.success) {
+          setStats(res.stats);
+          setRecentInvoices(res.data);
+        }
+
+      } catch (error) {
+        console.error("Dashboard fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+  <div className="container mx-auto px-6 py-8">
+
+    {/* Header */}
+    <div className="mb-8">
+      <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-500 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+        Dashboard
+      </h1>
+      <p className="text-gray-500 mt-1 text-sm">
+        Overview of your system performance
+      </p>
+    </div>
+
+    {/* Stats Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+
+      {/* Card */}
+      {[
+        {
+          title: "Total Invoices",
+          value: stats?.totalInvoicesCount,
+          color: "from-emerald-500 to-green-600",
+        },
+        {
+          title: "Total Customers",
+          value: stats?.totalClientsCount,
+          color: "from-blue-500 to-blue-700",
+        },
+        {
+          title: "Revenue This Month",
+          value: `₹${stats?.thisMonthRevenue || 0}`,
+          color: "from-purple-500 to-purple-700",
+        },
+        {
+          title: "Outstanding Amount",
+          value: `₹${stats?.outstandingAmount || 0}`,
+          color: "from-orange-400 to-orange-600",
+        },
+        {
+          title: "Paid %",
+          value: `${stats?.paidPercentage || 0}%`,
+          color: "from-teal-400 to-teal-600",
+        },
+        {
+          title: "Overdue",
+          value: stats?.overdueInvoicesCount,
+          color: "from-red-400 to-red-600",
+        },
+      ].map((card, index) => (
+        <div
+          key={index}
+          className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200"
+        >
           <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">I</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Invoices
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    120
-                  </dd>
-                </dl>
-              </div>
+            <div
+              className={`w-10 h-10 rounded-lg bg-gradient-to-r ${card.color} flex items-center justify-center mb-4`}
+            >
+              <span className="text-white font-bold text-sm">
+                {card.title.charAt(0)}
+              </span>
             </div>
+
+            <p className="text-sm text-gray-500">{card.title}</p>
+            <p className="text-xl font-semibold text-gray-900 mt-1">
+              {card.value}
+            </p>
           </div>
         </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">C</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Customers
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    45
-                  </dd>
-                </dl>
-              </div>
-            </div>
+      ))}
+    </div>
+
+    {/* Recent Invoices */}
+    <div className="mt-10">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+
+        {/* Header */}
+        <div className="px-6 py-5 flex justify-between items-center border-b border-gray-100">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Recent Invoices
+            </h3>
+            <p className="text-sm text-gray-500">
+              Latest invoice activities
+            </p>
           </div>
-        </div>       
-        
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">$</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Revenue This Month
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    $12,500
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
+
+          <Link
+            to="/invoices"
+            className="bg-gradient-to-r from-emerald-500 via-blue-600 to-purple-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition"
+          >
+            View All
+          </Link>
         </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">O</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Outstanding Amount
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    $3,200
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">P</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Paid vs Pending
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    75% Paid
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-red-600 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">!</span>
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Overdue Invoices
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    8
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Revenue Chart</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => [`${value}`, 'Revenue']} />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#3B82F6"
-                    strokeWidth={2}
-                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Invoice Status Pie</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+              <tr>
+                <th className="px-6 py-3 text-left">Invoice #</th>
+                <th className="px-6 py-3 text-left">Customer</th>
+                <th className="px-6 py-3 text-left">Amount</th>
+                <th className="px-6 py-3 text-left">Status</th>
+                <th className="px-6 py-3 text-left">Date</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-8 text-gray-500">
+                    Loading...
+                  </td>
+                </tr>
+              ) : (
+                recentInvoices.map((invoice) => (
+                  <tr
+                    key={invoice._id}
+                    className="hover:bg-gray-50 transition"
                   >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => [`${value}%`, 'Status']} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex justify-center space-x-6 mt-4">
-                {pieData.map((entry, index) => (
-                  <div key={index} className="flex items-center">
-                    <div
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: entry.color }}
-                    ></div>
-                    <span className="text-sm text-gray-600">{entry.name}: {entry.value}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
-      <div className="mt-8">
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-            <div>
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Recent Invoices
-              </h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                Latest invoice activities and quick actions.
-              </p>
-            </div>
-            <button className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 px-4 rounded-md">
-              View All
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Invoice #
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Due Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
-                    INV-001
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    Customer A
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    $500.00
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Paid
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    Jan 22, 2026
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-indigo-600 hover:text-indigo-900 text-sm">
-                        View
-                      </button>
-                      <button className="text-green-600 hover:text-green-900 text-sm">
-                        Download
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
-                    INV-002
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    Customer B
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    $750.00
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                      Pending
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    Jan 25, 2026
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-indigo-600 hover:text-indigo-900 text-sm">
-                        View
-                      </button>
-                      <button className="text-green-600 hover:text-green-900 text-sm">
-                        Download
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
-                    INV-003
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    Customer C
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    $300.00
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      Overdue
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    Jan 15, 2026
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-indigo-600 hover:text-indigo-900 text-sm">
-                        View
-                      </button>
-                      <button className="text-green-600 hover:text-green-900 text-sm">
-                        Download
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
-                    INV-004
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    Customer D
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    $1,200.00
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Paid
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    Jan 20, 2026
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-indigo-600 hover:text-indigo-900 text-sm">
-                        View
-                      </button>
-                      <button className="text-green-600 hover:text-green-900 text-sm">
-                        Download
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    <td className="px-6 py-4 font-medium text-blue-600">
+                      {invoice.invoiceMeta.invoiceNo}
+                    </td>
+
+                    <td className="px-6 py-4 text-gray-800">
+                      {invoice.client.name}
+                    </td>
+
+                    <td className="px-6 py-4 font-semibold text-gray-900">
+                      ₹{invoice.totals.grandTotal}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-3 py-1 text-xs rounded-full font-medium
+                        ${
+                          invoice.paymentStatus === "paid"
+                            ? "bg-green-100 text-green-700"
+                            : invoice.paymentStatus === "unpaid"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {invoice.paymentStatus}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 text-gray-500">
+                      {new Date(invoice.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-  );
+
+  </div>
+);
+
 };
 
 export default DashboardContent;

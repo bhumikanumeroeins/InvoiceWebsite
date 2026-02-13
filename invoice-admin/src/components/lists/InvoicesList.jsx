@@ -17,9 +17,7 @@ const InvoicesList = () => {
     clientName: '',
     status: '',
     dateFrom: '',
-    dateTo: '',
-    amountMin: '',
-    amountMax: ''
+    dateTo: ''
   });
 
   // Fetch invoices from backend
@@ -44,8 +42,6 @@ const InvoicesList = () => {
       if (filters.status && filters.status !== 'all') params.status = filters.status;
       if (filters.dateFrom) params.dateFrom = filters.dateFrom;
       if (filters.dateTo) params.dateTo = filters.dateTo;
-      if (filters.amountMin) params.amountMin = filters.amountMin;
-      if (filters.amountMax) params.amountMax = filters.amountMax;
 
       const response = await getTotalInvoiceCount(params);
 
@@ -89,9 +85,7 @@ const InvoicesList = () => {
       clientName: '',
       status: '',
       dateFrom: '',
-      dateTo: '',
-      amountMin: '',
-      amountMax: ''
+      dateTo: ''
     });
     setCurrentPage(1);
   };
@@ -235,43 +229,15 @@ const InvoicesList = () => {
             />
           </div>
 
-          {/* Amount Min */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount Min
-            </label>
-            <input
-              type="number"
-              placeholder="Min amount"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={filters.amountMin}
-              onChange={(e) => handleFilterChange('amountMin', e.target.value)}
-            />
+          {/* Clear Filters Button */}
+          <div className="flex items-end">
+            <button
+              className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
+              onClick={handleClearFilters}
+            >
+              Clear Filters
+            </button>
           </div>
-
-          {/* Amount Max */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount Max
-            </label>
-            <input
-              type="number"
-              placeholder="Max amount"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={filters.amountMax}
-              onChange={(e) => handleFilterChange('amountMax', e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Clear Filters Button */}
-        <div className="mt-4 flex justify-end">
-          <button
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
-            onClick={handleClearFilters}
-          >
-            Clear Filters
-          </button>
         </div>
       </div>
 

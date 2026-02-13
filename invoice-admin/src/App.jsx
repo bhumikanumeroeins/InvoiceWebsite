@@ -10,12 +10,11 @@ import Dashboard from "./pages/Dashboard";
 import Invoices from "./pages/Invoices";
 import Customers from "./pages/Customers";
 import Users from "./pages/Users";
-import Reminders from "./pages/Reminders";
 import Templates from "./pages/Templates";
-import Settings from "./pages/Settings";
-
+import Subscriptions from "./pages/Subscriptions";
 import InvoiceDetail from "./components/lists/InvoiceDetail";
 import AdminLayout from "./components/layout/AdminLayout";
+import AdminPlans from "./pages/Plans";
 
 function App() {
   return (
@@ -32,9 +31,8 @@ function App() {
           <Route path="/invoices/:id" element={<InvoiceDetail />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/users" element={<Users />} />
-          <Route path="/reminders" element={<Reminders />} />
-          <Route path="/templates" element={<Templates />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/plans" element={<AdminPlans />} />
         </Route>
       </Routes>
     </Router>
