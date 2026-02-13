@@ -139,4 +139,22 @@ invoiceSchema.index(
   { unique: true }
 );
 
+// ✅ ADD THIS RIGHT HERE
+invoiceSchema.set("toJSON", {
+  transform: function (doc, ret) {
+
+    if (ret.invoiceMeta?.invoiceDate) {
+      ret.invoiceMeta.invoiceDate =
+        ret.invoiceMeta.invoiceDate.toISOString().split("T")[0];
+    }
+
+    if (ret.invoiceMeta?.dueDate) {
+      ret.invoiceMeta.dueDate =
+        ret.invoiceMeta.dueDate.toISOString().split("T")[0];
+    }
+
+    return ret;
+  }
+});
+
 export default mongoose.model("InvoiceTaxForm", invoiceSchema);
