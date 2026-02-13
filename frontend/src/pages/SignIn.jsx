@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 import { FileText } from 'lucide-react';
@@ -9,25 +10,23 @@ const SignIn = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError('');
 
         try {
             const response = await authAPI.login(formData);
             // Backend now returns { token, email, userId }
             setAuthData(response.token, { email: response.email, userId: response.userId });
-            navigate('/dashboard');
+            toast.success('Welcome back! Redirecting to dashboard...');
+            setTimeout(() => navigate('/dashboard'), 1000);
         } catch (err) {
-            setError(err.message || 'Something went wrong');
+            toast.error(err.message || 'Something went wrong');
         } finally {
             setLoading(false);
         }
@@ -52,12 +51,6 @@ const SignIn = () => {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-                    {error && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
-                            {error}
-                        </div>
-                    )}
-
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Email address</label>

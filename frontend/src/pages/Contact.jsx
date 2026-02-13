@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 import { Mail, Phone, MapPin, Send, MessageSquare, Clock } from 'lucide-react';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
@@ -12,7 +13,6 @@ const Contact = () => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,23 +21,23 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const response = await contactAPI.submit(formData);
       
       if (response.status === 'success' || response.success) {
         setSubmitted(true);
+        toast.success('Message sent successfully! We\'ll get back to you soon.');
         setTimeout(() => {
           setFormData({ name: '', email: '', message: '' });
           setSubmitted(false);
         }, 5000);
       } else {
-        setError(response.message || 'Failed to send message. Please try again.');
+        toast.error(response.message || 'Failed to send message. Please try again.');
       }
     } catch (error) {
       console.error('Contact form submission error:', error);
-      setError('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -138,11 +138,6 @@ const Contact = () => {
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-5">
-                    {error && (
-                      <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                        <p className="text-red-600 text-sm">{error}</p>
-                      </div>
-                    )}
                     <div className="grid md:grid-cols-2 gap-5">
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { CreditCard, RefreshCw, Download, Mail, Calendar, Paperclip, X, Copy, ArrowRight, Loader2, Trash2, Bell, Clock, CheckCircle, XCircle, AlertCircle, FileText, Upload } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -226,12 +227,12 @@ If you need assistance or have any questions, please email: support@invoicepro.c
     const invoiceId = invoiceToUse?._id || invoiceToUse?.id;
     
     if (!invoiceId) {
-      alert('Invoice not found. Please try again.');
+      toast.error('Invoice not found. Please try again.');
       return;
     }
     
     if (!recurringData.emailTo.trim()) {
-      alert('Please enter an email address');
+      toast.warning('Please enter an email address');
       return;
     }
 
@@ -240,12 +241,12 @@ If you need assistance or have any questions, please email: support@invoicepro.c
       setSavingRecurring(true);
       try {
         await createRecurringInvoice(invoiceId, { frequency: 'never' });
-        alert('Recurring invoice disabled successfully');
+        toast.success('Recurring invoice disabled successfully');
         // Refresh the recurring data to update status
         await loadRecurringData();
       } catch (error) {
         console.error('Failed to disable recurring:', error);
-        alert('Failed to disable recurring invoice: ' + error.message);
+        toast.error('Failed to disable recurring invoice: ' + error.message);
       } finally {
         setSavingRecurring(false);
       }
@@ -254,28 +255,28 @@ If you need assistance or have any questions, please email: support@invoicepro.c
 
     // Validate required fields for active recurring
     if (!recurringData.startDate) {
-      alert('Please select a start date');
+      toast.warning('Please select a start date');
       return;
     }
 
     if (!recurringData.emailSubject.trim()) {
-      alert('Please enter an email subject');
+      toast.warning('Please enter an email subject');
       return;
     }
 
     if (!recurringData.emailText.trim()) {
-      alert('Please enter an email message');
+      toast.warning('Please enter an email message');
       return;
     }
 
     if (recurringData.stopOption === 'onDate' && !recurringData.stopDate) {
-      alert('Please select a stop date');
+      toast.warning('Please select a stop date');
       return;
     }
 
     if (recurringData.stopOption === 'onDate' && 
         new Date(recurringData.stopDate) <= new Date(recurringData.startDate)) {
-      alert('Stop date must be after start date');
+      toast.warning('Stop date must be after start date');
       return;
     }
 
@@ -283,7 +284,7 @@ If you need assistance or have any questions, please email: support@invoicepro.c
     try {
       const response = await createRecurringInvoice(invoiceId, recurringData);
       if (response.success) {
-        alert('Recurring invoice settings saved successfully!');
+        toast.success('Recurring invoice settings saved successfully!');
         // Refresh the recurring data to update status
         await loadRecurringData();
       } else {
@@ -291,7 +292,7 @@ If you need assistance or have any questions, please email: support@invoicepro.c
       }
     } catch (error) {
       console.error('Failed to save recurring settings:', error);
-      alert('Failed to save recurring settings: ' + error.message);
+      toast.error('Failed to save recurring settings: ' + error.message);
     } finally {
       setSavingRecurring(false);
     }
@@ -388,7 +389,7 @@ Best regards`,
   const handleCreateReminders = async () => {
     const invoiceId = currentInvoice?._id || currentInvoice?.id;
     if (!invoiceId) {
-      alert('Invoice ID not found');
+      toast.error('Invoice ID not found');
       return;
     }
 
@@ -396,14 +397,14 @@ Best regards`,
       setCreatingReminders(true);
       const response = await reminderAPI.create(invoiceId);
       if (response.success) {
-        alert(response.message || 'Reminders created successfully!');
+        toast.success(response.message || 'Reminders created successfully!');
         await loadReminders();
       } else {
-        alert(response.message || 'Failed to create reminders');
+        toast.error(response.message || 'Failed to create reminders');
       }
     } catch (error) {
       console.error('Failed to create reminders:', error);
-      alert(error.message || 'Failed to create reminders');
+      toast.error(error.message || 'Failed to create reminders');
     } finally {
       setCreatingReminders(false);
     }
@@ -417,14 +418,14 @@ Best regards`,
     try {
       const response = await reminderAPI.delete(reminderId);
       if (response.success) {
-        alert('Reminder deleted successfully!');
+        toast.success('Reminder deleted successfully!');
         await loadReminders();
       } else {
-        alert(response.message || 'Failed to delete reminder');
+        toast.error(response.message || 'Failed to delete reminder');
       }
     } catch (error) {
       console.error('Failed to delete reminder:', error);
-      alert(error.message || 'Failed to delete reminder');
+      toast.error(error.message || 'Failed to delete reminder');
     }
   };
 
@@ -462,7 +463,7 @@ Best regards`,
       await invoiceAPI.delete(currentInvoice._id || currentInvoice.id);
       onClose && onClose();
     } catch (err) {
-      alert('Failed to delete invoice: ' + err.message);
+      toast.error('Failed to delete invoice: ' + err.message);
       setDeleting(false);
     }
   };
@@ -474,7 +475,7 @@ Best regards`,
     try {
       await generatePDF(true);
     } catch (error) {
-      alert('Failed to generate PDF: ' + error.message);
+      toast.error('Failed to generate PDF: ' + error.message);
     } finally {
       setLoading(false);
       setLoadingAction(null);
@@ -522,12 +523,12 @@ Best regards`,
     const invoiceId = currentInvoice?._id || currentInvoice?.id || invoice?._id || invoice?.id;
     
     if (!invoiceId) {
-      alert('Invoice not found. Please try again.');
+      toast.error('Invoice not found. Please try again.');
       return;
     }
 
     if (!emailData.to) {
-      alert('Please enter recipient email address.');
+      toast.warning('Please enter recipient email address.');
       return;
     }
 
@@ -566,10 +567,10 @@ Best regards`,
         }
         setActiveAction('invoice');
       } else {
-        alert('Failed to send email: ' + (response?.message || 'Unknown error'));
+        toast.error('Failed to send email: ' + (response?.message || 'Unknown error'));
       }
     } catch (err) {
-      alert('Failed to send email: ' + (err?.message || 'Unknown error'));
+      toast.error('Failed to send email: ' + (err?.message || 'Unknown error'));
     } finally {
       setSendingEmail(false);
     }
@@ -583,13 +584,13 @@ Best regards`,
 
   const handleSavePayment = async () => {
     if (!paymentData.paidAmount || parseFloat(paymentData.paidAmount) <= 0) {
-      alert('Please enter a valid payment amount.');
+      toast.warning('Please enter a valid payment amount.');
       return;
     }
 
     const invoiceId = currentInvoice?._id || currentInvoice?.id;
     if (!invoiceId) {
-      alert('Invoice not found. Please try again.');
+      toast.error('Invoice not found. Please try again.');
       return;
     }
 
@@ -637,11 +638,11 @@ Best regards`,
       }
     } catch (error) {
       if (error.message.includes('404') || error.message.includes('Not Found')) {
-        alert('Payment API not available. Please check if the server is running and try again.');
+        toast.error('Payment API not available. Please check if the server is running and try again.');
       } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-        alert('You are not authorized to perform this action. Please log in again.');
+        toast.error('You are not authorized to perform this action. Please log in again.');
       } else {
-        alert('Failed to save payment: ' + error.message);
+        toast.error('Failed to save payment: ' + error.message);
       }
     } finally {
       setSavingPayment(false);
@@ -665,7 +666,7 @@ Best regards`,
 
     const invoiceId = currentInvoice?._id || currentInvoice?.id;
     if (!invoiceId) {
-      alert('Invoice not found. Please try again.');
+      toast.error('Invoice not found. Please try again.');
       return;
     }
 
@@ -704,11 +705,11 @@ Best regards`,
     } catch (error) {
       // Check if it's a network/server error
       if (error.message.includes('404') || error.message.includes('Not Found')) {
-        alert('Payment API not available. Please check if the server is running and try again.');
+        toast.error('Payment API not available. Please check if the server is running and try again.');
       } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-        alert('You are not authorized to perform this action. Please log in again.');
+        toast.error('You are not authorized to perform this action. Please log in again.');
       } else {
-        alert('Failed to set as unpaid: ' + error.message);
+        toast.error('Failed to set as unpaid: ' + error.message);
       }
     }
   };
@@ -1472,11 +1473,11 @@ Best regards`,
                   try {
                     const response = await invoiceAPI.copy(currentInvoice._id || currentInvoice.id);
                     if (response.success) {
-                      alert('Invoice copied successfully! You can find it in My Invoices.');
+                      toast.success('Invoice copied successfully! You can find it in My Invoices.');
                       onClose && onClose();
                     }
                   } catch (err) {
-                    alert('Failed to copy invoice: ' + err.message);
+                    toast.error('Failed to copy invoice: ' + err.message);
                   } finally {
                     setCopying(false);
                   }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { Rnd } from 'react-rnd';
 import { Save, Eye, ArrowLeft, Loader2, Mail, Download, Edit } from 'lucide-react';
 import { backgroundPatterns, BackgroundPattern } from './BackgroundPatterns';
@@ -299,7 +300,7 @@ Best regards`,
     try {
       await generatePDF(true);
     } catch (error) {
-      alert('Failed to generate PDF: ' + error.message);
+      toast.error('Failed to generate PDF: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -307,12 +308,12 @@ Best regards`,
 
   const handleSendEmail = async () => {
     if (!emailData.to) {
-      alert('Please enter recipient email address.');
+      toast.warning('Please enter recipient email address.');
       return;
     }
 
     if (!customInvoiceId) {
-      alert('Please save the invoice first before sending email.');
+      toast.warning('Please save the invoice first before sending email.');
       return;
     }
 
@@ -333,13 +334,13 @@ Best regards`,
       });
       
       if (response && response.success) {
-        alert('Email sent successfully with PDF attachment!');
+        toast.success('Email sent successfully with PDF attachment!');
         setActiveTab('preview');
       } else {
-        alert('Failed to send email: ' + (response?.message || 'Unknown error'));
+        toast.error('Failed to send email: ' + (response?.message || 'Unknown error'));
       }
     } catch (err) {
-      alert('Failed to send email: ' + (err?.message || 'Unknown error'));
+      toast.error('Failed to send email: ' + (err?.message || 'Unknown error'));
     } finally {
       setSendingEmail(false);
     }
@@ -450,7 +451,7 @@ Best regards`,
         }
       } catch (error) {
         console.error('Failed to load custom invoice:', error);
-        alert('Failed to load custom invoice data');
+        toast.error('Failed to load custom invoice data');
       } finally {
         setLoadingData(false);
       }
@@ -497,14 +498,14 @@ Best regards`,
       });
       
       if (response.success) {
-        alert('Template saved successfully!');
+        toast.success('Template saved successfully!');
         navigate('/dashboard');
       } else {
-        alert('Failed to save template: ' + response.message);
+        toast.error('Failed to save template: ' + response.message);
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to save template: ' + error.message);
+      toast.error('Failed to save template: ' + error.message);
     } finally {
       setSaving(false);
     }

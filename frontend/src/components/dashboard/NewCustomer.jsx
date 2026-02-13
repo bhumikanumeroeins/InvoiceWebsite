@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { currencyService } from '../../services/currencyService';
 import { UserPlus, FileText, Filter, Loader2, Calendar, Search, Download } from 'lucide-react';
 import { customerAPI } from '../../services/invoiceService';
@@ -140,7 +141,7 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
 
   const handleDownloadStatement = async () => {
     if (documents.length === 0) {
-      alert('No documents available to generate statement');
+      toast.warning('No documents available to generate statement');
       return;
     }
 
@@ -265,7 +266,7 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
       doc.save(`Customer_Statement_${customerName.replace(/\s+/g, '_')}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      toast.error('Failed to generate PDF. Please try again.');
     }
   };
 
