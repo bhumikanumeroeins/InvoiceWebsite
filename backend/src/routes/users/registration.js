@@ -10,6 +10,9 @@ import {
   updateEmailReportFrequency,
   upgradeSubscription
 } from "../../controller/users/registrationController.js";
+
+import {getAllPlans} from "../../controller/admin/admin_register.js";
+
 import { authenticateUser } from "../../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -22,6 +25,7 @@ router.put("/changePassword", authenticateUser, changePassword);
 router.post("/contact-us", contactUs);
 router.get("/email-report-frequency", authenticateUser, getEmailReportFrequency);
 router.put("/email-report-frequency", authenticateUser, updateEmailReportFrequency);
+router.get("/plans", getAllPlans);
 
 
 // upgrade-subscription

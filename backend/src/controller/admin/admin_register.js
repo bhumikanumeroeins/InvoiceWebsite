@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs' ;
 import jwt from 'jsonwebtoken' ;
 import { createResult , createError } from '../../utils/utils.js' ;
 import Registration from '../../models/users/registration.js' ;
+import SubscriptionPlan from "../../models/admin/subscription.js";
 
 export const registerAdmin = async ( req , res ) => 
 {
@@ -476,3 +477,80 @@ export const getUsersList = async (req, res) => {
 };
 
 
+
+export const createPlan = async (req, res) => {
+  try {
+    const { planName, price, durationMonths, invoiceLimit, description } = req.body;
+
+    const plan = await SubscriptionPlan.create({
+      planName,
+      price,
+      durationMonths,
+      invoiceLimit,
+      description
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Plan created successfully",
+      data: plan
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const getAllPlans = async (req, res) => {
+  try {
+    const plans = await SubscriptionPlan.find({ isActive: true });
+
+    res.status(200).json({
+      success: true,
+      data: plans
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+export const updatePlan = async (req, res) => {
+  try {
+    const { planId } = req.params;
+    const { planName, price, durationMonths, invoiceLimit, description } = req.body;
+
+    const plan = await SubscriptionPlan.findById(planId);
+
+    if (!plan) {
+      return res.status(404).json({
+        success: false,
+        message: "Plan not found"
+      });
+    }
+
+    // Update only provided fields
+    if (planName !== undefined) plan.planName = planName;
+    if (price !== undefined) plan.price = price;
+    if (durationMonths !== undefined) plan.durationMonths = durationMonths;
+    if (invoiceLimit !== undefined) plan.invoiceLimit = invoiceLimit;
+    if (description !== undefined) plan.description = description;
+
+    await plan.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Plan updated successfully",
+      data: plan
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
