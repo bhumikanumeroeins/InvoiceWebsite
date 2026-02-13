@@ -554,3 +554,35 @@ export const updatePlan = async (req, res) => {
     });
   }
 };
+
+
+export const togglePlanStatus = async (req, res) => {
+  try {
+    const { planId } = req.params;
+
+    const plan = await SubscriptionPlan.findById(planId);
+
+    if (!plan) {
+      return res.status(404).json({
+        success: false,
+        message: "Plan not found"
+      });
+    }
+
+    plan.isActive = !plan.isActive;
+
+    await plan.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Plan is now ${plan.isActive ? "Active" : "Inactive"}`,
+      data: plan
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
