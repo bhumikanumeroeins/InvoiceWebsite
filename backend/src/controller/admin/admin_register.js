@@ -599,13 +599,14 @@ export const getAllSubscribers = async (req, res) => {
       search
     } = req.query;
 
+    const paidPlans = ["Monthly", "6 Months", "Yearly"];
+
     const filter = {
-      // ❌ Exclude Free plan
-      "subscription.planName": { $ne: "Free" }
+      "subscription.planName": { $in: paidPlans }  // ✅ Only paid users
     };
 
-    // 🔎 Filter by Plan (Monthly / Yearly / 6 Months)
-    if (planName) {
+    // 🔎 If specific plan filter applied
+    if (planName && paidPlans.includes(planName)) {
       filter["subscription.planName"] = planName;
     }
 
@@ -632,7 +633,6 @@ export const getAllSubscribers = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      totalUsers,
       currentPage: Number(page),
       totalPages: Math.ceil(totalUsers / limit),
       data: users
