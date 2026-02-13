@@ -75,8 +75,8 @@ const registrationSchema = new mongoose.Schema({
   subscription: {
     planName: {
       type: String,
-      enum: ["free", "monthly", "halfYearly", "yearly"],
-      default: "free"
+      enum: ["Free", "Monthly", "6 Months", "Monthly"],
+      default: "Free"
     },
     price: {
       type: String,
