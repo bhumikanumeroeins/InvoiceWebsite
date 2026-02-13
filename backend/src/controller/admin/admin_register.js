@@ -599,9 +599,12 @@ export const getAllSubscribers = async (req, res) => {
       search
     } = req.query;
 
-    const filter = {};
+    const filter = {
+      // ❌ Exclude Free plan
+      "subscription.planName": { $ne: "Free" }
+    };
 
-    // 🔎 Filter by Plan
+    // 🔎 Filter by Plan (Monthly / Yearly / 6 Months)
     if (planName) {
       filter["subscription.planName"] = planName;
     }
@@ -620,7 +623,7 @@ export const getAllSubscribers = async (req, res) => {
     }
 
     const users = await Registration.find(filter)
-      .select("-password") // 🚫 Hide password
+      .select("-password")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
