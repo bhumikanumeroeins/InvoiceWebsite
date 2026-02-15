@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { currencyService } from '../../services/currencyService';
 import { FileText, Filter, Loader2, Trash2, RotateCcw, AlertTriangle, Palette } from 'lucide-react';
 import { invoiceAPI } from '../../services/invoiceService';
@@ -193,7 +194,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
       setSelectedIds([]);
     } catch (err) {
       console.error('Delete error:', err);
-      alert('Failed to delete some invoices. Please try again.');
+      toast.error('Failed to delete some invoices. Please try again.');
     } finally {
       setDeleting(false);
     }
@@ -216,7 +217,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
       setSelectedIds([]);
     } catch (err) {
       console.error('Restore error:', err);
-      alert('Failed to restore some invoices. Please try again.');
+      toast.error('Failed to restore some invoices. Please try again.');
     } finally {
       setRestoring(false);
     }
@@ -238,7 +239,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
       setSelectedIds([]);
     } catch (err) {
       console.error('Permanent delete error:', err);
-      alert('Failed to permanently delete some invoices. Please try again.');
+      toast.error('Failed to permanently delete some invoices. Please try again.');
     } finally {
       setDeleting(false);
     }

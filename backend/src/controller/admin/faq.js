@@ -6,24 +6,35 @@ import ContactUs from "../../models/users/contact_us.js";
 /* ------------------ CREATE FAQ ------------------ */
 export const createFAQ = async (req, res) => {
   try {
-    const { question, answer, isActive, order } = req.body;
+    const { question, answer, isActive } = req.body;
 
     if (!question || !answer) {
-      return res.status(400).json(createError("question and answer are required"));
+      return res
+        .status(400)
+        .json(createError("question and answer are required"));
     }
+
+    // 🔥 Find highest existing order
+    const lastFAQ = await FAQ.findOne().sort({ order: -1 });
+
+    const nextOrder = lastFAQ ? lastFAQ.order + 1 : 1;
 
     const faq = await FAQ.create({
       question,
       answer,
       isActive: typeof isActive !== "undefined" ? isActive : true,
-      order: order || 0
+      order: nextOrder
     });
 
-    return res.status(201).json(createResult(faq, "FAQ created successfully"));
+    return res
+      .status(201)
+      .json(createResult(faq, "FAQ created successfully"));
+
   } catch (error) {
     return res.status(500).json(createError(error.message));
   }
 };
+
 
 /* ------------------ GET ALL FAQ (ADMIN) ------------------ */
 export const getAllFAQsAdmin = async (req, res) => {

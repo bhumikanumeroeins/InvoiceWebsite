@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from 'react-toastify';
 import {
   User,
   BarChart3,
@@ -44,7 +45,6 @@ const SettingsPage = () => {
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -95,7 +95,6 @@ const SettingsPage = () => {
   };
 
   const handleSaveProfile = async () => {
-    setMessage({ type: '', text: '' });
     setSaving(true);
     
     try {
@@ -109,28 +108,26 @@ const SettingsPage = () => {
       
       // Backend returns { success: true, message: '...' }
       if (response.success || response.status === 'success') {
-        setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        toast.success('Profile updated successfully!');
       } else {
-        setMessage({ type: 'error', text: response.message || response.data?.message || 'Failed to update profile' });
+        toast.error(response.message || response.data?.message || 'Failed to update profile');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
+      toast.error(error.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
   };
 
   const handleChangePassword = async () => {
-    setMessage({ type: '', text: '' });
     
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage({ type: 'error', text: 'New passwords do not match' });
+      toast.warning('New passwords do not match');
       return;
     }
     
     if (passwordData.newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+      toast.warning('Password must be at least 6 characters');
       return;
     }
     
@@ -143,21 +140,19 @@ const SettingsPage = () => {
       });
       
       if (response.status === 'success' || response.success) {
-        setMessage({ type: 'success', text: 'Password changed successfully!' });
+        toast.success('Password changed successfully!');
         setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
-        setMessage({ type: 'error', text: response.message || response.data?.message || 'Failed to change password' });
+        toast.error(response.message || response.data?.message || 'Failed to change password');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'Failed to change password' });
+      toast.error(error.message || 'Failed to change password');
     } finally {
       setSaving(false);
     }
   };
 
   const handleSaveEmailReportFrequency = async () => {
-    setMessage({ type: '', text: '' });
     setSaving(true);
     
     try {
@@ -166,13 +161,12 @@ const SettingsPage = () => {
       });
       
       if (response.success) {
-        setMessage({ type: 'success', text: 'Email report preference updated successfully!' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        toast.success('Email report preference updated successfully!');
       } else {
-        setMessage({ type: 'error', text: response.message || 'Failed to update preference' });
+        toast.error(response.message || 'Failed to update preference');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'Failed to update preference' });
+      toast.error(error.message || 'Failed to update preference');
     } finally {
       setSaving(false);
     }
@@ -430,22 +424,6 @@ const SettingsPage = () => {
 
             {/* FOOTER ACTION BAR */}
             <div className="px-8 py-6 bg-slate-50 border-t border-slate-200">
-              {/* Message Display */}
-              {message.text && (
-                <div className={`mb-4 p-4 rounded-xl flex items-center gap-3 ${
-                  message.type === 'success' 
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                    : 'bg-red-50 text-red-700 border border-red-200'
-                }`}>
-                  {message.type === 'success' ? (
-                    <CheckCircle className="w-5 h-5" />
-                  ) : (
-                    <AlertCircle className="w-5 h-5" />
-                  )}
-                  <span>{message.text}</span>
-                </div>
-              )}
-              
               <button 
                 onClick={
                   activeTab === 'changePassword' 

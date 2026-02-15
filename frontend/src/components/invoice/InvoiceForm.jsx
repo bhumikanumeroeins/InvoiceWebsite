@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from 'react-toastify';
 import { currencyService } from '../../services/currencyService';
 import {
   Plus,
@@ -140,7 +141,6 @@ const InvoiceForm = ({
   const isEditMode = !!editInvoice;
   const config = documentConfig[documentType] || documentConfig["invoice"];
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState('');
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [currencies, setCurrencies] = useState([]);
   const [loadingCurrencies, setLoadingCurrencies] = useState(true);
@@ -474,7 +474,7 @@ const InvoiceForm = ({
         }
       } catch (err) {
         console.error('Failed to save item:', err);
-        alert('Failed to save item: ' + err.message);
+        toast.error('Failed to save item: ' + err.message);
       }
     }
   };
@@ -487,7 +487,7 @@ const InvoiceForm = ({
       }
     } catch (err) {
       console.error('Failed to delete item:', err);
-      alert('Failed to delete item: ' + err.message);
+      toast.error('Failed to delete item: ' + err.message);
     }
   };
   const openTaxModal = (index) => {
@@ -516,7 +516,7 @@ const InvoiceForm = ({
       }
     } catch (err) {
       console.error('Failed to save tax:', err);
-      alert('Failed to save tax: ' + err.message);
+      toast.error('Failed to save tax: ' + err.message);
     }
     return null;
   };
@@ -533,7 +533,7 @@ const InvoiceForm = ({
       }
     } catch (err) {
       console.error('Failed to delete tax:', err);
-      alert('Failed to delete tax: ' + err.message);
+      toast.error('Failed to delete tax: ' + err.message);
     }
   };
   
@@ -663,7 +663,6 @@ const InvoiceForm = ({
     }
 
     setSaving(true);
-    setSaveError('');
     setShowLoginPrompt(false);
 
     try {
@@ -797,7 +796,7 @@ const InvoiceForm = ({
       }
     } catch (error) {
       console.error('Save invoice error:', error);
-      setSaveError(error.message || 'Failed to save invoice');
+      toast.error(error.message || 'Failed to save invoice');
     } finally {
       setSaving(false);
     }
@@ -1393,11 +1392,6 @@ const InvoiceForm = ({
 
         {/* Action Button */}
         <div className="px-8 py-6 bg-slate-50 border-t border-slate-200">
-          {saveError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
-              {saveError}
-            </div>
-          )}
           {showLoginPrompt && (
             <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1481,7 +1475,7 @@ const InvoiceForm = ({
             }
           } catch (err) {
             console.error('Failed to save item:', err);
-            alert('Failed to save item: ' + err.message);
+            toast.error('Failed to save item: ' + err.message);
           }
         }}
       />

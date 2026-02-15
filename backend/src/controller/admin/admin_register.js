@@ -586,3 +586,62 @@ export const togglePlanStatus = async (req, res) => {
     });
   }
 };
+
+
+
+export const getAllSubscribers = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      planName,
+      isActive,
+      search
+    } = req.query;
+
+    const paidPlans = ["Monthly", "6 Months", "Yearly"];
+
+    const filter = {
+      "subscription.planName": { $in: paidPlans }  // ✅ Only paid users
+    };
+
+    // 🔎 If specific plan filter applied
+    if (planName && paidPlans.includes(planName)) {
+      filter["subscription.planName"] = planName;
+    }
+
+    // 🔎 Filter by Active Status
+    if (isActive !== undefined) {
+      filter["subscription.isActive"] = isActive === "true";
+    }
+
+    // 🔎 Search by email or name
+    if (search) {
+      filter.$or = [
+        { email: { $regex: search, $options: "i" } },
+        { name: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    const users = await Registration.find(filter)
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    const totalUsers = await Registration.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      currentPage: Number(page),
+      totalPages: Math.ceil(totalUsers / limit),
+      data: users
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

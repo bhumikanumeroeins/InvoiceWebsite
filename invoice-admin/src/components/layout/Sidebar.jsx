@@ -8,6 +8,8 @@ import {
   UserCheck,
   LogOut,
   CreditCard,
+  HelpCircle,
+  MessageSquare,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -26,6 +28,8 @@ const Sidebar = () => {
     { name: "Users", path: "/users", icon: UserCheck },
     { name: "Subscribers", path: "/subscriptions", icon: CreditCard },
     { name: "Plans", path: "/plans", icon: Package },
+    { name: "FAQ", path: "/faq", icon: HelpCircle },
+    { name: "Contact Us", path: "/contact-us", icon: MessageSquare },
   ];
 
   return (

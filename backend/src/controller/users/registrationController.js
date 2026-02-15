@@ -3,7 +3,7 @@ import ContactUs from '../../models/users/contact_us.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { createResult, createError } from '../../utils/utils.js';
-
+import SubscriptionPlan  from '../../models/admin/subscription.js'
 
 export const registerUser = async (req, res) => {
     const { email, password } = req.body;
@@ -284,44 +284,28 @@ export const updateEmailReportFrequency = async (req, res) => {
 export const upgradeSubscription = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { plan } = req.body;
+    const { planId } = req.body;
 
     const user = await Registration.findById(userId);
+    const plan = await SubscriptionPlan.findById(planId);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    let invoiceLimit = 2;
-    let price ;
-    let months ;
-
-    if (plan === "monthly") {
-      invoiceLimit = -1; // unlimited
-      price = "$3";
-      months = 1;
-    } else if (plan === "halfYearly") {
-      invoiceLimit = -1;
-      price = "$15";
-      months = 6;
-    } else if (plan === "yearly") {
-      invoiceLimit = -1;
-      price = "$25";
-      months = 12;
-    } else {
-      return res.status(400).json({ message: "Invalid plan" });
+    if (!plan) {
+      return res.status(404).json({ message: "Plan not found" });
     }
 
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + months);
+
+    if (plan.durationMonths > 0) {
+      endDate.setMonth(endDate.getMonth() + plan.durationMonths);
+    }
 
     user.subscription = {
-      planName: plan,
-      price,
-      invoiceLimit,
+      planName: plan.planName,
+      price: plan.price,
+      invoiceLimit: plan.invoiceLimit,
       startDate,
-      endDate,
+      endDate: plan.durationMonths > 0 ? endDate : null,
       isActive: true
     };
 
@@ -334,6 +318,6 @@ export const upgradeSubscription = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: "Error upgrading plan" });
+    res.status(500).json({ message: error.message });
   }
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { currencyService } from '../../services/currencyService';
 import { BarChart3, Filter, Loader2, Calendar, FileText, Printer, Search } from 'lucide-react';
 import { reportsAPI } from '../../services/reportsService';
@@ -225,7 +226,7 @@ const MyReports = ({ onInvoiceClick }) => {
       }
     } catch (error) {
       console.error('PDF export error:', error);
-      alert('Failed to export PDF: ' + error.message);
+      toast.error('Failed to export PDF: ' + error.message);
     }
   };
 
@@ -244,7 +245,7 @@ const MyReports = ({ onInvoiceClick }) => {
         reportsAPI.downloadCSV(csvContent, filename);
       }
     } catch (error) {
-      alert('Failed to export Excel: ' + error.message);
+      toast.error('Failed to export Excel: ' + error.message);
     }
   };
 
