@@ -10,7 +10,6 @@ import Dashboard from "./pages/Dashboard";
 import Invoices from "./pages/Invoices";
 import Customers from "./pages/Customers";
 import Users from "./pages/Users";
-import Templates from "./pages/Templates";
 import Subscriptions from "./pages/Subscriptions";
 import InvoiceDetail from "./components/lists/InvoiceDetail";
 import AdminLayout from "./components/layout/AdminLayout";

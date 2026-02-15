@@ -77,6 +77,7 @@ const Features = () => {
         whileInView="visible"
         viewport={{ once: true, amount: 0.5 }}
       >
+
         <div className="max-w-7xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-semibold text-white mb-4">
             Built for faster payments
@@ -98,7 +99,7 @@ const Features = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.5 }}
-            className="bg-white border border-slate-200 rounded-3xl p-10 shadow-lg"
+            className="bg-white/80 backdrop-blur-xl rounded-3xl p-12 shadow-2xl"
           >
             <h3 className="text-2xl font-semibold text-slate-900 mb-4">
               Complete invoice lifecycle
@@ -181,7 +182,6 @@ const Features = () => {
                 Average invoice paid in <b>3 days</b>
               </span>
             </motion.div>
-
           </motion.div>
 
           {/* RIGHT IMAGE */}
@@ -194,7 +194,6 @@ const Features = () => {
           >
             <img src={invoiceImage} alt="payment preview" className="w-full"/>
           </motion.div>
-
         </div>
 
         {/* FEATURES GRID */}
@@ -250,7 +249,6 @@ const Features = () => {
             })}
           </div>
         </motion.section>
-
       </div>
     </section>
   );

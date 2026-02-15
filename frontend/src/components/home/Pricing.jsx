@@ -1,66 +1,60 @@
 import { Check, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { planAPI } from '../../services/planService';
+import { useEffect, useState } from "react";
 
-const plans = [
-  {
-    name: 'Starter',
-    price: '$0',
-    period: 'one-time',
-    description: 'Create up to 2 invoices after sign up',
-    features: [
-      '2 invoices total',
-      'Basic templates',
-      'PDF download',
-      'Email sending',
-    ],
-    cta: 'Start Free',
-    popular: false,
-  },
-  {
-    name: 'Monthly',
-    price: '$3',
-    period: 'per month',
-    description: 'Unlimited invoices for 1 month',
-    features: [
-      'Unlimited invoices',
-      'All templates',
-      'Email & reminders',
-      'Payment tracking',
-    ],
-    cta: 'Subscribe Monthly',
-    popular: false,
-  },
-  {
-    name: '6 Months',
-    price: '$15',
-    period: '6 months',
-    description: 'Best value short-term plan',
-    features: [
-      'Unlimited invoices',
-      'All templates',
-      'Priority support',
-      'Reminders & tracking',
-    ],
-    cta: 'Subscribe 6 Months',
-    popular: false,
-  },
-  {
-    name: 'Yearly',
-    price: '$25',
-    period: 'per year',
-    description: 'Best value long-term plan',
-    features: [
-      'Unlimited invoices',
-      'All templates',
-      'Full features access',
-      'Lowest cost per month',
-    ],
-    cta: 'Subscribe Yearly',
-    popular: true,
-  },
-];
 
 const Pricing = () => {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const response = await planAPI.getAll();
+        if (response.success) {
+          const activePlans = response.data.filter(plan => plan.isActive === true);
+          setPlans(activePlans);
+        }
+      } catch (error) {
+        console.error("Failed to fetch plans:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+const handleSubscribe = async (planId) => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("Please sign in to subscribe.");
+    window.location.href = "/signin";
+    return;
+  }
+
+  try {
+    const res = await planAPI.upgrade(planId);
+
+    if (res.success) {
+      alert("Subscription upgraded successfully!");
+    }
+  } catch (error) {
+    console.error("Upgrade failed:", error.message);
+    alert(error.message);
+  }
+};
+
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <p className="text-gray-500">Loading plans...</p>
+      </div>
+    );
+  }
   // Animation variants
   const fadeUp = {
     hidden: { opacity: 0, y: 30, scale: 0.95 },
@@ -69,7 +63,7 @@ const Pricing = () => {
 
   const staggerContainer = {
     hidden: {},
-    visible: { transition: { staggerChildren: 0.2 } }, // sequential animation for cards
+    visible: { transition: { staggerChildren: 0.2 } }, 
   };
 
   return (
@@ -88,7 +82,7 @@ const Pricing = () => {
             Simple, Transparent Pricing
           </h2>
           <p className="text-lg text-slate-600">
-            Choose the plan that works best for you. All plans include a 14-day free trial.
+            Choose the plan that works best for you.
           </p>
         </motion.div>
 
@@ -100,58 +94,96 @@ const Pricing = () => {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          {plans.map((plan) => (
-            <motion.div
-              key={plan.name}
-              variants={fadeUp}
-              className={`relative rounded-3xl p-8 shadow-md transition-transform hover:scale-105 ${
-                plan.popular
-                  ? 'bg-gradient-to-br from-indigo-600 to-emerald-500 text-white shadow-lg'
-                  : 'bg-white border border-gray-200'
-              }`}
-            >
-              {/* Popular Badge */}
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-indigo-600 text-sm font-bold px-4 py-1.5 rounded-full flex items-center gap-1 shadow">
-                  <Sparkles className="w-4 h-4" />
-                  Most Popular
-                </div>
-              )}
+          {plans?.length > 0 && plans.map((plan) => {
+            const isFree = plan.planName === "Free";
+            const isPopular = plan.planName === "Yearly";
 
-              {/* Plan Header */}
-              <div className="text-center mb-8">
-                <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-slate-900'}`}>{plan.name}</h3>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className={`text-4xl sm:text-5xl font-bold ${plan.popular ? 'text-white' : 'text-slate-900'}`}>{plan.price}</span>
-                  <span className={plan.popular ? 'text-white/80' : 'text-gray-500'}>/{plan.period}</span>
-                </div>
-                <p className={`mt-2 ${plan.popular ? 'text-white/80' : 'text-gray-500'}`}>{plan.description}</p>
-              </div>
+            const period =
+              plan.durationMonths === 0
+                ? "one-time"
+                : plan.durationMonths === 1
+                ? "per month"
+                : `${plan.durationMonths} months`;
 
-              {/* Features */}
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.popular ? 'bg-white/20' : 'bg-indigo-100'}`}>
-                      <Check className={`w-3 h-3 ${plan.popular ? 'text-white' : 'text-indigo-600'}`} />
-                    </div>
-                    <span className={plan.popular ? 'text-white/90' : 'text-gray-700'}>{feature}</span>
-                  </li>
-                ))}
-              </ul>
+            const features = [
+              plan.invoiceLimit === -1
+                ? "Unlimited invoices"
+                : `${plan.invoiceLimit} invoices total`,
+              "All templates",
+              "Email & reminders",
+              "Payment tracking",
+            ];
 
-              {/* CTA Button */}
-              <button
-                className={`w-full py-4 px-6 rounded-full font-semibold transition-all ${
-                  plan.popular
-                    ? 'bg-white text-indigo-600 hover:shadow-lg'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            const cta = isFree
+              ? "Start Free"
+              : `Subscribe ${plan.planName}`;
+
+            return (
+              <motion.div
+                key={plan._id}
+                variants={fadeUp}
+                className={`relative rounded-3xl p-8 shadow-md transition-transform hover:scale-105 ${
+                  isPopular
+                    ? 'bg-gradient-to-br from-indigo-600 to-emerald-500 text-white shadow-lg'
+                    : 'bg-white border border-gray-200'
                 }`}
               >
-                {plan.cta}
-              </button>
-            </motion.div>
-          ))}
+                {/* Popular Badge */}
+                {isPopular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-indigo-600 text-sm font-bold px-4 py-1.5 rounded-full flex items-center gap-1 shadow">
+                    <Sparkles className="w-4 h-4" />
+                    Most Popular
+                  </div>
+                )}
+
+                {/* Plan Header */}
+                <div className="text-center mb-8">
+                  <h3 className={`text-xl font-bold mb-2 ${isPopular ? 'text-white' : 'text-slate-900'}`}>
+                    {plan.planName}
+                  </h3>
+
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className={`text-4xl sm:text-5xl font-bold ${isPopular ? 'text-white' : 'text-slate-900'}`}>
+                      {plan.price}
+                    </span>
+                    <span className={isPopular ? 'text-white/80' : 'text-gray-500'}>
+                      /{period}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Features */}
+                <ul className="space-y-4 mb-8">
+                  {features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                        isPopular ? 'bg-white/20' : 'bg-indigo-100'
+                      }`}>
+                        <Check className={`w-3 h-3 ${
+                          isPopular ? 'text-white' : 'text-indigo-600'
+                        }`} />
+                      </div>
+                      <span className={isPopular ? 'text-white/90' : 'text-gray-700'}>
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA Button */}
+                <button
+                onClick={() => handleSubscribe(plan._id)}
+                  className={`w-full py-4 px-6 rounded-full font-semibold transition-all ${
+                    isPopular
+                      ? 'bg-white text-indigo-600 hover:shadow-lg'
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
+                >
+                  {cta}
+                </button>
+              </motion.div>
+            );
+          })}
         </motion.div>
       </div>
     </section>
