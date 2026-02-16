@@ -10,13 +10,12 @@ import InvoicePreview from '../components/dashboard/InvoicePreview';
 import { getCurrentUser, authAPI } from '../services/authService';
 
 const documentTypes = [
-  { id: 'invoice', label: 'Invoice', icon: FileText },
+  { id: 'invoice', label: 'New', icon: FileText },
   { id: 'custom-invoice', label: 'Custom Invoice', icon: Palette, isCustom: true },
   { id: 'tax-invoice', label: 'Tax Invoice', icon: Receipt },
   { id: 'proforma-invoice', label: 'Proforma Invoice', icon: FileCheck },
   { id: 'receipt', label: 'Receipt', icon: CreditCard },
   { id: 'sales-receipt', label: 'Sales Receipt', icon: ShoppingCart },
-  // { id: 'cash-receipt', label: 'Cash Receipt', icon: CreditCard },
   { id: 'quote', label: 'Quote', icon: FileText },
   { id: 'estimate', label: 'Estimate', icon: FileCheck },
   { id: 'credit-memo', label: 'Credit Memo', icon: Receipt },
@@ -230,36 +229,62 @@ const Dashboard = () => {
       </header>
 
       {/* Invoice Type Options */}
-      <div className="bg-[#f8f9fa] py-3">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="bg-slate-900 relative overflow-hidden py-12">
+        {/* Decorative Background Circles */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="flex items-center gap-2 justify-center mb-2">
-            <span className="flex items-center gap-1 text-green-600 font-medium">
-              <Plus className="w-5 h-5 bg-green-500 text-white rounded-full p-0.5" /> New:
-            </span>
-            {documentTypes.slice(0, 6).map((doc, index) => (
-              <span key={doc.id} className="flex items-center">
+            {/* <button
+              onClick={() => handleDocTypeClick('invoice')}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-white/10 text-slate-300 border border-white/10 hover:bg-white/20 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              New:
+            </button> */}
+
+            {documentTypes.slice(0, 8).map((doc) => {
+              const Icon = doc.icon;
+
+              return (
                 <button 
+                  key={doc.id}
                   onClick={() => handleDocTypeClick(doc.id)}
-                  className={`text-sm cursor-pointer hover:underline transition-all ${selectedDocType === doc.id && showExtraTabs ? 'text-blue-600 font-medium underline' : 'text-gray-600 hover:text-blue-600'}`}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all duration-300 ${
+                    selectedDocType === doc.id
+                      ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
+                      : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white border border-white/10'
+                  }`}
                 >
+                  <Icon className="w-4 h-4" />
                   {doc.label}
                 </button>
-                {index < 5 && <span className="text-gray-400 ml-2">·</span>}
-              </span>
-            ))}
+              );
+            })}
+
           </div>
           <div className="flex items-center gap-2 justify-center">
-            {documentTypes.slice(6).map((doc, index) => (
-              <span key={doc.id} className="flex items-center">
-                <button 
-                  onClick={() => handleDocTypeClick(doc.id)}
-                  className={`text-sm cursor-pointer hover:underline transition-all ${selectedDocType === doc.id && showExtraTabs ? 'text-blue-600 font-medium underline' : 'text-gray-600 hover:text-blue-600'}`}
-                >
-                  {doc.label}
-                </button>
-                {index < 5 && <span className="text-gray-400 ml-2">·</span>}
-              </span>
-            ))}
+            {documentTypes.slice(8).map((doc) => {
+                const Icon = doc.icon;
+
+                return (
+                  <button
+                    key={doc.id}
+                    onClick={() => handleDocTypeClick(doc.id)}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all duration-300 ${
+                      selectedDocType === doc.id
+                        ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
+                        : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white border border-white/10'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {doc.label}
+                  </button>
+                );
+              })}
           </div>
         </div>
       </div>
