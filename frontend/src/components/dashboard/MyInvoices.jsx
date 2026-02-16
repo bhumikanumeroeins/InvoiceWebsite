@@ -106,7 +106,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch standard invoices, trash, and custom invoices
       const [activeResponse, trashResponse, customResponse] = await Promise.all([
         invoiceAPI.getAll(),
         invoiceAPI.getTrash(),
@@ -128,9 +127,12 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     }
   };
 
-  // Transform custom invoice data
   const transformCustomInvoice = (inv) => {
     const content = inv.content || {};
+    
+    const totalString = content.total || content.grandTotal || '0';
+    const totalValue = parseFloat(totalString.replace(/[^0-9.-]+/g, '')) || 0;
+    
     return {
       id: inv._id,
       _id: inv._id,
@@ -140,19 +142,18 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
       date: inv.createdAt 
         ? new Date(inv.createdAt).toLocaleDateString('en-GB') 
         : '',
-      total: content.total || content.grandTotal || '0.00',
+      total: totalValue,
+      paid: 0, 
       currency: inv.currency || 'INR',
       status: 'custom',
       type: 'custom',
     };
   };
 
-  // Refetch when component mounts or refreshKey changes
   useEffect(() => {
     fetchInvoices();
   }, [refreshKey]);
 
-  // Handle checkbox selection
   const handleSelectInvoice = (id) => {
     setSelectedIds(prev => 
       prev.includes(id) 
@@ -161,7 +162,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     );
   };
 
-  // Handle select all
   const handleSelectAll = () => {
     const currentIds = filteredInvoices.map(inv => inv.id);
     const allSelected = currentIds.every(id => selectedIds.includes(id));
@@ -173,7 +173,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     }
   };
 
-  // Move to trash (soft delete)
   const handleDeleteSelected = async () => {
     if (selectedIds.length === 0) return;
     
@@ -185,7 +184,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     try {
       await Promise.all(selectedIds.map(id => invoiceAPI.delete(id)));
       
-      // Move deleted invoices to trash state
       const deletedInvoices = invoices.filter(inv => selectedIds.includes(inv.id));
       const updatedTrash = [...deletedInvoices.map(inv => ({ ...inv, status: 'trash', deletedAt: new Date().toLocaleDateString('en-GB') })), ...trashInvoices];
       
@@ -200,7 +198,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     }
   };
 
-  // Restore from trash
   const handleRestoreSelected = async () => {
     if (selectedIds.length === 0) return;
 
@@ -208,7 +205,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     try {
       await Promise.all(selectedIds.map(id => invoiceAPI.restore(id)));
       
-      // Move restored invoices back to active
       const restoredInvoices = trashInvoices.filter(inv => selectedIds.includes(inv.id));
       const updatedInvoices = [...restoredInvoices.map(inv => ({ ...inv, status: inv.paymentStatus === 'paid' ? 'paid' : inv.paymentStatus === 'partiallyPaid' ? 'partial' : 'unpaid' })), ...invoices];
       
@@ -223,7 +219,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     }
   };
 
-  // Permanent delete
   const handlePermanentDelete = async () => {
     if (selectedIds.length === 0) return;
     
@@ -253,7 +248,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     } else if (invoiceFilter === 'all') {
       filtered = invoiceType === 'custom' ? customInvoices : invoices;
     } else {
-      // Other filters only apply to standard invoices
       switch (invoiceFilter) {
         case 'paid': filtered = invoices.filter(inv => inv.status === 'paid'); break;
         case 'unpaid': filtered = invoices.filter(inv => inv.status === 'unpaid'); break;
@@ -263,7 +257,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
       }
     }
     
-    // Apply search filter
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(inv => 
@@ -292,7 +285,6 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
   const filteredInvoices = getFilteredInvoices();
   const isTrashView = invoiceFilter === 'trash';
 
-  // Calculate totals from FILTERED invoices, not all invoices
   const totalAmount = filteredInvoices.reduce((sum, inv) => sum + inv.total, 0);
   const paidAmount = filteredInvoices.reduce((sum, inv) => sum + inv.paid, 0);
   const balanceDue = totalAmount - paidAmount;
@@ -306,12 +298,10 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     { id: 'trash', label: 'Trash', color: 'bg-red-500' },
   ];
 
-  // Clear selection when switching filters or invoice type
   useEffect(() => {
     setSelectedIds([]);
   }, [invoiceFilter, invoiceType]);
 
-  // Handle custom invoice click - navigate to template builder
   const handleCustomInvoiceClick = (customInvoice) => {
     navigate(`/template-builder?id=${customInvoice._id}`);
   };
@@ -544,7 +534,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
                         </td>
                       )}
                       <td className="p-4 text-sm text-slate-700 text-right font-medium">
-                        {isCustom ? invoice.total : formatCurrency(invoice.total, invoice.currency)}
+                        {formatCurrency(invoice.total, invoice.currency)}
                       </td>
                     </tr>
                   );
