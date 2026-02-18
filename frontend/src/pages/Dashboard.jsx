@@ -10,18 +10,18 @@ import InvoicePreview from '../components/dashboard/InvoicePreview';
 import { getCurrentUser, authAPI } from '../services/authService';
 
 const documentTypes = [
-  { id: 'invoice', label: 'New', icon: FileText },
-  { id: 'custom-invoice', label: 'Custom Invoice', icon: Palette, isCustom: true },
-  { id: 'tax-invoice', label: 'Tax Invoice', icon: Receipt },
-  { id: 'proforma-invoice', label: 'Proforma Invoice', icon: FileCheck },
-  { id: 'receipt', label: 'Receipt', icon: CreditCard },
-  { id: 'sales-receipt', label: 'Sales Receipt', icon: ShoppingCart },
-  { id: 'quote', label: 'Quote', icon: FileText },
-  { id: 'estimate', label: 'Estimate', icon: FileCheck },
-  { id: 'credit-memo', label: 'Credit Memo', icon: Receipt },
-  { id: 'credit-note', label: 'Credit Note', icon: FileText },
-  { id: 'purchase-order', label: 'Purchase Order', icon: ShoppingCart },
-  { id: 'delivery-note', label: 'Delivery Note', icon: Truck },
+  { id: 'invoice', label: 'Create', icon: FileText },
+  { id: 'custom-invoice', label: 'Standard Invoice', icon: Palette, isCustom: true },
+  { id: 'tax-invoice', label: 'GST Invoice', icon: Receipt },
+  { id: 'proforma-invoice', label: 'Advance Invoice', icon: FileCheck },
+  { id: 'receipt', label: 'Payment Receipt', icon: CreditCard },
+  { id: 'sales-receipt', label: 'Instant Sale', icon: ShoppingCart },
+  { id: 'quote', label: 'Proposal', icon: FileText },
+  { id: 'estimate', label: 'Cost Estimate', icon: FileCheck },
+  { id: 'credit-memo', label: 'Refund', icon: Receipt },
+  { id: 'credit-note', label: 'Adjustment Note', icon: FileText },
+  { id: 'purchase-order', label: 'Order Request', icon: ShoppingCart },
+  { id: 'delivery-note', label: 'Shipment Note', icon: Truck },
 ];
 
 const Dashboard = () => {
@@ -77,8 +77,8 @@ const Dashboard = () => {
 
   const baseTabs = [
     { id: 'myInvoices', label: 'My Invoices', icon: FileText },
-    { id: 'myCustomers', label: 'My Customers', icon: Users },
-    { id: 'myReports', label: 'My Reports', icon: BarChart3 },
+    { id: 'myCustomers', label: 'Clients', icon: Users },
+    { id: 'myReports', label: 'Analytics', icon: BarChart3 },
   ];
 
   const getExtraTabs = () => {
@@ -246,7 +246,7 @@ const Dashboard = () => {
               New:
             </button> */}
 
-            {documentTypes.slice(0, 8).map((doc) => {
+            {documentTypes.slice(0, 7).map((doc) => {
               const Icon = doc.icon;
 
               return (
@@ -267,7 +267,7 @@ const Dashboard = () => {
 
           </div>
           <div className="flex items-center gap-2 justify-center">
-            {documentTypes.slice(8).map((doc) => {
+            {documentTypes.slice(7).map((doc) => {
                 const Icon = doc.icon;
 
                 return (

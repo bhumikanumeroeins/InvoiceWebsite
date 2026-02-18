@@ -5,18 +5,18 @@ import InvoiceForm from '../components/invoice/InvoiceForm';
 import { FileText, Receipt, CreditCard, FileCheck, Truck, ShoppingCart } from 'lucide-react';
 
 const documentTypes = [
-  { id: 'invoice', label: 'Invoice', icon: FileText, color: 'indigo' },
-  { id: 'tax-invoice', label: 'Tax Invoice', icon: Receipt, color: 'violet' },
-  { id: 'proforma-invoice', label: 'Proforma', icon: FileCheck, color: 'blue' },
-  { id: 'receipt', label: 'Receipt', icon: CreditCard, color: 'emerald' },
-  { id: 'sales-receipt', label: 'Sales Receipt', icon: ShoppingCart, color: 'teal' },
+  { id: 'invoice', label: 'Create', icon: FileText, color: 'indigo' },
+  { id: 'tax-invoice', label: 'GST Invoice', icon: Receipt, color: 'violet' },
+  { id: 'proforma-invoice', label: 'Advance Invoice', icon: FileCheck, color: 'blue' },
+  { id: 'receipt', label: 'Payment Receipt', icon: CreditCard, color: 'emerald' },
+  { id: 'sales-receipt', label: 'Instant Sale', icon: ShoppingCart, color: 'teal' },
   // { id: 'cash-receipt', label: 'Cash Receipt', icon: CreditCard, color: 'green' },
-  { id: 'quote', label: 'Quote', icon: FileText, color: 'amber' },
-  { id: 'estimate', label: 'Estimate', icon: FileCheck, color: 'orange' },
-  { id: 'credit-memo', label: 'Credit Memo', icon: Receipt, color: 'rose' },
-  { id: 'credit-note', label: 'Credit Note', icon: FileText, color: 'pink' },
-  { id: 'purchase-order', label: 'Purchase Order', icon: ShoppingCart, color: 'cyan' },
-  { id: 'delivery-note', label: 'Delivery Note', icon: Truck, color: 'slate' },
+  { id: 'quote', label: 'Proposal', icon: FileText, color: 'amber' },
+  { id: 'estimate', label: 'Cost Estimate', icon: FileCheck, color: 'orange' },
+  { id: 'credit-memo', label: 'Refund', icon: Receipt, color: 'rose' },
+  { id: 'credit-note', label: 'Adjustment Note', icon: FileText, color: 'pink' },
+  { id: 'purchase-order', label: 'Order Request', icon: ShoppingCart, color: 'cyan' },
+  { id: 'delivery-note', label: 'Shipment Note', icon: Truck, color: 'slate' },
 ];
 
 const CreateInvoice = () => {
