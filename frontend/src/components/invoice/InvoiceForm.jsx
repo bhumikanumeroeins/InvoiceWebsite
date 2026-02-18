@@ -345,7 +345,6 @@ const InvoiceForm = ({
     fetchTaxes();
   }, []);
 
-  // Fetch saved items from ItemMaster API
   useEffect(() => {
     const fetchSavedItems = async () => {
       if (!isAuthenticated()) return;
@@ -662,11 +661,16 @@ const InvoiceForm = ({
       return;
     }
 
+    const hasValidItems = items.some(item => item.description && item.description.trim());
+    if (!hasValidItems) {
+      toast.warning('Please add at least one item to the invoice');
+      return;
+    }
+
     setSaving(true);
     setShowLoginPrompt(false);
 
     try {
-      // Step 1: Save items to ItemMaster first and collect itemIds
       const itemIds = [];
       
       for (const item of items) {
@@ -733,7 +737,6 @@ const InvoiceForm = ({
         return url; 
       };
 
-      // Step 2: Create invoice with itemIds
       const invoicePayload = {
         formType: 'advanced',
         documentType: getBackendDocType(),
@@ -753,7 +756,7 @@ const InvoiceForm = ({
           dueDate: invoiceData.dueDate,
           currency: invoiceData.currency,
         },
-        items: itemIds, // Send itemIds instead of full item objects
+        items: itemIds,
         terms: terms.filter(t => t.trim()).map(text => ({ text })),
         payment: {
           bankName: invoiceData.bankName,
@@ -791,7 +794,6 @@ const InvoiceForm = ({
       }
       
       if (onSave && response.data) {
-        // Pass the complete invoice data from backend
         onSave(response.data, isEditMode);
       }
     } catch (error) {
