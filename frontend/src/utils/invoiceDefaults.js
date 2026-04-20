@@ -14,7 +14,8 @@ const fetchProfileData = async () => {
         return profileCache;
       }
       
-      const response = await fetch('http://localhost:5000/api/invoices/profile', {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/invoices/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -42,7 +43,7 @@ const fetchProfileData = async () => {
 };
 
 export const getInvoiceData = (data = {}) => {
-  const BACKEND_URL = 'http://localhost:5000';
+  const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
   
   const getImageUrl = (filename) => {
     if (!filename) return null;
