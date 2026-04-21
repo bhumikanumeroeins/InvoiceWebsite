@@ -120,11 +120,18 @@ const invoiceSchema = new mongoose.Schema({
   balanceDue: Number,
 
   paymentId: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "Payment",
-  default: null
-},
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Payment",
+    default: null
+  },
 
+  // 🔹 SELECTED TEMPLATE
+  selectedTemplate: {
+    type: Number,
+    default: 1,
+    min: 1,
+    max: 12
+  },
 
   createdAt: {
     type: Date,

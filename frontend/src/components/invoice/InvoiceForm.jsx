@@ -792,8 +792,9 @@ const InvoiceForm = ({
       } else {
         response = await invoiceAPI.create(formData);
       }
-      
+
       if (onSave && response.data) {
+        toast.success(isEditMode ? 'Invoice updated successfully!' : 'Invoice created! Redirecting to preview...');
         onSave(response.data, isEditMode);
       }
     } catch (error) {
@@ -806,9 +807,9 @@ const InvoiceForm = ({
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
-        {/* Header with Tabs */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-8 py-5">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 flex flex-col" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-8 py-5 flex-shrink-0 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-emerald-400 flex items-center justify-center">
@@ -822,8 +823,8 @@ const InvoiceForm = ({
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="p-8">
+        {/* Scrollable form content */}
+        <div className="flex-1 overflow-y-auto p-8">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column - Sender & Recipient */}
             <div className="lg:col-span-2 space-y-6">
@@ -1391,45 +1392,51 @@ const InvoiceForm = ({
             </div>
           </div>
         </div>
+        {/* end scrollable content */}
 
-        {/* Action Button */}
-        <div className="px-8 py-6 bg-slate-50 border-t border-slate-200">
+        {/* Sticky Save Bar — always visible at bottom */}
+        <div className="flex-shrink-0 px-8 py-4 bg-white border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] rounded-b-2xl">
           {showLoginPrompt && (
-            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+            <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <LogIn className="w-5 h-5 text-amber-600" />
-                <span className="text-amber-800 font-medium">Please sign in to save your invoice</span>
+                <span className="text-amber-800 font-medium text-sm">Please sign in to save your invoice</span>
               </div>
-              <Link 
-                to="/signin" 
-                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+              <Link
+                to="/signin"
+                className="px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all"
               >
                 Sign In
               </Link>
             </div>
           )}
-          <button 
-            onClick={handleSaveInvoice}
-            disabled={saving}
-            className="relative w-full py-4 bg-slate-900 text-white font-semibold rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-3 text-lg overflow-hidden disabled:opacity-50"
-          >
-            {/* Decorative Background */}
-            <div className="absolute inset-0">
-              <div className="absolute top-0 left-1/4 w-32 h-32 bg-indigo-500/30 rounded-full blur-2xl" />
-              <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-emerald-500/30 rounded-full blur-2xl" />
-            </div>
-            {saving ? (
-              <>
-                <Loader2 className="w-5 h-5 relative z-10 animate-spin" />
-                <span className="relative z-10">Saving...</span>
-              </>
-            ) : (
-              <>
-                <FileText className="w-5 h-5 relative z-10" />
-                <span className="relative z-10">{isEditMode ? 'Update' : 'Save'} {documentLabel}, Print or Send</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSaveInvoice}
+              disabled={saving}
+              className="flex-1 py-3 bg-slate-900 text-white font-semibold rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-5 h-5" />
+                  {isEditMode ? `Update ${documentLabel}` : `Save ${documentLabel}`}
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleSaveInvoice}
+              disabled={saving}
+              className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              Save & Preview
+            </button>
+          </div>
         </div>
       </div>
 

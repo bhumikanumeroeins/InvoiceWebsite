@@ -32,6 +32,7 @@ import Templates11 from '../templates/Templates11';
 import Templates12 from '../templates/Templates12';
 import InvoiceForm from '../invoice/InvoiceForm';
 import InvoiceActionTabs from '../invoice/InvoiceActionTabs';
+import InlineInvoiceEditor from '../invoice/InlineInvoiceEditor';
 import { invoiceAPI } from '../../services/invoiceService';
 import { paymentAPI } from '../../services/paymentService';
 import { getCurrentUser } from '../../services/authService';
@@ -349,6 +350,10 @@ Best regards`,
     if (actionId === 'payments') {
       setActiveAction('payments');
       await loadPaymentDetails();
+      // Auto-open the payment form if not already paid
+      if (currentInvoice?.paymentStatus !== 'paid') {
+        setShowPaymentForm(true);
+      }
       return;
     }
     
@@ -578,6 +583,10 @@ Best regards`,
 
   const handleInvoiceSaved = (updatedInvoice) => {
     setCurrentInvoice(updatedInvoice);
+    // Preserve the selected template — don't reset it on edit save
+    if (updatedInvoice?.selectedTemplate) {
+      setSelectedTemplate(updatedInvoice.selectedTemplate);
+    }
     setActiveAction('invoice');
     onInvoiceUpdated && onInvoiceUpdated(updatedInvoice);
   };
@@ -731,6 +740,7 @@ Best regards`,
         onClose={onClose}
         loading={loading}
         loadingAction={loadingAction}
+        paymentStatus={currentInvoice?.paymentStatus || 'unpaid'}
       />
 
       {/* Invoice Preview Content */}
@@ -762,15 +772,51 @@ Best regards`,
         </div>
       )}
 
+      {/* Inline Edit View — live template preview with editable fields panel */}
+      {activeAction === 'inline-edit' && (
+        <InlineInvoiceEditor
+          invoice={currentInvoice}
+          selectedTemplate={selectedTemplate}
+          onSave={handleInvoiceSaved}
+          onCancel={() => setActiveAction('invoice')}
+        />
+      )}
+
       {/* Edit View - Shows InvoiceForm inline */}
       {activeAction === 'edit' && (
         <div className="p-4">
-          <InvoiceForm 
-            documentType="invoice"
-            documentLabel="Invoice"
-            editInvoice={currentInvoice}
-            onSave={handleInvoiceSaved}
-          />
+          {(() => {
+            // Map backend doc type back to frontend form type
+            const backendToFrontend = {
+              invoice: 'invoice',
+              taxInvoice: 'tax-invoice',
+              proforma: 'proforma-invoice',
+              receipt: 'receipt',
+              salesReceipt: 'sales-receipt',
+              cashReceipt: 'cash-receipt',
+              quote: 'quote',
+              estimate: 'estimate',
+              creditMemo: 'credit-memo',
+              creditNote: 'credit-note',
+              purchaseOrder: 'purchase-order',
+              deliveryNote: 'delivery-note',
+            };
+            const frontendType = backendToFrontend[currentInvoice?.documentType] || 'invoice';
+            const labelMap = {
+              invoice: 'Invoice', 'tax-invoice': 'GST Invoice', 'proforma-invoice': 'Advance Invoice',
+              receipt: 'Receipt', 'sales-receipt': 'Sales Receipt', quote: 'Quote',
+              estimate: 'Estimate', 'credit-memo': 'Credit Memo', 'credit-note': 'Credit Note',
+              'purchase-order': 'Purchase Order', 'delivery-note': 'Delivery Note',
+            };
+            return (
+              <InvoiceForm
+                documentType={frontendType}
+                documentLabel={labelMap[frontendType] || 'Invoice'}
+                editInvoice={currentInvoice}
+                onSave={handleInvoiceSaved}
+              />
+            );
+          })()}
         </div>
       )}
 

@@ -7,9 +7,23 @@ import { backgroundPatterns, BackgroundPattern } from './BackgroundPatterns';
 import { apiCall } from '../../services/apiConfig';
 import { buildInvoiceAPI } from '../../services/buildInvoiceService';
 import { getCurrentUser } from '../../services/authService';
+import { currencyService } from '../../services/currencyService';
 import TemplateBuilderTabs from './TemplateBuilderTabs';
 
-const EditableText = ({ value, onChange, style, className, placeholder }) => {
+const CURRENCIES = [
+  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+  { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
+  { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
+  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+];
+
+const EditableText = ({ value, onChange, style, className, placeholder, readOnly = false }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState(value);
   const [isHovered, setIsHovered] = useState(false);
@@ -26,7 +40,7 @@ const EditableText = ({ value, onChange, style, className, placeholder }) => {
     }
   };
 
-  if (isEditing) {
+  if (isEditing && !readOnly) {
     return (
       <input
         type="text"
@@ -51,21 +65,23 @@ const EditableText = ({ value, onChange, style, className, placeholder }) => {
   return (
     <span
       onClick={() => {
-        setIsEditing(true);
-        setTempValue(value);
+        if (!readOnly) {
+          setIsEditing(true);
+          setTempValue(value);
+        }
       }}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => { if (!readOnly) setIsHovered(true); }}
       onMouseLeave={() => setIsHovered(false)}
       style={{
         ...style,
-        cursor: 'pointer',
+        cursor: readOnly ? 'default' : 'pointer',
         padding: '2px 4px',
         borderRadius: '2px',
         transition: 'background 0.2s',
-        background: isHovered ? '#EFF6FF' : 'transparent'
+        background: !readOnly && isHovered ? '#EFF6FF' : 'transparent'
       }}
       className={className}
-      title="Click to edit"
+      title={readOnly ? undefined : 'Click to edit'}
     >
       {value || placeholder}
     </span>
@@ -100,6 +116,7 @@ Best regards`,
   
   const [templateConfig, setTemplateConfig] = useState({
     templateName: 'My Custom Template',
+    currency: 'USD',
     
     primaryColor: '#4F46E5',
     secondaryColor: '#10B981',
@@ -144,18 +161,18 @@ Best regards`,
       amountLabel: 'Amount',
       item1Desc: 'Sample Item 1',
       item1Qty: '2',
-      item1Rate: '$50.00',
-      item1Amount: '$100.00',
+      item1Rate: '50.00',
+      item1Amount: '100.00',
       item2Desc: 'Sample Item 2',
       item2Qty: '1',
-      item2Rate: '$75.00',
-      item2Amount: '$75.00',
+      item2Rate: '75.00',
+      item2Amount: '75.00',
       subtotalLabel: 'Subtotal:',
-      subtotal: '$175.00',
+      subtotal: '175.00',
       taxLabel: 'Tax (10%):',
-      tax: '$17.50',
+      tax: '17.50',
       totalLabel: 'Total:',
-      total: '$192.50',
+      total: '192.50',
       termsLabel: 'Terms & Conditions',
       terms: 'Payment is due within 30 days. Thank you for your business!',
       paymentInfoLabel: 'PAYMENT INFORMATION',
@@ -346,11 +363,62 @@ Best regards`,
     }
   };
 
+  const currencySymbol = CURRENCIES.find(c => c.code === templateConfig.currency)?.symbol || '$';
+
+  const parseNum = (val) => parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
+
+  const recalcTotals = (content) => {
+    const item1Qty = parseNum(content.item1Qty);
+    const item1Rate = parseNum(content.item1Rate);
+    const item1Amount = item1Qty * item1Rate;
+
+    const item2Qty = parseNum(content.item2Qty);
+    const item2Rate = parseNum(content.item2Rate);
+    const item2Amount = item2Qty * item2Rate;
+
+    const subtotal = item1Amount + item2Amount;
+
+    // Extract tax % from taxLabel e.g. "Tax (10%):" → 10
+    const taxMatch = String(content.taxLabel).match(/(\d+(\.\d+)?)\s*%/);
+    const taxRate = taxMatch ? parseFloat(taxMatch[1]) : 0;
+    const tax = subtotal * taxRate / 100;
+    const total = subtotal + tax;
+
+    return {
+      ...content,
+      item1Amount: item1Amount.toFixed(2),
+      item2Amount: item2Amount.toFixed(2),
+      subtotal: subtotal.toFixed(2),
+      tax: tax.toFixed(2),
+      total: total.toFixed(2),
+    };
+  };
+
   const handleContentChange = (key, value) => {
-    setTemplateConfig(prev => ({
-      ...prev,
-      content: { ...prev.content, [key]: value }
-    }));
+    const itemRecalcKeys = ['item1Qty', 'item1Rate', 'item2Qty', 'item2Rate', 'taxLabel'];
+    setTemplateConfig(prev => {
+      const updatedContent = { ...prev.content, [key]: value };
+      let finalContent = updatedContent;
+
+      if (itemRecalcKeys.includes(key)) {
+        // Recalc everything from items up
+        finalContent = recalcTotals(updatedContent);
+      } else if (key === 'subtotal' || key === 'tax') {
+        // Just recalc total from the new subtotal + tax
+        const subtotal = parseNum(key === 'subtotal' ? value : updatedContent.subtotal);
+        const tax = parseNum(key === 'tax' ? value : updatedContent.tax);
+        finalContent = { ...updatedContent, total: (subtotal + tax).toFixed(2) };
+      } else if (key === 'item1Amount' || key === 'item2Amount') {
+        // Recalc subtotal from both amounts, then total
+        const item1Amount = parseNum(key === 'item1Amount' ? value : updatedContent.item1Amount);
+        const item2Amount = parseNum(key === 'item2Amount' ? value : updatedContent.item2Amount);
+        const subtotal = item1Amount + item2Amount;
+        const tax = parseNum(updatedContent.tax);
+        finalContent = { ...updatedContent, subtotal: subtotal.toFixed(2), total: (subtotal + tax).toFixed(2) };
+      }
+
+      return { ...prev, content: finalContent };
+    });
   };
 
   const handleImageUpload = (key, file) => {
@@ -420,6 +488,7 @@ Best regards`,
           setTemplateConfig(prev => ({
             ...prev,
             templateName: data.templateName || prev.templateName,
+            currency: data.currency || prev.currency,
             primaryColor: data.primaryColor || prev.primaryColor,
             secondaryColor: data.secondaryColor || prev.secondaryColor,
             textColor: data.textColor || prev.textColor,
@@ -643,7 +712,7 @@ Best regards`,
             >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Customization Panel */}
-            {!previewMode && activeTab === 'edit' && (
+            {isEditMode && (
               <div className="lg:col-span-1 space-y-6">
                 {/* Template Name */}
                 <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
@@ -654,6 +723,20 @@ Best regards`,
                     onChange={(e) => setTemplateConfig(prev => ({ ...prev, templateName: e.target.value }))}
                     className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
+                </div>
+
+                {/* Currency */}
+                <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
+                  <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Currency</h3>
+                  <select
+                    value={templateConfig.currency}
+                    onChange={(e) => setTemplateConfig(prev => ({ ...prev, currency: e.target.value }))}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  >
+                    {CURRENCIES.map(c => (
+                      <option key={c.code} value={c.code}>{c.symbol} — {c.name} ({c.code})</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Colors */}
@@ -1043,14 +1126,14 @@ Best regards`,
                           />
                         ) : (
                           <div className="w-full h-full rounded flex items-center justify-center text-gray-500 border-2 border-dashed border-gray-300">
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.logoText}
                               onChange={(val) => handleContentChange('logoText', val)}
                               placeholder="LOGO"
                             />
                           </div>
                         )}
-                        {!previewMode && (
+                        {isEditMode && (
                           <>
                             <label className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700">
                               📷 Upload
@@ -1087,20 +1170,20 @@ Best regards`,
                         updateSize('invoiceMeta', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('invoiceMeta', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div className="text-right text-sm">
                         <div className="mb-2">
                           <span className="font-semibold" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.invoiceNumberLabel}
                               onChange={(val) => handleContentChange('invoiceNumberLabel', val)}
                               placeholder="Invoice #:"
                             />
                           </span>{' '}
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.invoiceNumber}
                             onChange={(val) => handleContentChange('invoiceNumber', val)}
                             placeholder="INV-001"
@@ -1108,13 +1191,13 @@ Best regards`,
                         </div>
                         <div className="mb-2">
                           <span className="font-semibold" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.dateLabel}
                               onChange={(val) => handleContentChange('dateLabel', val)}
                               placeholder="Date:"
                             />
                           </span>{' '}
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.invoiceDate}
                             onChange={(val) => handleContentChange('invoiceDate', val)}
                             placeholder="Jan 29, 2026"
@@ -1122,13 +1205,13 @@ Best regards`,
                         </div>
                         <div className="mb-2">
                           <span className="font-semibold" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.poNumberLabel}
                               onChange={(val) => handleContentChange('poNumberLabel', val)}
                               placeholder="PO #:"
                             />
                           </span>{' '}
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.poNumber}
                             onChange={(val) => handleContentChange('poNumber', val)}
                             placeholder="PO-12345"
@@ -1136,13 +1219,13 @@ Best regards`,
                         </div>
                         <div>
                           <span className="font-semibold" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.dueDateLabel}
                               onChange={(val) => handleContentChange('dueDateLabel', val)}
                               placeholder="Due Date:"
                             />
                           </span>{' '}
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.dueDate}
                             onChange={(val) => handleContentChange('dueDate', val)}
                             placeholder="Feb 28, 2026"
@@ -1162,8 +1245,8 @@ Best regards`,
                       updateSize('invoiceTitle', ref.offsetWidth, ref.offsetHeight);
                       updatePosition('invoiceTitle', position.x, position.y);
                     }}
-                    disableDragging={previewMode}
-                    enableResizing={!previewMode}
+                    disableDragging={!isEditMode}
+                    enableResizing={isEditMode}
                     style={{ zIndex: 10 }}
                   >
                     <div>
@@ -1175,7 +1258,7 @@ Best regards`,
                         }}
                         className="font-bold"
                       >
-                        <EditableText
+                        <EditableText readOnly={!isEditMode}
                           value={templateConfig.content.invoiceTitle}
                           onChange={(val) => handleContentChange('invoiceTitle', val)}
                           placeholder="INVOICE"
@@ -1195,20 +1278,20 @@ Best regards`,
                         updateSize('businessInfo', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('businessInfo', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div>
                         <h3 className="font-semibold mb-2" style={{ color: templateConfig.primaryColor }}>
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.fromLabel}
                             onChange={(val) => handleContentChange('fromLabel', val)}
                             placeholder="From"
                           />
                         </h3>
                         <p className="text-sm">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.businessName}
                             onChange={(val) => handleContentChange('businessName', val)}
                             placeholder="Your Business Name"
@@ -1216,7 +1299,7 @@ Best regards`,
                           />
                         </p>
                         <p className="text-sm">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.businessAddress1}
                             onChange={(val) => handleContentChange('businessAddress1', val)}
                             placeholder="123 Business St"
@@ -1224,7 +1307,7 @@ Best regards`,
                           />
                         </p>
                         <p className="text-sm">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.businessAddress2}
                             onChange={(val) => handleContentChange('businessAddress2', val)}
                             placeholder="City, State 12345"
@@ -1246,20 +1329,20 @@ Best regards`,
                         updateSize('clientInfo', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('clientInfo', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div>
                         <h3 className="font-semibold mb-2" style={{ color: templateConfig.primaryColor }}>
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.billToLabel}
                             onChange={(val) => handleContentChange('billToLabel', val)}
                             placeholder="Bill To"
                           />
                         </h3>
                         <p className="text-sm">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.clientName}
                             onChange={(val) => handleContentChange('clientName', val)}
                             placeholder="Client Name"
@@ -1267,7 +1350,7 @@ Best regards`,
                           />
                         </p>
                         <p className="text-sm">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.clientAddress1}
                             onChange={(val) => handleContentChange('clientAddress1', val)}
                             placeholder="456 Client Ave"
@@ -1275,7 +1358,7 @@ Best regards`,
                           />
                         </p>
                         <p className="text-sm">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.clientAddress2}
                             onChange={(val) => handleContentChange('clientAddress2', val)}
                             placeholder="City, State 67890"
@@ -1297,20 +1380,20 @@ Best regards`,
                         updateSize('shipTo', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('shipTo', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div>
                         <h3 className="font-semibold mb-2" style={{ color: templateConfig.primaryColor }}>
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.shipToLabel}
                             onChange={(val) => handleContentChange('shipToLabel', val)}
                             placeholder="Ship To"
                           />
                         </h3>
                         <p className="text-sm">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.shipToName}
                             onChange={(val) => handleContentChange('shipToName', val)}
                             placeholder="Ship To Name"
@@ -1318,7 +1401,7 @@ Best regards`,
                           />
                         </p>
                         <p className="text-sm">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.shipToAddress1}
                             onChange={(val) => handleContentChange('shipToAddress1', val)}
                             placeholder="789 Shipping St"
@@ -1326,7 +1409,7 @@ Best regards`,
                           />
                         </p>
                         <p className="text-sm">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.shipToAddress2}
                             onChange={(val) => handleContentChange('shipToAddress2', val)}
                             placeholder="City, State 11111"
@@ -1348,8 +1431,8 @@ Best regards`,
                         updateSize('itemsTable', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('itemsTable', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div className="w-full">
@@ -1362,28 +1445,28 @@ Best regards`,
                               }}
                             >
                               <th className="text-left p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.descriptionLabel}
                                   onChange={(val) => handleContentChange('descriptionLabel', val)}
                                   placeholder="Description"
                                 />
                               </th>
                               <th className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.qtyLabel}
                                   onChange={(val) => handleContentChange('qtyLabel', val)}
                                   placeholder="Qty"
                                 />
                               </th>
                               <th className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.rateLabel}
                                   onChange={(val) => handleContentChange('rateLabel', val)}
                                   placeholder="Rate"
                                 />
                               </th>
                               <th className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.amountLabel}
                                   onChange={(val) => handleContentChange('amountLabel', val)}
                                   placeholder="Amount"
@@ -1394,61 +1477,61 @@ Best regards`,
                           <tbody>
                             <tr>
                               <td className="p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.item1Desc}
                                   onChange={(val) => handleContentChange('item1Desc', val)}
                                   placeholder="Sample Item 1"
                                 />
                               </td>
                               <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.item1Qty}
                                   onChange={(val) => handleContentChange('item1Qty', val)}
                                   placeholder="2"
                                 />
                               </td>
                               <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.item1Rate}
                                   onChange={(val) => handleContentChange('item1Rate', val)}
-                                  placeholder="$50.00"
+                                  placeholder="50.00"
                                 />
                               </td>
                               <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.item1Amount}
                                   onChange={(val) => handleContentChange('item1Amount', val)}
-                                  placeholder="$100.00"
+                                  placeholder="100.00"
                                 />
                               </td>
                             </tr>
                             <tr>
                               <td className="p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.item2Desc}
                                   onChange={(val) => handleContentChange('item2Desc', val)}
                                   placeholder="Sample Item 2"
                                 />
                               </td>
                               <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.item2Qty}
                                   onChange={(val) => handleContentChange('item2Qty', val)}
                                   placeholder="1"
                                 />
                               </td>
                               <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.item2Rate}
                                   onChange={(val) => handleContentChange('item2Rate', val)}
-                                  placeholder="$75.00"
+                                  placeholder="75.00"
                                 />
                               </td>
                               <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText
+                                <span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.item2Amount}
                                   onChange={(val) => handleContentChange('item2Amount', val)}
-                                  placeholder="$75.00"
+                                  placeholder="75.00"
                                 />
                               </td>
                             </tr>
@@ -1469,39 +1552,39 @@ Best regards`,
                         updateSize('totals', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('totals', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span>
-                              <EditableText
+                              <EditableText readOnly={!isEditMode}
                                 value={templateConfig.content.subtotalLabel}
                                 onChange={(val) => handleContentChange('subtotalLabel', val)}
                                 placeholder="Subtotal:"
                               />
                             </span>
-                            <EditableText
+                            <span><span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
                               value={templateConfig.content.subtotal}
                               onChange={(val) => handleContentChange('subtotal', val)}
-                              placeholder="$175.00"
-                            />
+                              placeholder="175.00"
+                            /></span>
                           </div>
                           <div className="flex justify-between">
                             <span>
-                              <EditableText
+                              <EditableText readOnly={!isEditMode}
                                 value={templateConfig.content.taxLabel}
                                 onChange={(val) => handleContentChange('taxLabel', val)}
                                 placeholder="Tax (10%):"
                               />
                             </span>
-                            <EditableText
+                            <span><span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
                               value={templateConfig.content.tax}
                               onChange={(val) => handleContentChange('tax', val)}
-                              placeholder="$17.50"
-                            />
+                              placeholder="17.50"
+                            /></span>
                           </div>
                           <div 
                             className="flex justify-between font-bold text-lg pt-2 border-t"
@@ -1511,17 +1594,17 @@ Best regards`,
                             }}
                           >
                             <span>
-                              <EditableText
+                              <EditableText readOnly={!isEditMode}
                                 value={templateConfig.content.totalLabel}
                                 onChange={(val) => handleContentChange('totalLabel', val)}
                                 placeholder="Total:"
                               />
                             </span>
-                            <EditableText
+                            <span><span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
                               value={templateConfig.content.total}
                               onChange={(val) => handleContentChange('total', val)}
-                              placeholder="$192.50"
-                            />
+                              placeholder="192.50"
+                            /></span>
                           </div>
                         </div>
                       </div>
@@ -1539,20 +1622,20 @@ Best regards`,
                         updateSize('terms', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('terms', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div className="text-sm">
                         <h3 className="font-semibold mb-2" style={{ color: templateConfig.primaryColor }}>
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.termsLabel}
                             onChange={(val) => handleContentChange('termsLabel', val)}
                             placeholder="Terms & Conditions"
                           />
                         </h3>
                         <p className="text-gray-600">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.terms}
                             onChange={(val) => handleContentChange('terms', val)}
                             placeholder="Payment is due within 30 days. Thank you for your business!"
@@ -1574,13 +1657,13 @@ Best regards`,
                         updateSize('paymentInfo', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('paymentInfo', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div className="bg-white border rounded-lg p-4" style={{ borderColor: templateConfig.borderColor }}>
                           <h3 className="font-semibold mb-3 text-sm" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.paymentInfoLabel}
                               onChange={(val) => handleContentChange('paymentInfoLabel', val)}
                               placeholder="PAYMENT INFORMATION"
@@ -1589,13 +1672,13 @@ Best regards`,
                           <div className="space-y-2 text-sm">
                             <div className="flex gap-2">
                               <span className="text-gray-600 w-24">
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.bankLabel}
                                   onChange={(val) => handleContentChange('bankLabel', val)}
                                   placeholder="Bank:"
                                 />
                               </span>
-                              <EditableText
+                              <EditableText readOnly={!isEditMode}
                                 value={templateConfig.content.bankName}
                                 onChange={(val) => handleContentChange('bankName', val)}
                                 placeholder="Bank of America"
@@ -1603,13 +1686,13 @@ Best regards`,
                             </div>
                             <div className="flex gap-2">
                               <span className="text-gray-600 w-24">
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.accountLabel}
                                   onChange={(val) => handleContentChange('accountLabel', val)}
                                   placeholder="Account:"
                                 />
                               </span>
-                              <EditableText
+                              <EditableText readOnly={!isEditMode}
                                 value={templateConfig.content.accountNumber}
                                 onChange={(val) => handleContentChange('accountNumber', val)}
                                 placeholder="****1234"
@@ -1617,13 +1700,13 @@ Best regards`,
                             </div>
                             <div className="flex gap-2">
                               <span className="text-gray-600 w-24">
-                                <EditableText
+                                <EditableText readOnly={!isEditMode}
                                   value={templateConfig.content.ifscLabel}
                                   onChange={(val) => handleContentChange('ifscLabel', val)}
                                   placeholder="IFSC/Routing:"
                                 />
                               </span>
-                              <EditableText
+                              <EditableText readOnly={!isEditMode}
                                 value={templateConfig.content.ifscCode}
                                 onChange={(val) => handleContentChange('ifscCode', val)}
                                 placeholder="BOFA0001234"
@@ -1645,8 +1728,8 @@ Best regards`,
                         updateSize('qrCode', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('qrCode', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div className="text-center flex flex-col items-center justify-center">
@@ -1662,7 +1745,7 @@ Best regards`,
                                 <span className="text-gray-500 text-xs">QR Code</span>
                               </div>
                             )}
-                            {!previewMode && (
+                            {isEditMode && (
                               <>
                                 <label className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700">
                                   📷 Upload
@@ -1686,7 +1769,7 @@ Best regards`,
                             )}
                           </div>
                           <p className="text-sm font-semibold mt-2" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.qrCodeText}
                               onChange={(val) => handleContentChange('qrCodeText', val)}
                               placeholder="Scan to Pay"
@@ -1707,8 +1790,8 @@ Best regards`,
                         updateSize('signature', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('signature', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div className="text-center">
@@ -1732,7 +1815,7 @@ Best regards`,
                               <div className="text-gray-400 text-xs pt-10">Signature Area</div>
                             </div>
                           )}
-                          {!previewMode && (
+                          {isEditMode && (
                             <>
                               <label className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700">
                                 📷 Upload
@@ -1756,7 +1839,7 @@ Best regards`,
                           )}
                         </div>
                         <p className="text-sm font-semibold">
-                          <EditableText
+                          <EditableText readOnly={!isEditMode}
                             value={templateConfig.content.signatureLabel}
                             onChange={(val) => handleContentChange('signatureLabel', val)}
                             placeholder="Authorized Signature"
@@ -1777,8 +1860,8 @@ Best regards`,
                         updateSize('footer', ref.offsetWidth, ref.offsetHeight);
                         updatePosition('footer', position.x, position.y);
                       }}
-                      disableDragging={previewMode}
-                      enableResizing={!previewMode}
+                      disableDragging={!isEditMode}
+                      enableResizing={isEditMode}
                       style={{ zIndex: 10 }}
                     >
                       <div 
@@ -1787,14 +1870,14 @@ Best regards`,
                       >
                         <div>
                           <p className="font-semibold mb-1" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.emailLabel}
                               onChange={(val) => handleContentChange('emailLabel', val)}
                               placeholder="EMAIL"
                             />
                           </p>
                           <p className="text-xs">
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.footerEmail}
                               onChange={(val) => handleContentChange('footerEmail', val)}
                               placeholder="contact@business.com"
@@ -1803,14 +1886,14 @@ Best regards`,
                         </div>
                         <div>
                           <p className="font-semibold mb-1" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.phoneLabel}
                               onChange={(val) => handleContentChange('phoneLabel', val)}
                               placeholder="PHONE"
                             />
                           </p>
                           <p className="text-xs">
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.footerPhone}
                               onChange={(val) => handleContentChange('footerPhone', val)}
                               placeholder="+1 (555) 123-4567"
@@ -1819,14 +1902,14 @@ Best regards`,
                         </div>
                         <div>
                           <p className="font-semibold mb-1" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.websiteLabel}
                               onChange={(val) => handleContentChange('websiteLabel', val)}
                               placeholder="WEBSITE"
                             />
                           </p>
                           <p className="text-xs">
-                            <EditableText
+                            <EditableText readOnly={!isEditMode}
                               value={templateConfig.content.footerWebsite}
                               onChange={(val) => handleContentChange('footerWebsite', val)}
                               placeholder="www.business.com"

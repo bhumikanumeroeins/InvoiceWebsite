@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { currencyService } from '../../services/currencyService';
-import { FileText, Filter, Loader2, Trash2, RotateCcw, AlertTriangle, Palette } from 'lucide-react';
+import { FileText, Filter, Loader2, Trash2, RotateCcw, AlertTriangle, Palette, Plus, CheckCircle } from 'lucide-react';
 import { invoiceAPI } from '../../services/invoiceService';
+import { paymentAPI } from '../../services/paymentService';
 import { buildInvoiceAPI } from '../../services/buildInvoiceService';
 import { getUploadsUrl } from '../../services/apiConfig';
 import { useNavigate } from 'react-router-dom';
 
-const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
+const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = '' }) => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [customInvoices, setCustomInvoices] = useState([]);
@@ -99,6 +100,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
       },
       signature: inv.signature ? `${getUploadsUrl()}/uploads/${inv.signature}` : null,
       qrCode: inv.qrCode ? `${getUploadsUrl()}/uploads/${inv.qrCode}` : null,
+      selectedTemplate: inv.selectedTemplate || 1,
     };
   };
 
@@ -306,6 +308,38 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
     navigate(`/template-builder?id=${customInvoice._id}`);
   };
 
+  const handleQuickMarkPaid = async (e, invoice) => {
+    e.stopPropagation();
+    try {
+      await paymentAPI.updatePaymentStatus(invoice.id, {
+        paymentStatus: 'paid',
+        paidAmount: invoice.total,
+        paidDate: new Date().toISOString().split('T')[0],
+        paymentMethod: 'Other',
+      });
+      toast.success(`Invoice ${invoice.number} marked as paid`);
+      fetchInvoices();
+    } catch (err) {
+      toast.error('Failed to mark as paid: ' + err.message);
+    }
+  };
+
+  const getStatusBadge = (invoice) => {
+    if (invoice.isOverdue) {
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">● Overdue</span>;
+    }
+    switch (invoice.status) {
+      case 'paid':
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">● Paid</span>;
+      case 'partial':
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">● Partial</span>;
+      case 'unpaid':
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">● Unpaid</span>;
+      default:
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">● —</span>;
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
       {/* Header */}
@@ -461,10 +495,30 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
               <Trash2 className="w-16 h-16 text-slate-300 mb-4" />
               <p className="text-slate-500">Trash is empty</p>
             </>
+          ) : invoices.length === 0 && customInvoices.length === 0 ? (
+            // True empty state — no invoices at all
+            <div className="text-center max-w-sm">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-100 to-emerald-100 flex items-center justify-center mx-auto mb-5">
+                <FileText className="w-10 h-10 text-indigo-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">No invoices yet</h3>
+              <p className="text-slate-500 mb-6 text-sm leading-relaxed">
+                Create your first invoice in seconds. Add your business details, items, and send it straight to your client.
+              </p>
+              {onNewInvoice && (
+                <button
+                  onClick={onNewInvoice}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                >
+                  <Plus className="w-5 h-5" />
+                  Create your first invoice
+                </button>
+              )}
+            </div>
           ) : (
             <>
               <FileText className="w-16 h-16 text-slate-300 mb-4" />
-              <p className="text-slate-500">No invoices found</p>
+              <p className="text-slate-500">No invoices match this filter</p>
             </>
           )}
         </div>
@@ -486,6 +540,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
                   <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
                   <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Number</th>
                   <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{isTrashView ? 'Deleted On' : 'Date'}</th>
+                  {!isTrashView && <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>}
                   {!isTrashView && <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Paid</th>}
                   <th className="p-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</th>
                 </tr>
@@ -504,7 +559,7 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
                           onInvoiceClick && onInvoiceClick(invoice);
                         }
                       }}
-                      className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${!isTrashView ? 'cursor-pointer' : ''} ${
+                      className={`border-b border-slate-100 hover:bg-slate-50 transition-colors group ${!isTrashView ? 'cursor-pointer' : ''} ${
                         index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
                       } ${isCustom ? 'bg-purple-50/30' : ''}`}
                     >
@@ -525,7 +580,16 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
                       {!isTrashView && (
                         <td className="p-4 text-sm">
                           {isCustom ? (
-                            <span className="text-purple-600 font-medium text-xs">Custom Design</span>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">● Custom</span>
+                          ) : (
+                            getStatusBadge(invoice)
+                          )}
+                        </td>
+                      )}
+                      {!isTrashView && (
+                        <td className="p-4 text-sm">
+                          {isCustom ? (
+                            <span className="text-slate-400 text-xs">—</span>
                           ) : (
                             <span className={`font-medium ${invoice.paid > 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
                               {formatCurrency(invoice.paid, invoice.currency)}
@@ -534,7 +598,19 @@ const MyInvoices = ({ onInvoiceClick, refreshKey, searchQuery = '' }) => {
                         </td>
                       )}
                       <td className="p-4 text-sm text-slate-700 text-right font-medium">
-                        {formatCurrency(invoice.total, invoice.currency)}
+                        <div className="flex items-center justify-end gap-2">
+                          {!isTrashView && !isCustom && invoice.status !== 'paid' && (
+                            <button
+                              onClick={(e) => handleQuickMarkPaid(e, invoice)}
+                              className="opacity-0 group-hover:opacity-100 inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-lg border border-emerald-200 hover:bg-emerald-100 transition-all"
+                              title="Mark as paid"
+                            >
+                              <CheckCircle className="w-3 h-3" />
+                              Paid
+                            </button>
+                          )}
+                          {formatCurrency(invoice.total, invoice.currency)}
+                        </div>
                       </td>
                     </tr>
                   );

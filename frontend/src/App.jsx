@@ -10,8 +10,7 @@ import Contact from './pages/Contact';
 import TemplateBuilder from './components/builder/TemplateBuilder';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
-
-
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
   return (
@@ -20,12 +19,12 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/create/:type" element={<CreateInvoice />} />
         <Route path="/faq" element={<FAQ />} />
-        <Route path="/contact" element={<Contact />} />        
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/template-builder" element={<TemplateBuilder />} />        
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/create/:type" element={<ProtectedRoute><CreateInvoice /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/template-builder" element={<ProtectedRoute><TemplateBuilder /></ProtectedRoute>} />
       </Routes>
       <ToastContainer
         position="top-right"

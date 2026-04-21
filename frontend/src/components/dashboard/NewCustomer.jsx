@@ -82,6 +82,7 @@ const NewCustomer = ({ customer, onInvoiceClick }) => {
       },
       signature: inv.signature ? `${getUploadsUrl()}/uploads/${inv.signature}` : null,
       qrCode: inv.qrCode ? `${getUploadsUrl()}/uploads/${inv.qrCode}` : null,
+      selectedTemplate: inv.selectedTemplate || 1,
     };
   };
 
