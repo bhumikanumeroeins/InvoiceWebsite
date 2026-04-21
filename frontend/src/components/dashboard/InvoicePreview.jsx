@@ -746,21 +746,25 @@ Best regards`,
       {/* Invoice Preview Content */}
       {activeAction === 'invoice' && (
         <div className="p-6">
-          <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm flex justify-center">
-            <div
-                className="origin-top"
+          <div className="border border-slate-200 rounded-lg bg-white shadow-sm flex justify-center">
+            <div style={{ width: "476px", height: "700px", overflow: "hidden", position: "relative" }}>
+              <div
                 style={{
-                  transform: activeAction === "invoice" ? "scale(0.6)" : "scale(1)",
+                  transform: "scale(0.6)",
+                  transformOrigin: "top left",
+                  width: "794px",
+                  pointerEvents: "none",
                 }}
               >
-              {(() => {
-                const TemplateComponent = templates[selectedTemplate];
-                return (
-                  <TemplateComponent
-                    data={previewData}
-                  />
-                );
-              })()}
+                {(() => {
+                  const TemplateComponent = templates[selectedTemplate];
+                  return (
+                    <TemplateComponent
+                      data={previewData}
+                    />
+                  );
+                })()}
+              </div>
             </div>
           </div>
           <div className="mt-4 flex items-center justify-center">

@@ -129,6 +129,6 @@ export const getInvoiceData = (data = {}) => {
     website: profile.websiteLink || '',
     
     poNumber: '',
-    upiId: '',
+    upiId: data.payment?.upiId || '',
   };
 };

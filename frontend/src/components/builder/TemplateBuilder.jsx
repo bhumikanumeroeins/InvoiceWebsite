@@ -273,14 +273,7 @@ Best regards`,
         throw new Error('Failed to capture template - data URL too short. Element might be empty or hidden.');
       }
 
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
       const pdfWidth = 210;
-      const pdfHeight = 297;
 
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -299,7 +292,13 @@ Best regards`,
       const imgWidth = pdfWidth;
       const imgHeight = (img.height * pdfWidth) / img.width;
 
-      pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, Math.min(imgHeight, pdfHeight));
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [pdfWidth, imgHeight],
+      });
+
+      pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight);
 
       if (forDownload) {
         pdf.save(`${templateConfig.templateName || 'Custom-Invoice'}.pdf`);
@@ -1101,8 +1100,8 @@ Best regards`,
                     width: '850px',
                     minHeight: '1123px',
                     position: 'relative',
-                    overflow: 'hidden',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    paddingBottom: '60px'
                   }}
                 >
                   {/* Background Patterns */}
@@ -1953,6 +1952,12 @@ Best regards`,
                       </div>
                     </Rnd>
                   )}
+                  {/* Disclaimer */}
+                  <div style={{ position: "absolute", bottom: 32, left: 32, right: 32, textAlign: "center", padding: "6px 0", borderTop: "1px solid #e5e7eb" }}>
+                    <p style={{ fontSize: "10px", color: "#9ca3af", margin: 0, fontStyle: "italic" }}>
+                      This invoice has been generated electronically and is valid without signature.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

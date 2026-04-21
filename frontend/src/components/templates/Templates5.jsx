@@ -15,6 +15,7 @@ const Templates5 = ({ data = {} }) => {
   const gray = '#374151';
 
   return (
+    <>
     <div 
       style={{ 
         width: '794px', 
@@ -172,6 +173,13 @@ const Templates5 = ({ data = {} }) => {
         <span style={{ color: '#fff', fontSize: '11px' }}>{website}</span>
       </div>
     </div>
+      {/* Disclaimer */}
+      <div style={{ width: "794px", textAlign: "center", padding: "8px 50px 4px", borderTop: "1px solid #e5e7eb", backgroundColor: "#fff" }}>
+        <p style={{ fontSize: "10px", color: "#9ca3af", margin: 0, fontStyle: "italic" }}>
+          This invoice has been generated electronically and is valid without signature.
+        </p>
+      </div>
+    </>
   );
 };
 

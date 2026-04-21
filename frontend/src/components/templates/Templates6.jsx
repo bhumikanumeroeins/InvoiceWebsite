@@ -15,6 +15,7 @@ const Templates6 = ({ data = {} }) => {
   } = getInvoiceData(data);
 
   return (
+    <>
     <div
       className="w-[794px] h-[1123px] relative font-[Poppins] font-[Fira_Sans] bg-no-repeat bg-top"
       style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "794px 1123px" }}
@@ -135,6 +136,13 @@ const Templates6 = ({ data = {} }) => {
         <span>{website}</span>
       </div>
     </div>
+      {/* Disclaimer */}
+      <div style={{ width: "794px", textAlign: "center", padding: "8px 50px 4px", borderTop: "1px solid #e5e7eb", backgroundColor: "#fff" }}>
+        <p style={{ fontSize: "10px", color: "#9ca3af", margin: 0, fontStyle: "italic" }}>
+          This invoice has been generated electronically and is valid without signature.
+        </p>
+      </div>
+    </>
   );
 };
 
