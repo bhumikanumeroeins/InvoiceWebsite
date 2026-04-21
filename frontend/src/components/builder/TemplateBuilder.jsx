@@ -176,12 +176,15 @@ Best regards`,
       termsLabel: 'Terms & Conditions',
       terms: 'Payment is due within 30 days. Thank you for your business!',
       paymentInfoLabel: 'PAYMENT INFORMATION',
+      paymentInfoType: 'bank',
       bankLabel: 'Bank:',
       bankName: 'Bank of America',
       accountLabel: 'Account:',
       accountNumber: '****1234',
       ifscLabel: 'IFSC/Routing:',
       ifscCode: 'BOFA0001234',
+      upiLabel: 'UPI ID:',
+      upiId: 'business@upi',
       qrCodeImage: '',
       qrCodeText: 'Scan to Pay',
       signatureImage: '',
@@ -1048,6 +1051,18 @@ Best regards`,
                       />
                       <span className="text-sm text-gray-700">Payment Info</span>
                     </label>
+                    {templateConfig.visibility.paymentInfo && (
+                      <div className="ml-6">
+                        <select
+                          value={templateConfig.content.paymentInfoType}
+                          onChange={(e) => handleContentChange('paymentInfoType', e.target.value)}
+                          className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                          <option value="bank">Bank Details</option>
+                          <option value="upi">UPI Info</option>
+                        </select>
+                      </div>
+                    )}
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
@@ -1670,48 +1685,67 @@ Best regards`,
                             />
                           </h3>
                           <div className="space-y-2 text-sm">
-                            <div className="flex gap-2">
-                              <span className="text-gray-600 w-24">
+                            {templateConfig.content.paymentInfoType === 'upi' ? (
+                              <div className="flex gap-2">
+                                <span className="text-gray-600 w-24">
+                                  <EditableText readOnly={!isEditMode}
+                                    value={templateConfig.content.upiLabel}
+                                    onChange={(val) => handleContentChange('upiLabel', val)}
+                                    placeholder="UPI ID:"
+                                  />
+                                </span>
                                 <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.bankLabel}
-                                  onChange={(val) => handleContentChange('bankLabel', val)}
-                                  placeholder="Bank:"
+                                  value={templateConfig.content.upiId}
+                                  onChange={(val) => handleContentChange('upiId', val)}
+                                  placeholder="business@upi"
                                 />
-                              </span>
-                              <EditableText readOnly={!isEditMode}
-                                value={templateConfig.content.bankName}
-                                onChange={(val) => handleContentChange('bankName', val)}
-                                placeholder="Bank of America"
-                              />
-                            </div>
-                            <div className="flex gap-2">
-                              <span className="text-gray-600 w-24">
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.accountLabel}
-                                  onChange={(val) => handleContentChange('accountLabel', val)}
-                                  placeholder="Account:"
-                                />
-                              </span>
-                              <EditableText readOnly={!isEditMode}
-                                value={templateConfig.content.accountNumber}
-                                onChange={(val) => handleContentChange('accountNumber', val)}
-                                placeholder="****1234"
-                              />
-                            </div>
-                            <div className="flex gap-2">
-                              <span className="text-gray-600 w-24">
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.ifscLabel}
-                                  onChange={(val) => handleContentChange('ifscLabel', val)}
-                                  placeholder="IFSC/Routing:"
-                                />
-                              </span>
-                              <EditableText readOnly={!isEditMode}
-                                value={templateConfig.content.ifscCode}
-                                onChange={(val) => handleContentChange('ifscCode', val)}
-                                placeholder="BOFA0001234"
-                              />
-                            </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex gap-2">
+                                  <span className="text-gray-600 w-24">
+                                    <EditableText readOnly={!isEditMode}
+                                      value={templateConfig.content.bankLabel}
+                                      onChange={(val) => handleContentChange('bankLabel', val)}
+                                      placeholder="Bank:"
+                                    />
+                                  </span>
+                                  <EditableText readOnly={!isEditMode}
+                                    value={templateConfig.content.bankName}
+                                    onChange={(val) => handleContentChange('bankName', val)}
+                                    placeholder="Bank of America"
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <span className="text-gray-600 w-24">
+                                    <EditableText readOnly={!isEditMode}
+                                      value={templateConfig.content.accountLabel}
+                                      onChange={(val) => handleContentChange('accountLabel', val)}
+                                      placeholder="Account:"
+                                    />
+                                  </span>
+                                  <EditableText readOnly={!isEditMode}
+                                    value={templateConfig.content.accountNumber}
+                                    onChange={(val) => handleContentChange('accountNumber', val)}
+                                    placeholder="****1234"
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <span className="text-gray-600 w-24">
+                                    <EditableText readOnly={!isEditMode}
+                                      value={templateConfig.content.ifscLabel}
+                                      onChange={(val) => handleContentChange('ifscLabel', val)}
+                                      placeholder="IFSC/Routing:"
+                                    />
+                                  </span>
+                                  <EditableText readOnly={!isEditMode}
+                                    value={templateConfig.content.ifscCode}
+                                    onChange={(val) => handleContentChange('ifscCode', val)}
+                                    placeholder="BOFA0001234"
+                                  />
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                     </Rnd>
