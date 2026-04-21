@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { Save, Loader2, Plus, Trash2, Upload, X } from 'lucide-react';
 import { invoiceAPI, itemAPI } from '../../services/invoiceService';
 import { getUploadsUrl } from '../../services/apiConfig';
+import SignatureModal from './SignatureModal';
 
 import Templates1 from '../templates/Templates1';
 import Templates2 from '../templates/Templates2';
@@ -58,6 +59,7 @@ const Section = ({ title, children, defaultOpen = true }) => {
 
 const InlineInvoiceEditor = ({ invoice, selectedTemplate, onSave, onCancel }) => {
   const [saving, setSaving] = useState(false);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
 
   // Build editable state from invoice
   const [draft, setDraft] = useState(() => {
@@ -380,10 +382,13 @@ const InlineInvoiceEditor = ({ invoice, selectedTemplate, onSave, onCancel }) =>
                   </button>
                 </div>
               ) : (
-                <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all text-sm text-slate-500">
-                  <Upload className="w-4 h-4" /> Upload signature
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { if (e.target.files[0]) set('signatureFile', e.target.files[0]); }} />
-                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowSignatureModal(true)}
+                  className="flex items-center gap-2 px-3 py-2 border border-dashed border-slate-300 rounded-lg hover:border-indigo-400 hover:bg-indigo-50/50 transition-all text-sm text-slate-500 w-full"
+                >
+                  <Upload className="w-4 h-4" /> Add signature
+                </button>
               )}
             </div>
             {/* QR Code */}
@@ -424,6 +429,15 @@ const InlineInvoiceEditor = ({ invoice, selectedTemplate, onSave, onCancel }) =>
           <TemplateComponent data={previewData} />
         </div>
       </div>
+
+      <SignatureModal
+        isOpen={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        onUpload={(e) => {
+          const file = e.target.files[0];
+          if (file) set('signatureFile', file);
+        }}
+      />
     </div>
   );
 };

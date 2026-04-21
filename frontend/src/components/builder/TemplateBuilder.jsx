@@ -9,6 +9,7 @@ import { buildInvoiceAPI } from '../../services/buildInvoiceService';
 import { getCurrentUser } from '../../services/authService';
 import { currencyService } from '../../services/currencyService';
 import TemplateBuilderTabs from './TemplateBuilderTabs';
+import SignatureModal from '../invoice/SignatureModal';
 
 const CURRENCIES = [
   { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
@@ -232,6 +233,7 @@ Best regards`,
 
   const [previewMode, setPreviewMode] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
   
   const isEditMode = activeTab === 'edit';
 
@@ -607,6 +609,7 @@ Best regards`,
   }
 
   return (
+    <>
     <div className="min-h-screen bg-gray-100">
       {/* Main Header */}
       <header className="bg-white border-b border-slate-200">
@@ -1850,15 +1853,12 @@ Best regards`,
                           )}
                           {isEditMode && (
                             <>
-                              <label className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700">
-                                📷 Upload
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleImageUpload('signatureImage', e.target.files[0])}
-                                  className="hidden"
-                                />
-                              </label>
+                              <button
+                                onClick={() => setShowSignatureModal(true)}
+                                className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700"
+                              >
+                                ✏️ Sign
+                              </button>
                               {templateConfig.content.signatureImage && (
                                 <button
                                   onClick={() => handleContentChange('signatureImage', null)}
@@ -1981,6 +1981,16 @@ Best regards`,
         </div>
       </footer>
     </div>
+
+    <SignatureModal
+      isOpen={showSignatureModal}
+      onClose={() => setShowSignatureModal(false)}
+      onUpload={(e) => {
+        const file = e.target.files[0];
+        if (file) handleImageUpload('signatureImage', file);
+      }}
+    />
+    </>
   );
 
 
