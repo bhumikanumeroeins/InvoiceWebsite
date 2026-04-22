@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import AIRefinePanel from './AIRefinePanel';
 import { toast } from 'react-toastify';
 import { Rnd } from 'react-rnd';
 import { Save, Eye, ArrowLeft, Loader2, Mail, Download, Edit } from 'lucide-react';
@@ -92,6 +93,7 @@ const EditableText = ({ value, onChange, style, className, placeholder, readOnly
 const TemplateBuilder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const customInvoiceId = searchParams.get('id');
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
@@ -372,15 +374,12 @@ Best regards`,
   const parseNum = (val) => parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
 
   const recalcTotals = (content) => {
-    const item1Qty = parseNum(content.item1Qty);
-    const item1Rate = parseNum(content.item1Rate);
-    const item1Amount = item1Qty * item1Rate;
+    const item1Amount = parseNum(content.item1Qty) * parseNum(content.item1Rate);
+    const item2Amount = parseNum(content.item2Qty) * parseNum(content.item2Rate);
+    const item3Amount = parseNum(content.item3Qty) * parseNum(content.item3Rate);
+    const item4Amount = parseNum(content.item4Qty) * parseNum(content.item4Rate);
 
-    const item2Qty = parseNum(content.item2Qty);
-    const item2Rate = parseNum(content.item2Rate);
-    const item2Amount = item2Qty * item2Rate;
-
-    const subtotal = item1Amount + item2Amount;
+    const subtotal = item1Amount + item2Amount + item3Amount + item4Amount;
 
     // Extract tax % from taxLabel e.g. "Tax (10%):" → 10
     const taxMatch = String(content.taxLabel).match(/(\d+(\.\d+)?)\s*%/);
@@ -392,6 +391,8 @@ Best regards`,
       ...content,
       item1Amount: item1Amount.toFixed(2),
       item2Amount: item2Amount.toFixed(2),
+      item3Amount: item3Amount.toFixed(2),
+      item4Amount: item4Amount.toFixed(2),
       subtotal: subtotal.toFixed(2),
       tax: tax.toFixed(2),
       total: total.toFixed(2),
@@ -399,7 +400,7 @@ Best regards`,
   };
 
   const handleContentChange = (key, value) => {
-    const itemRecalcKeys = ['item1Qty', 'item1Rate', 'item2Qty', 'item2Rate', 'taxLabel'];
+    const itemRecalcKeys = ['item1Qty', 'item1Rate', 'item2Qty', 'item2Rate', 'item3Qty', 'item3Rate', 'item4Qty', 'item4Rate', 'taxLabel'];
     setTemplateConfig(prev => {
       const updatedContent = { ...prev.content, [key]: value };
       let finalContent = updatedContent;
@@ -468,6 +469,21 @@ Best regards`,
     }));
   };
 
+  const handleAIUpdate = (updates) => {
+    const { currency: updatedCurrency, ...contentUpdates } = updates;
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(contentUpdates).filter(([, v]) => v !== null && v !== undefined && v !== '')
+    );
+    setTemplateConfig(prev => {
+      const merged = { ...prev.content, ...cleanUpdates };
+      return {
+        ...prev,
+        ...(updatedCurrency && { currency: updatedCurrency }),
+        content: recalcTotals(merged),
+      };
+    });
+  };
+
   useEffect(() => {
     const loadCustomInvoice = async () => {
       if (!customInvoiceId) return;
@@ -532,6 +548,27 @@ Best regards`,
     
     loadCustomInvoice();
   }, [customInvoiceId]);
+
+  useEffect(() => {
+    const aiContent = location.state?.aiContent;
+    if (!aiContent || customInvoiceId) return; 
+    const { currency, templateName, ...contentFields } = aiContent;
+    const cleanContent = Object.fromEntries(
+      Object.entries(contentFields).filter(([, v]) => v !== null && v !== undefined && v !== '')
+    );
+    const aiVisibility = location.state?.visibility;
+    setTemplateConfig(prev => {
+      const merged = { ...prev.content, ...cleanContent };
+      return {
+        ...prev,
+        templateName: templateName || prev.templateName,
+        ...(currency && { currency }),
+        ...(aiVisibility && { visibility: { ...prev.visibility, ...aiVisibility } }),
+        content: recalcTotals(merged),
+      };
+    });
+    setActiveTab('edit');
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
     setSaving(true);
@@ -729,6 +766,9 @@ Best regards`,
                     className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
                 </div>
+
+                {/* AI Refine Panel */}
+                <AIRefinePanel content={templateConfig.content} onUpdate={handleAIUpdate} />
 
                 {/* Currency */}
                 <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">

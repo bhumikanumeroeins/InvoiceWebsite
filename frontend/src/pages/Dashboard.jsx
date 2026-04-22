@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ChevronDown, Settings, LogOut, Plus, FileText, Users, BarChart3, UserPlus, X, Receipt, CreditCard, FileCheck, Truck, ShoppingCart, Eye, Edit, Palette } from 'lucide-react';
+import { Search, ChevronDown, Settings, LogOut, Plus, FileText, Users, BarChart3, UserPlus, X, Receipt, CreditCard, FileCheck, Truck, ShoppingCart, Eye, Edit, Palette, Sparkles } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import InvoiceForm from '../components/invoice/InvoiceForm';
 import MyInvoices from '../components/dashboard/MyInvoices';
@@ -190,6 +190,14 @@ const Dashboard = () => {
 
           {/* Right: New Invoice + User */}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* AI Generate button */}
+            <button
+              onClick={() => navigate('/ai-invoice')}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all"
+            >
+              <Sparkles className="w-4 h-4" />
+              AI Generate
+            </button>
             {/* New Invoice button with dropdown */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button

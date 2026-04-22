@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import CreateInvoice from './pages/CreateInvoice';
+import AIInvoiceGenerator from './pages/AIInvoiceGenerator';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
 import TemplateBuilder from './components/builder/TemplateBuilder';
@@ -22,6 +23,7 @@ function App() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/create/:type" element={<ProtectedRoute><CreateInvoice /></ProtectedRoute>} />
+        <Route path="/ai-invoice" element={<ProtectedRoute><AIInvoiceGenerator /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/template-builder" element={<ProtectedRoute><TemplateBuilder /></ProtectedRoute>} />

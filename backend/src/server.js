@@ -1,12 +1,12 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import app from "./app.js";
 import connectDB from "./config/db.js";
-import dotenv from "dotenv";
 import path from "path";
 import { processAllDueRecurringInvoices } from "./controller/recurring/recurringInvoice.js";
 import { initReminderCron } from "./services/reminderCron.js";
 import { initEmailReportCron } from "./services/emailReportCron.js";
-
-dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 

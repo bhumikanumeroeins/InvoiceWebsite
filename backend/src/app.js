@@ -16,6 +16,7 @@ import reminders from "./routes/reminders/paymentReminder.js";
 import admin from "./routes/admin/admin_register.js";
 
 import buildInvoice from "./routes/users/buildInvoice.js";
+import aiInvoice from "./routes/ai/aiInvoice.js";
 
 
 import adminFAQRoutes from "./routes/admin/faq.js";
@@ -48,6 +49,7 @@ app.use("/api/recurring", recurring);
 app.use("/api/reminders", reminders);
 app.use("/api/admin", admin);
 app.use("/api/build-invoice", buildInvoice);
+app.use("/api/ai", aiInvoice);
 app.use("/api/admin/faq", adminFAQRoutes);
 app.use("/api/user/faq", userFAQRoutes);
 
