@@ -11,7 +11,8 @@ const Templates7 = ({ data = {} }) => {
     items, terms, subtotal, taxAmount, total,
     bankName, accountNo, ifscCode,
     signature, qrCode,
-    email, phone, website
+    email, phone, website,
+    currencySymbol
   } = getInvoiceData(data);
 
   return (
@@ -94,10 +95,10 @@ const Templates7 = ({ data = {} }) => {
                 <div style={{ width: "10%" }}>{item.quantity}.</div>
                 <div style={{ width: "45%" }}>{item.description}</div>
                 <div style={{ width: "20%", textAlign: "center" }}>
-                {item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                {currencySymbol}{item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </div>
                 <div style={{ width: "25%", textAlign: "right" }}>
-                {item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                {currencySymbol}{item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </div>
             </div>
             ))}
@@ -115,13 +116,13 @@ const Templates7 = ({ data = {} }) => {
 
         <div style={{ width: "35%" }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700" }}>
-            <span>Sub Total</span><span>{subtotal.toLocaleString("en-IN")}</span>
+            <span>Sub Total</span><span>{currencySymbol}{subtotal.toLocaleString("en-IN")}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700"}}>
-            <span>Tax</span><span>{taxAmount}</span>
+            <span>Tax</span><span>{currencySymbol}{taxAmount}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "18px", marginTop: "8px" }}>
-            <span>Total</span><span>{total.toLocaleString("en-IN")}</span>
+            <span>Total</span><span>{currencySymbol}{total.toLocaleString("en-IN")}</span>
           </div>
         </div>
       </div>

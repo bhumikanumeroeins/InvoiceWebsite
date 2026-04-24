@@ -11,7 +11,8 @@ const Templates8 = ({ data = {} }) => {
     items, terms, subtotal, taxAmount, total,
     bankName, accountNo, ifscCode,
     signature, qrCode,
-    email, phone, website
+    email, phone, website,
+    currencySymbol
   } = getInvoiceData(data);
 
   const purple = "#3b2d4a";
@@ -108,8 +109,8 @@ const Templates8 = ({ data = {} }) => {
           <div key={i} style={{ display: "flex", padding: "12px 20px", background: i === 1 ? cream : "transparent", borderRadius: "30px", marginTop: "6px" }}>
             <div style={{ width: "10%" }}>{item.quantity}</div>
             <div style={{ width: "45%" }}>{item.description}</div>
-            <div style={{ width: "20%", textAlign: "center" }}>{item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-            <div style={{ width: "25%", textAlign: "right" }}>{item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+            <div style={{ width: "20%", textAlign: "center" }}>{currencySymbol}{item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+            <div style={{ width: "25%", textAlign: "right" }}>{currencySymbol}{item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
           </div>
         ))}
       </div>
@@ -122,9 +123,9 @@ const Templates8 = ({ data = {} }) => {
         </div>
 
         <div>
-            <div><b className="inline-block min-w-[80px]">Sub total:</b><span className="font-semibold">{subtotal.toLocaleString("en-IN")}</span></div>
-            <div><b className="inline-block min-w-[80px]">Tax:</b><span className="font-semibold">{taxAmount.toLocaleString("en-IN")}</span></div>
-            <div><b className="inline-block min-w-[80px]">Total:</b><span className="font-semibold">{total.toLocaleString("en-IN")}</span></div>
+            <div><b className="inline-block min-w-[80px]">Sub total:</b><span className="font-semibold">{currencySymbol}{subtotal.toLocaleString("en-IN")}</span></div>
+            <div><b className="inline-block min-w-[80px]">Tax:</b><span className="font-semibold">{currencySymbol}{taxAmount.toLocaleString("en-IN")}</span></div>
+            <div><b className="inline-block min-w-[80px]">Total:</b><span className="font-semibold">{currencySymbol}{total.toLocaleString("en-IN")}</span></div>
         </div>
       </div>
 

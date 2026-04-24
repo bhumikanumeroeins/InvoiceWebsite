@@ -10,7 +10,8 @@ const Templates11 = ({ data = {} }) => {
     items, terms, subtotal, taxAmount, total,
     bankName, accountNo, ifscCode,
     signature, qrCode,
-    email, phone, website
+    email, phone, website,
+    currencySymbol
   } = getInvoiceData(data);
 
   const dark = "#24364f";
@@ -109,8 +110,8 @@ const Templates11 = ({ data = {} }) => {
           <div key={i} style={{ display: "flex", borderBottom: "1px solid #ddd" }}>
             <div style={{ width: "12%", background: dark, color: "#fff", padding: 14 }}>{item.quantity}</div>
             <div style={{ width: "38%", padding: 14 }}>{item.description}</div>
-            <div style={{ width: "25%", padding: 14, textAlign: "center" }}>{item.rate.toLocaleString("en-IN")}</div>
-            <div style={{ width: "25%", padding: 14, textAlign: "right" }}>{item.amount.toLocaleString("en-IN")}</div>
+            <div style={{ width: "25%", padding: 14, textAlign: "center" }}>{currencySymbol}{item.rate.toLocaleString("en-IN")}</div>
+            <div style={{ width: "25%", padding: 14, textAlign: "right" }}>{currencySymbol}{item.amount.toLocaleString("en-IN")}</div>
           </div>
         ))}
       </div>
@@ -119,15 +120,15 @@ const Templates11 = ({ data = {} }) => {
       <div style={{ position: "absolute", top: 525, right: 75, width: 260 }}>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <span>Sub Total</span>
-          <span>{subtotal.toLocaleString("en-IN")}</span>
+          <span>{currencySymbol}{subtotal.toLocaleString("en-IN")}</span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <span>Tax</span>
-          <span>{taxAmount.toLocaleString("en-IN")}</span>
+          <span>{currencySymbol}{taxAmount.toLocaleString("en-IN")}</span>
         </div>
         <div style={{ marginTop: 10, background: dark, color: "#fff", padding: 12, display: "flex", justifyContent: "space-between" }}>
           <b>Total</b>
-          <b>{total.toLocaleString("en-IN")}</b>
+          <b>{currencySymbol}{total.toLocaleString("en-IN")}</b>
         </div>
       </div>
 

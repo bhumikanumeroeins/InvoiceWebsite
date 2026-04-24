@@ -10,7 +10,8 @@ const Templates12 = ({ data = {} }) => {
     invoiceNumber, invoiceDate, poNumber, dueDate,
     items, terms, subtotal, taxAmount, total,
     bankName, accountNo, ifscCode,
-    signature, qrCode
+    signature, qrCode,
+    currencySymbol
   } = getInvoiceData(data);
 
   const teal = "#2bb6b1";
@@ -113,8 +114,8 @@ const Templates12 = ({ data = {} }) => {
             <div key={i} style={{ display: "flex", padding: 12 }}>
               <div style={{ width: "10%" }}>{item.quantity}</div>
               <div style={{ width: "40%" }}>{item.description}</div>
-              <div style={{ width: "25%", textAlign: "center" }}>{item.rate}</div>
-              <div style={{ width: "25%", textAlign: "right" }}>{item.amount}</div>
+              <div style={{ width: "25%", textAlign: "center" }}>{currencySymbol}{item.rate}</div>
+              <div style={{ width: "25%", textAlign: "right" }}>{currencySymbol}{item.amount}</div>
             </div>
           ))}
         </div>
@@ -132,14 +133,14 @@ const Templates12 = ({ data = {} }) => {
             <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
                 <span style={{ minWidth: 90 }}>Subtotal</span>
                 <div style={{ flex: 1, height: 2, background: teal, margin: "0 10px" }} />
-                <span>{subtotal}</span>
+                <span>{currencySymbol}{subtotal}</span>
             </div>
 
             {/* Tax */}
             <div style={{ display: "flex", alignItems: "center", marginBottom: 14 }}>
                 <span style={{ minWidth: 90 }}>Tax</span>
                 <div style={{ flex: 1, height: 2, background: teal, margin: "0 10px" }} />
-                <span>{taxAmount}</span>
+                <span>{currencySymbol}{taxAmount}</span>
             </div>
 
             {/* Total */}
@@ -154,7 +155,7 @@ const Templates12 = ({ data = {} }) => {
                 }}
             >
                 <span>Total</span>
-                <span>{total}</span>
+                <span>{currencySymbol}{total}</span>
             </div>
 
             </div>

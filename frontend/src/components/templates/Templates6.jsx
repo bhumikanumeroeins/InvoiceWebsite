@@ -11,7 +11,8 @@ const Templates6 = ({ data = {} }) => {
     items, terms, subtotal, taxAmount, total,
     bankName, accountNo, ifscCode,
     signature, qrCode,
-    email, phone, website
+    email, phone, website,
+    currencySymbol
   } = getInvoiceData(data);
 
   return (
@@ -72,8 +73,8 @@ const Templates6 = ({ data = {} }) => {
           <div key={idx} className="grid grid-cols-[80px_1fr_140px_140px] px-4 py-3 border-b text-sm">
             <div> {i.quantity}</div>
             <div> {i.description}</div>
-            <div className="text-center"> {i.rate.toLocaleString("en-IN")}</div>
-            <div className="text-right"> {i.amount.toLocaleString("en-IN")}</div>
+            <div className="text-center"> {currencySymbol}{i.rate.toLocaleString("en-IN")}</div>
+            <div className="text-right"> {currencySymbol}{i.amount.toLocaleString("en-IN")}</div>
           </div>
         ))}
       </div>
@@ -89,13 +90,13 @@ const Templates6 = ({ data = {} }) => {
 
         <div className="w-[35%] pr-3">
           <div className="flex justify-between mb-2">
-            <span>Sub Total</span><span className='font-semibold'>{subtotal.toLocaleString("en-IN")}</span>
+            <span>Sub Total</span><span className='font-semibold'>{currencySymbol}{subtotal.toLocaleString("en-IN")}</span>
           </div>
           <div className="flex justify-between mb-2">
-            <span>Tax</span><span className='font-bold'>{taxAmount.toLocaleString("en-IN")}</span>
+            <span>Tax</span><span className='font-bold'>{currencySymbol}{taxAmount.toLocaleString("en-IN")}</span>
           </div>
           <div className="flex justify-between font-bold text-lg border-t pt-2">
-            <span>Total</span><span className='font-bold'>{total.toLocaleString("en-IN")}</span>
+            <span>Total</span><span className='font-bold'>{currencySymbol}{total.toLocaleString("en-IN")}</span>
           </div>
         </div>
       </div>

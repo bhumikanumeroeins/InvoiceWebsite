@@ -11,7 +11,8 @@ const Templates9 = ({ data = {} }) => {
     items, terms, subtotal, taxAmount, total,
     bankName, accountNo, ifscCode,
     signature, qrCode,
-    email, phone, website
+    email, phone, website,
+    currencySymbol
   } = getInvoiceData(data);
 
   const navy = "#1f2552";
@@ -95,8 +96,8 @@ const Templates9 = ({ data = {} }) => {
           <div key={i} style={{ display: "flex", padding: "14px 14px 14px 50px", borderBottom: "1px solid #d1d5db" }}>
             <div style={{ width: "10%", textAlign: "center" }}>{item.quantity}</div>
             <div style={{ width: "45%" }}>{item.description}</div>
-            <div style={{ width: "20%", textAlign: "center" }}>{item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-            <div style={{ width: "25%", textAlign: "right" }}>{item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+            <div style={{ width: "20%", textAlign: "center" }}>{currencySymbol}{item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+            <div style={{ width: "25%", textAlign: "right" }}>{currencySymbol}{item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
           </div>
         ))}
       </div>
@@ -114,7 +115,7 @@ const Templates9 = ({ data = {} }) => {
                 Subtotal :
                 </span>
                 <span style={{ color: "#000" }}>
-                {subtotal.toLocaleString("en-IN")}
+                {currencySymbol}{subtotal.toLocaleString("en-IN")}
                 </span>
             </div>
 
@@ -123,7 +124,7 @@ const Templates9 = ({ data = {} }) => {
                 Tax :
                 </span>
                 <span style={{ color: "#000" }}>
-                {taxAmount.toLocaleString("en-IN")}
+                {currencySymbol}{taxAmount.toLocaleString("en-IN")}
                 </span>
             </div>
 
@@ -132,7 +133,7 @@ const Templates9 = ({ data = {} }) => {
                 Total :
                 </span>
                 <span style={{ color: "#000" }}>
-                {total.toLocaleString("en-IN")}
+                {currencySymbol}{total.toLocaleString("en-IN")}
                 </span>
             </div>
             </div>

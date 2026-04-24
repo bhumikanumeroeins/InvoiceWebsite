@@ -87,6 +87,26 @@ export const getInvoiceData = (data = {}) => {
   
   const profile = profileCache || { email: '', phone: '', websiteLink: '' };
 
+  // Currency symbol mapping
+  const getCurrencySymbol = (currencyCode) => {
+    const symbols = {
+      'USD': '$',
+      'INR': '₹',
+      'EUR': '€',
+      'GBP': '£',
+      'AED': 'د.إ',
+      'AUD': 'A$',
+      'CAD': 'C$',
+      'SGD': 'S$',
+      'JPY': '¥',
+      'CNY': '¥'
+    };
+    return symbols[currencyCode] || currencyCode || '$';
+  };
+
+  const currency = data.currency || 'USD';
+  const currencySymbol = getCurrencySymbol(currency);
+
   return {
     logo: getImageUrl(data.business?.logo),
     companyName: data.business?.name || '',
@@ -128,6 +148,8 @@ export const getInvoiceData = (data = {}) => {
     phone: profile.phone || '',
     website: profile.websiteLink || '',
     
+    currency: currency,
+    currencySymbol: currencySymbol,
     poNumber: '',
     upiId: data.payment?.upiId || '',
   };

@@ -183,34 +183,115 @@ export const refineInvoice = async (req, res) => {
   }
 };
 
-// ─── CHAT PROMPT — asks AI to either extract invoice data OR ask for missing info ───
-const CHAT_SYSTEM_PROMPT = `You are an intelligent invoice assistant. Your job is to help users create invoices from natural language descriptions.
+// ─── TEMPLATE FIELD DEFINITIONS ───────────────────────────────────────────────
+const TEMPLATE_FIELDS = `
+REQUIRED — must come from the user, never invent these:
+  - businessName    : Who is issuing the invoice
+  - clientName      : Who is being billed
+  - item1Desc       : At least one service/product description
+  - item1Rate       : Price for that item (real number from user)
+  - currency        : Detect from symbols/country, or ask
 
-Analyze the user's message and decide:
+OPTIONAL — can be filled with placeholder values (tell user which ones):
+  - item1Qty           → default "1"
+  - invoiceDate        → today's date
+  - dueDate            → 30 days from today
+  - invoiceNumber      → "INV-001"
+  - invoiceTitle       → "Invoice"
+  - taxLabel / tax     → "Tax (0%):" / "0.00" unless user mentions tax
+  - businessAddress1/2 → "[Your Address]"
+  - clientAddress1/2   → "[Client Address]"
+  - terms              → "Payment due within 30 days"
+  - templateName       → auto from context
 
-1. If the message contains ENOUGH information to create at least a basic invoice (has at least a business/client name OR at least one item/service), respond with:
-{
-  "action": "generate",
-  "data": { ...invoice fields matching the schema below... },
-  "placeholders": ["list of fields you filled with placeholder/assumed values"],
-  "message": "short friendly message like 'Here's your invoice! I used placeholder values for: [list]. You can edit these after signing in.'"
-}
+NEVER fill — leave empty, user updates after sign-in:
+  - shipToName / shipToAddress
+  - poNumber
+  - bankName / accountNumber / ifscCode
+  - footerEmail / footerPhone / footerWebsite
+  - item2–4 fields (only if user explicitly mentions multiple items)
+`;
 
-2. If the message is too vague (e.g. just 'make an invoice' with no details), respond with:
+// ─── CHAT SYSTEM PROMPT ────────────────────────────────────────────────────────
+const CHAT_SYSTEM_PROMPT = `You are a friendly invoice assistant that fills invoice templates through conversation.
+
+Follow this exact flow:
+
+━━ STEP 1: EXTRACT ━━
+From the full conversation, extract every field you can confidently identify.
+
+━━ STEP 2: DECIDE ━━
+
+CASE A — Any REQUIRED field is still missing (businessName, clientName, item description, item price, currency):
+→ action: "ask"
+→ Write a conversational message that does THREE things in this order:
+  1. Ask for the missing required fields clearly
+  2. List the optional fields you CAN fill with placeholder values (offer the user a chance to provide them)
+  3. End with a question like "Want to provide any of these, or should I go ahead and fill them with placeholders?"
+
+Example tone:
+"Got it! I just need a couple more things:
+• What's your **business name** and your **client's name**?
+• What's the **service or product** you're billing for, and at what **price**?
+
+I can also fill these with placeholder values if you'd like to skip them for now:
+• Your business address → [Your Address]
+• Client address → [Client Address]  
+• Invoice number → INV-001
+• Due date → 30 days from today
+
+Want to provide any of the above, or shall I go ahead and generate with placeholders?"
+
+CASE B — All required fields are present (from this or earlier messages):
+→ action: "generate"
+→ Use real user values for required fields
+→ Use defaults/placeholders for optional fields not provided
+→ Leave "never fill" fields empty
+→ In your message, naturally list what was filled with placeholders
+
+CASE C — User says "go ahead", "proceed", "yes", "fill with placeholders", or similar:
+→ action: "generate" immediately, even if optional fields are missing
+→ Use whatever required fields were provided earlier in the conversation
+
+RULES:
+- NEVER invent businessName, clientName, item description, or price
+- Ask only ONCE — if user already answered (even partially), go to generate
+- Keep tone friendly and conversational, use bullet points and bold for clarity
+- The full conversation history is your memory
+
+${TEMPLATE_FIELDS}
+
+RESPONSE FORMAT — return ONLY valid JSON, no markdown outside the JSON:
+
+For "ask":
 {
   "action": "ask",
-  "question": "A single, friendly question asking for the most important missing info. Ask for multiple things in one question if needed. Keep it short."
+  "extracted": { ...fields already identified from conversation... },
+  "question": "Your full conversational message (plain text, can use markdown like **bold** and bullet points)"
 }
 
-Invoice data schema (only include fields you can fill):
+For "generate":
+{
+  "action": "generate",
+  "data": { ...all invoice fields per schema below... },
+  "placeholders": ["field keys that used placeholder/default — not user-provided"],
+  "message": "Friendly confirmation. Example: 'Here's your invoice! I filled **businessAddress**, **clientAddress**, and **invoiceNumber** with placeholder values — you can update these anytime after signing in.'"
+}
+
+Invoice data schema:
 ${CONTENT_SCHEMA}
 
-Rules for "generate":
-- Fill what you can from the user's message
-- For missing fields, use sensible placeholders: businessName → "Your Business", clientName → "Client Name", item1Desc → "Service", item1Qty → "1", item1Rate → "100.00"
-- Always calculate amounts, subtotal, tax, total correctly
-- Always include invoiceDate (today) and dueDate (30 days from today) if not mentioned
-- Return ONLY valid JSON, no markdown`;
+CALCULATION RULES:
+- itemNAmount = itemNQty × itemNRate
+- subtotal = sum of all item amounts
+- tax = subtotal × (tax% / 100), or "0.00" if no tax
+- total = subtotal + tax
+- All money as strings with 2 decimal places: "500.00"
+- Default qty = "1" if not mentioned
+- taxLabel must include %: "Tax (18%):" or "Tax (0%):"
+- invoiceDate = today, dueDate = 30 days from today (unless user specifies)`;
+
+
 
 export const chatInvoice = async (req, res) => {
   try {
@@ -226,7 +307,7 @@ export const chatInvoice = async (req, res) => {
       });
     }
 
-    const { messages } = req.body; // array of { role: 'user'|'assistant', content: string }
+    const { messages } = req.body;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ success: false, message: "Messages are required" });
     }
@@ -236,14 +317,14 @@ export const chatInvoice = async (req, res) => {
     due.setDate(due.getDate() + 30);
     const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-    // Build conversation context for Gemini
+    // Build full conversation text for Gemini
     const conversationText = messages
       .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
       .join('\n');
 
     const model = getModel();
     const result = await model.generateContent(
-      `${CHAT_SYSTEM_PROMPT}\n\nToday: ${fmt(today)}, Due (default): ${fmt(due)}\n\nConversation:\n${conversationText}\n\nRespond with JSON only:`
+      `${CHAT_SYSTEM_PROMPT}\n\nToday: ${fmt(today)}, Default due date: ${fmt(due)}\n\nConversation so far:\n${conversationText}\n\nRespond with JSON only:`
     );
 
     const text = result.response.text().trim();
@@ -253,20 +334,22 @@ export const chatInvoice = async (req, res) => {
     try {
       parsed = JSON.parse(cleaned);
     } catch {
+      console.error("Gemini chat returned non-JSON:", text);
       return res.status(500).json({ success: false, message: "AI returned an unexpected response. Please try again." });
     }
 
-    // Increment usage only when we actually generate
+    // Only count usage when invoice is actually generated
     if (parsed.action === 'generate') {
       usage.count += 1;
     }
 
     return res.status(200).json({
       success: true,
-      action: parsed.action,
-      data: parsed.data || null,
-      question: parsed.question || null,
-      message: parsed.message || null,
+      action: parsed.action,                  // "generate" | "ask"
+      data: parsed.data || null,              // full invoice data when action=generate
+      extracted: parsed.extracted || null,    // partial data when action=ask (for partial preview)
+      question: parsed.question || null,      // clarifying question when action=ask
+      message: parsed.message || null,        // confirmation message when action=generate
       placeholders: parsed.placeholders || [],
       remaining: PUBLIC_LIMIT - usage.count,
     });

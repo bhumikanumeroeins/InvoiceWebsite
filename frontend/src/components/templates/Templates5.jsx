@@ -7,7 +7,8 @@ const Templates5 = ({ data = {} }) => {
     companyName, companyAddress, billToName, billToAddress,
     shipToName, shipToAddress, invoiceNumber, invoiceDate, poNumber,
     dueDate, items, terms, subtotal, taxAmount, total, bankName,
-    accountNo, ifscCode, signature, qrCode, email, phone, website
+    accountNo, ifscCode, signature, qrCode, email, phone, website,
+    currencySymbol
   } = getInvoiceData(data);
 
   const purple = '#33265d';
@@ -94,8 +95,8 @@ const Templates5 = ({ data = {} }) => {
             <div key={index} style={{ display: 'flex', alignItems: 'center', padding: '15px 15px', backgroundColor: index % 2 === 0 ? '#fff' : '#f1e4fe', borderRadius: index % 2 === 0 ? '0' : '25px', marginTop: '5px' }}>
               <div style={{ width: '10%', color: purple, fontSize: '15px', fontFamily: "'Passion One', cursive" }}>{item.quantity}</div>
               <div style={{ width: '45%', color: purple, fontSize: '15px' }}>{item.description}</div>
-              <div style={{ width: '22%', color: purple, fontSize: '15px', textAlign: 'center' }}>{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-              <div style={{ width: '23%', color: purple, fontSize: '15px', textAlign: 'right' }}>{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '22%', color: purple, fontSize: '15px', textAlign: 'center' }}>{currencySymbol}{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ width: '23%', color: purple, fontSize: '15px', textAlign: 'right' }}>{currencySymbol}{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
             </div>
           ))}
         </div>
@@ -118,15 +119,15 @@ const Templates5 = ({ data = {} }) => {
         <div style={{ width: '40%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ color: gray, fontSize: '15px', fontWeight: '600' }}>Sub total</span>
-            <span style={{ color: gray, fontSize: '15px' }}>{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <span style={{ color: gray, fontSize: '15px' }}>{currencySymbol}{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ color: gray, fontSize: '15px', fontWeight: '600' }}>Tax</span>
-            <span style={{ color: gray, fontSize: '15px' }}>{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
+            <span style={{ color: gray, fontSize: '15px' }}>{currencySymbol}{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span style={{ color: gray, fontSize: '15px', fontWeight: '700' }}>Total</span>
-            <span style={{ color: gray, fontSize: '15px', fontWeight: '700' }}>{total.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
+            <span style={{ color: gray, fontSize: '15px', fontWeight: '700' }}>{currencySymbol}{total.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
           </div>
         </div>
       </div>

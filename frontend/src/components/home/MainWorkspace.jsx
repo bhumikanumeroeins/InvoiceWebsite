@@ -6,6 +6,7 @@ import InvoiceLivePreview from './InvoiceLivePreview';
 import AuthModal from './AuthModal';
 import TopBar from './TopBar';
 import ToolGrid from './ToolGrid';
+import TemplatePicker from './TemplatePicker';
 
 const FREE_LIMIT = 10;
 const STORAGE_KEY = 'ip_prompt_count';
@@ -26,15 +27,26 @@ const MainWorkspace = () => {
   const [loading, setLoading] = useState(false);
   const [aiData, setAiData] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(1);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const confirmationShownRef = useRef(false); // track if confirmation already fired
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authReason, setAuthReason] = useState('');
   const [localCount, setLocalCount] = useState(getLocalCount());
   const [loggedIn, setLoggedIn] = useState(isAuthenticated());
   const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Re-focus input after every AI response and on mount
+  useEffect(() => {
+    if (!loading) {
+      textareaRef.current?.focus();
+    }
+  }, [loading, messages]);
 
   const remaining = Math.max(0, FREE_LIMIT - localCount);
 
@@ -71,22 +83,40 @@ const MainWorkspace = () => {
       }
 
       if (res.action === 'ask') {
+        // AI needs required fields — store extracted data but DON'T show preview yet
+        if (res.extracted && Object.keys(res.extracted).length > 0) {
+          setAiData(res.extracted);
+          // intentionally NOT setting showPreview here
+        }
         setMessages(prev => [...prev, { role: 'assistant', content: res.question }]);
       } else if (res.action === 'generate') {
         incLocalCount();
         setLocalCount(getLocalCount());
         setAiData(res.data);
-        setShowPreview(true);
 
-        const placeholderNote = res.placeholders?.length > 0
-          ? `\n\n📝 Used placeholders for: **${res.placeholders.join(', ')}**. Edit after signing in.`
-          : '';
+        const isRefinement = showPreview; // preview already open = refinement
 
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: (res.message || 'Here\'s your invoice!') + placeholderNote,
-          aiData: res.data,
-        }]);
+        if (isRefinement) {
+          // Just update data — keep preview open, no template picker
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: res.message || 'Done! Your invoice has been updated.',
+          }]);
+        } else {
+          // First generation — show template picker
+          setShowPreview(false);
+          setShowTemplatePicker(true);
+          confirmationShownRef.current = false;
+
+          const confirmationMsg = res.message || 'Your invoice is ready!';
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: 'Got all the details! Now pick a template to preview your invoice:',
+            aiData: res.data,
+            showTemplatePicker: true,
+            confirmationMsg,
+          }]);
+        }
       }
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: err.message || 'Something went wrong.' }]);
@@ -134,6 +164,7 @@ const MainWorkspace = () => {
       )}
       <div className="relative bg-white border border-gray-200 rounded-2xl shadow-sm focus-within:border-indigo-400 focus-within:shadow-md transition-all">
         <textarea
+          ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -232,8 +263,25 @@ const MainWorkspace = () => {
                         {msg.aiData && (
                           <div className="mt-3 flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
                             <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-                            Invoice preview ready — see the right panel
+                            Invoice data ready — pick a template below
                           </div>
+                        )}
+                        {msg.showTemplatePicker && (
+                          <TemplatePicker
+                            selectedId={selectedTemplateId}
+                            onSelect={(t) => {
+                              setSelectedTemplateId(t.id);
+                              setShowPreview(true);
+                              // Only fire confirmation message once
+                              if (!confirmationShownRef.current && msg.confirmationMsg) {
+                                confirmationShownRef.current = true;
+                                setMessages(prev => [...prev, {
+                                  role: 'assistant',
+                                  content: msg.confirmationMsg,
+                                }]);
+                              }
+                            }}
+                          />
                         )}
                       </div>
                     </div>
@@ -266,6 +314,7 @@ const MainWorkspace = () => {
           <div className="w-1/2 flex flex-col bg-gray-50 overflow-hidden">
             <InvoiceLivePreview
               aiData={aiData}
+              templateId={selectedTemplateId}
               isLoggedIn={loggedIn}
               onSignInClick={() => openAuthModal('Sign in to edit, download, and save your invoice.')}
             />

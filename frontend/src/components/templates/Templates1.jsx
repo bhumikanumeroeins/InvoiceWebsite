@@ -10,7 +10,8 @@ const Templates1 = ({ data = {} }) => {
     logo, companyName, companyAddress, billToName, billToAddress,
     shipToName, shipToAddress, invoiceNumber, invoiceDate, poNumber,
     dueDate, items, terms, subtotal, taxAmount, total, bankName,
-    accountNo, ifscCode, signature, qrCode, email, phone, website
+    accountNo, ifscCode, signature, qrCode, email, phone, website,
+    currencySymbol
   } = getInvoiceData(data);
 
   const magenta = '#e91e8c';
@@ -204,10 +205,10 @@ const Templates1 = ({ data = {} }) => {
               <div style={{ width: "12%" }}>{item.quantity}</div>
               <div style={{ width: "38%" }}>{item.description}</div>
               <div style={{ width: "25%", textAlign: "center" }}>
-                {item.rate}
+                {currencySymbol}{item.rate}
               </div>
               <div style={{ width: "25%", textAlign: "right" }}>
-                {item.amount}
+                {currencySymbol}{item.amount}
               </div>
             </div>
           ))}
@@ -231,11 +232,11 @@ const Templates1 = ({ data = {} }) => {
           <div style={{ width: "40%" }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <strong>SUBTOTAL</strong>
-              <span>{subtotal}</span>
+              <span>{currencySymbol}{subtotal}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <strong>TAX%</strong>
-              <span>{taxAmount}</span>
+              <span>{currencySymbol}{taxAmount}</span>
             </div>
 
             <div
@@ -249,7 +250,7 @@ const Templates1 = ({ data = {} }) => {
               }}
             >
               <strong style={{ color: "#fff" }}>TOTAL</strong>
-              <span style={{ color: "#fff" }}>{total}</span>
+              <span style={{ color: "#fff" }}>{currencySymbol}{total}</span>
             </div>
           </div>
         </div>

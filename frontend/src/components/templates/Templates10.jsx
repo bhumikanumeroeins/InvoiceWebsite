@@ -10,7 +10,8 @@ const Templates10 = ({ data = {} }) => {
     items, terms, subtotal, taxAmount, total,
     bankName, accountNo, ifscCode,
     signature, qrCode,
-    email, phone, website
+    email, phone, website,
+    currencySymbol
   } = getInvoiceData(data);
 
   const dark = "#2f343a";
@@ -111,12 +112,12 @@ const Templates10 = ({ data = {} }) => {
 
                 {/* Unit Price */}
                 <div style={{ width: "20%", padding: "14px", background: "#f3f3f3", textAlign: "center" }}>
-                {item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                {currencySymbol}{item.rate.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </div>
 
                 {/* Amount */}
                 <div style={{ width: "25%", padding: "14px", background: "#ffffff", textAlign: "right" }}>
-                {item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                {currencySymbol}{item.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </div>
             </div>
             ))}
@@ -147,8 +148,8 @@ const Templates10 = ({ data = {} }) => {
 
         <div style={{ minWidth: "250px" }}>
             
-          <div><b className="uppercase inline-block min-w-[175px]">Subtotal:</b><span>{subtotal.toLocaleString("en-IN")}</span></div>
-          <div><b className="uppercase inline-block min-w-[175px]">Tax:</b><span>{taxAmount.toLocaleString("en-IN")}</span> </div>
+          <div><b className="uppercase inline-block min-w-[175px]">Subtotal:</b><span>{currencySymbol}{subtotal.toLocaleString("en-IN")}</span></div>
+          <div><b className="uppercase inline-block min-w-[175px]">Tax:</b><span>{currencySymbol}{taxAmount.toLocaleString("en-IN")}</span> </div>
 
           {/* Grey strip above total */}
             <div
@@ -168,7 +169,7 @@ const Templates10 = ({ data = {} }) => {
                     fontWeight: "700"
                 }}
             >
-            <b className="uppercase inline-block min-w-[150px]">Total:</b> <span>{total.toLocaleString("en-IN")}</span>
+            <b className="uppercase inline-block min-w-[150px]">Total:</b> <span>{currencySymbol}{total.toLocaleString("en-IN")}</span>
             </div>
 
             {/* Rainbow strip below */}
