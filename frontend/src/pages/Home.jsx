@@ -1,21 +1,15 @@
-import Layout from '../components/layout/Layout';
-import Hero from '../components/home/Hero';
-import Features from '../components/home/Features';
-import Templates from '../components/home/Templates';
-import Testimonials from '../components/home/Testimonials';
-import Pricing from '../components/home/Pricing';
-import CTA from '../components/home/CTA';
+import { useState } from 'react';
+import Sidebar from '../components/home/Sidebar';
+import MainWorkspace from '../components/home/MainWorkspace';
 
 const Home = () => {
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+
   return (
-    <Layout>
-      <Hero />
-      <Features />
-      <Templates />
-      <Pricing />
-      <Testimonials />
-      <CTA />
-    </Layout>
+    <div className="flex h-screen bg-white overflow-hidden">
+      <Sidebar expanded={sidebarExpanded} onToggle={() => setSidebarExpanded(!sidebarExpanded)} />
+      <MainWorkspace />
+    </div>
   );
 };
 

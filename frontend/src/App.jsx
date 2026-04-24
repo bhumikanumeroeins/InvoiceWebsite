@@ -6,8 +6,6 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import CreateInvoice from './pages/CreateInvoice';
 import AIInvoiceGenerator from './pages/AIInvoiceGenerator';
-import FAQ from './pages/FAQ';
-import Contact from './pages/Contact';
 import TemplateBuilder from './components/builder/TemplateBuilder';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
@@ -20,8 +18,6 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/faq" element={<FAQ />} />
-        <Route path="/contact" element={<Contact />} />
         <Route path="/create/:type" element={<ProtectedRoute><CreateInvoice /></ProtectedRoute>} />
         <Route path="/ai-invoice" element={<ProtectedRoute><AIInvoiceGenerator /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

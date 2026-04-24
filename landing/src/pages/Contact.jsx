@@ -6,28 +6,20 @@ import Footer from '../components/layout/Footer';
 import { contactAPI } from '../services/contactService';
 
 const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: '',
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const response = await contactAPI.submit(formData);
-      
       if (response.status === 'success' || response.success) {
         setSubmitted(true);
-        toast.success('Message sent successfully! We\'ll get back to you soon.');
+        toast.success("Message sent successfully! We'll get back to you soon.");
         setTimeout(() => {
           setFormData({ name: '', email: '', message: '' });
           setSubmitted(false);
@@ -46,60 +38,42 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />
-      
-      {/* Hero Section */}
+
       <section className="relative bg-slate-900 pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
         </div>
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Contact Us
-          </h1>
-          <p className="text-xl text-slate-300">
-            We'd love to hear from you. Get in touch with our team.
-          </p>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Contact Us</h1>
+          <p className="text-xl text-slate-300">We'd love to hear from you. Get in touch with our team.</p>
         </div>
       </section>
 
-      {/* Contact Section */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Contact Info Cards */}
             <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
-                  <Mail className="w-6 h-6 text-indigo-600" />
+              {[
+                { icon: Mail, bg: 'bg-indigo-100', iconColor: 'text-indigo-600', title: 'Email Us', sub: "We'll respond within 24 hours", link: { href: 'mailto:support@invoicepro.com', label: 'support@invoicepro.com' } },
+                { icon: Phone, bg: 'bg-emerald-100', iconColor: 'text-emerald-600', title: 'Call Us', sub: 'Mon-Fri from 9am to 6pm', link: { href: 'tel:+911234567890', label: '+91 123 456 7890' } },
+              ].map(({ icon: Icon, bg, iconColor, title, sub, link }) => (
+                <div key={title} className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+                  <div className={`w-12 h-12 ${bg} rounded-xl flex items-center justify-center mb-4`}>
+                    <Icon className={`w-6 h-6 ${iconColor}`} />
+                  </div>
+                  <h3 className="font-semibold text-slate-800 mb-1">{title}</h3>
+                  <p className="text-slate-600 text-sm mb-2">{sub}</p>
+                  <a href={link.href} className="text-indigo-600 hover:underline">{link.label}</a>
                 </div>
-                <h3 className="font-semibold text-slate-800 mb-1">Email Us</h3>
-                <p className="text-slate-600 text-sm mb-2">We'll respond within 24 hours</p>
-                <a href="mailto:support@invoicepro.com" className="text-indigo-600 hover:underline">
-                  support@invoicepro.com
-                </a>
-              </div>
-
-              <div className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                  <Phone className="w-6 h-6 text-emerald-600" />
-                </div>
-                <h3 className="font-semibold text-slate-800 mb-1">Call Us</h3>
-                <p className="text-slate-600 text-sm mb-2">Mon-Fri from 9am to 6pm</p>
-                <a href="tel:+911234567890" className="text-indigo-600 hover:underline">
-                  +91 123 456 7890
-                </a>
-              </div>
+              ))}
 
               <div className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
                 <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4">
                   <MapPin className="w-6 h-6 text-amber-600" />
                 </div>
                 <h3 className="font-semibold text-slate-800 mb-1">Visit Us</h3>
-                <p className="text-slate-600 text-sm">
-                  123 Business Park, Tech Hub<br />
-                  Mumbai, Maharashtra 400001
-                </p>
+                <p className="text-slate-600 text-sm">123 Business Park, Tech Hub<br />Mumbai, Maharashtra 400001</p>
               </div>
 
               <div className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
@@ -115,7 +89,6 @@ const Contact = () => {
               </div>
             </div>
 
-            {/* Contact Form */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
@@ -140,9 +113,7 @@ const Contact = () => {
                   <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="grid md:grid-cols-2 gap-5">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Your Name
-                        </label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Your Name</label>
                         <input
                           type="text"
                           name="name"
@@ -154,9 +125,7 @@ const Contact = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Email Address
-                        </label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
                         <input
                           type="email"
                           name="email"
@@ -169,9 +138,7 @@ const Contact = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Message
-                      </label>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Message</label>
                       <textarea
                         name="message"
                         value={formData.message}
@@ -189,7 +156,7 @@ const Contact = () => {
                     >
                       {loading ? (
                         <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           Sending...
                         </>
                       ) : (

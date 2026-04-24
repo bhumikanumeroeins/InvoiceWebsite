@@ -1,6 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import Layout from '../components/layout/Layout';
 import InvoiceForm from '../components/invoice/InvoiceForm';
 import { FileText, Receipt, CreditCard, FileCheck, Truck, ShoppingCart } from 'lucide-react';
 
@@ -39,8 +38,7 @@ const CreateInvoice = () => {
   }, [currentType, activeType]);
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-white">
         {/* Hero Header */}
         <div className="bg-slate-900 relative overflow-hidden py-12">
           {/* Decorative Background Circles */}
@@ -98,7 +96,6 @@ const CreateInvoice = () => {
           )}
         </div>
       </div>
-    </Layout>
   );
 };
 
