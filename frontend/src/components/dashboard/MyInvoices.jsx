@@ -1,27 +1,42 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { currencyService } from '../../services/currencyService';
-import { FileText, Filter, Loader2, Trash2, RotateCcw, AlertTriangle, Palette, Plus, CheckCircle } from 'lucide-react';
-import { invoiceAPI } from '../../services/invoiceService';
-import { paymentAPI } from '../../services/paymentService';
-import { buildInvoiceAPI } from '../../services/buildInvoiceService';
-import { getUploadsUrl } from '../../services/apiConfig';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import { currencyService } from "../../services/currencyService";
+import {
+  FileText,
+  Filter,
+  Loader2,
+  Trash2,
+  RotateCcw,
+  AlertTriangle,
+  Palette,
+  Plus,
+  CheckCircle,
+} from "lucide-react";
+import { invoiceAPI } from "../../services/invoiceService";
+import { paymentAPI } from "../../services/paymentService";
+import { buildInvoiceAPI } from "../../services/buildInvoiceService";
+import { getUploadsUrl } from "../../services/apiConfig";
+import { useNavigate } from "react-router-dom";
 
-const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = '' }) => {
+const MyInvoices = ({
+  onInvoiceClick,
+  onNewInvoice,
+  refreshKey,
+  searchQuery = "",
+}) => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [customInvoices, setCustomInvoices] = useState([]);
   const [trashInvoices, setTrashInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [invoiceFilter, setInvoiceFilter] = useState('all');
-  const [invoiceType, setInvoiceType] = useState('standard'); // 'standard' or 'custom'
+  const [invoiceFilter, setInvoiceFilter] = useState("all");
+  const [invoiceType, setInvoiceType] = useState("standard"); // 'standard' or 'custom'
 
   // Helper function to format currency amount
   const formatCurrency = (amount, currencyCode) => {
-    const symbol = currencyService.getSymbol(currencyCode || 'INR');
-    const locale = currencyCode === 'USD' ? 'en-US' : 'en-IN';
+    const symbol = currencyService.getSymbol(currencyCode || "INR");
+    const locale = currencyCode === "USD" ? "en-US" : "en-IN";
     return `${symbol} ${amount.toLocaleString(locale, { minimumFractionDigits: 2 })}`;
   };
   const [selectedIds, setSelectedIds] = useState([]);
@@ -31,74 +46,82 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
   // Transform invoice data from backend format
   const transformInvoice = (inv, isTrash = false) => {
     const statusMap = {
-      'unpaid': 'unpaid',
-      'partiallyPaid': 'partial',
-      'paid': 'paid',
+      unpaid: "unpaid",
+      partiallyPaid: "partial",
+      paid: "paid",
     };
-    
-    const status = isTrash ? 'trash' : (statusMap[inv.paymentStatus] || 'unpaid');
-    
+
+    const status = isTrash ? "trash" : statusMap[inv.paymentStatus] || "unpaid";
+
     // Check if invoice is overdue (separate from status)
-    const isOverdue = !isTrash && 
-                      inv.paymentStatus !== 'paid' && 
-                      inv.invoiceMeta?.dueDate && 
-                      new Date(inv.invoiceMeta.dueDate) < new Date();
-    
+    const isOverdue =
+      !isTrash &&
+      inv.paymentStatus !== "paid" &&
+      inv.invoiceMeta?.dueDate &&
+      new Date(inv.invoiceMeta.dueDate) < new Date();
+
     const total = inv.totals?.grandTotal || 0;
     let paid = 0;
-    if (inv.paymentStatus === 'paid') paid = total;
-    else if (inv.paymentStatus === 'partiallyPaid') paid = inv.paidAmount || (total * 0.5);
-    
+    if (inv.paymentStatus === "paid") paid = total;
+    else if (inv.paymentStatus === "partiallyPaid")
+      paid = inv.paidAmount || total * 0.5;
+
     return {
       id: inv._id,
       _id: inv._id,
-      customer: inv.client?.name || '',
-      number: inv.invoiceMeta?.invoiceNo || '',
-      date: inv.invoiceMeta?.invoiceDate 
-        ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString('en-GB') 
-        : '',
-      dueDate: inv.invoiceMeta?.dueDate 
-        ? new Date(inv.invoiceMeta.dueDate).toLocaleDateString('en-GB') 
-        : '',
-      deletedAt: inv.deletedAt 
-        ? new Date(inv.deletedAt).toLocaleDateString('en-GB') 
-        : '',
+      customer: inv.client?.name || "",
+      number: inv.invoiceMeta?.invoiceNo || "",
+      date: inv.invoiceMeta?.invoiceDate
+        ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString("en-GB")
+        : "",
+      dueDate: inv.invoiceMeta?.dueDate
+        ? new Date(inv.invoiceMeta.dueDate).toLocaleDateString("en-GB")
+        : "",
+      deletedAt: inv.deletedAt
+        ? new Date(inv.deletedAt).toLocaleDateString("en-GB")
+        : "",
       paid: paid,
       total: total,
-      currency: inv.invoiceMeta?.currency || 'INR',
+      currency: inv.invoiceMeta?.currency || "INR",
       status: status,
       isOverdue: isOverdue,
-      paymentStatus: inv.paymentStatus || 'unpaid',
-      logo: inv.business?.logo ? `${getUploadsUrl()}/uploads/${inv.business.logo}` : null,
-      companyName: inv.business?.name || '',
-      companyAddress: `${inv.business?.address || ''}\n${inv.business?.phone || ''}, ${inv.business?.email || ''}`,
+      paymentStatus: inv.paymentStatus || "unpaid",
+      logo: inv.business?.logo
+        ? `${getUploadsUrl()}/uploads/${inv.business.logo}`
+        : null,
+      companyName: inv.business?.name || "",
+      companyAddress: `${inv.business?.address || ""}\n${inv.business?.phone || ""}, ${inv.business?.email || ""}`,
       billTo: {
-        name: inv.client?.name || '',
-        address: `${inv.client?.address || ''}\n${inv.client?.email || ''}`,
+        name: inv.client?.name || "",
+        address: `${inv.client?.address || ""}\n${inv.client?.email || ""}`,
       },
-      shipTo: inv.shipTo?.shippingAddress ? {
-        name: '',
-        address: inv.shipTo.shippingAddress,
-      } : null,
-      invoiceNumber: inv.invoiceMeta?.invoiceNo || '',
-      invoiceDate: inv.invoiceMeta?.invoiceDate 
-        ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString('en-GB') 
-        : '',
-      items: (inv.items || []).map(item => ({
+      shipTo: inv.shipTo?.shippingAddress
+        ? {
+            name: "",
+            address: inv.shipTo.shippingAddress,
+          }
+        : null,
+      invoiceNumber: inv.invoiceMeta?.invoiceNo || "",
+      invoiceDate: inv.invoiceMeta?.invoiceDate
+        ? new Date(inv.invoiceMeta.invoiceDate).toLocaleDateString("en-GB")
+        : "",
+      items: (inv.items || []).map((item) => ({
         quantity: item.quantity || 1,
-        description: item.description || '',
+        description: item.description || "",
         rate: item.rate || 0,
         amount: item.amount || 0,
       })),
-      terms: (inv.terms || []).map(t => t.text),
+      terms: (inv.terms || []).map((t) => t.text),
       subtotal: inv.totals?.subtotal || 0,
       taxAmount: inv.totals?.taxTotal || 0,
       paymentInfo: {
-        bankName: inv.payment?.bankName || '',
-        accountNo: inv.payment?.accountNo || '',
-        ifscCode: inv.payment?.ifscCode || '',
+        bankName: inv.payment?.bankName || "",
+        accountNo: inv.payment?.accountNo || "",
+        ifscCode: inv.payment?.ifscCode || "",
       },
-      signature: inv.signature ? `${getUploadsUrl()}/uploads/${inv.signature}` : null,
+      signature: inv.signature
+        ? `${getUploadsUrl()}/uploads/${inv.signature}`
+        : null,
       qrCode: inv.qrCode ? `${getUploadsUrl()}/uploads/${inv.qrCode}` : null,
       selectedTemplate: inv.selectedTemplate || 1,
     };
@@ -108,22 +131,37 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
     setLoading(true);
     setError(null);
     try {
-      const [activeResponse, trashResponse, customResponse] = await Promise.all([
+      const [
+        activeResponse,
+        trashResponse,
+        customResponse,
+        customTrashResponse,
+      ] = await Promise.all([
         invoiceAPI.getAll(),
         invoiceAPI.getTrash(),
-        buildInvoiceAPI.getAll()
+        buildInvoiceAPI.getAll(),
+        buildInvoiceAPI.getTrash(),
       ]);
-      
-      const transformedInvoices = (activeResponse.data || []).map(inv => transformInvoice(inv, false));
-      const transformedTrash = (trashResponse.data || []).map(inv => transformInvoice(inv, true));
-      const transformedCustom = (customResponse.data || []).map(inv => transformCustomInvoice(inv));
-      
+
+      const transformedInvoices = (activeResponse.data || []).map((inv) =>
+        transformInvoice(inv, false),
+      );
+      const transformedTrash = (trashResponse.data || []).map((inv) =>
+        transformInvoice(inv, true),
+      );
+      const transformedCustom = (customResponse.data || []).map((inv) =>
+        transformCustomInvoice(inv),
+      );
+      const transformedCustomTrash = (customTrashResponse.data || []).map(
+        (inv) => ({ ...transformCustomInvoice(inv), status: "trash" }),
+      );
+
       setInvoices(transformedInvoices);
-      setTrashInvoices(transformedTrash);
+      setTrashInvoices([...transformedTrash, ...transformedCustomTrash]);
       setCustomInvoices(transformedCustom);
     } catch (err) {
-      console.error('Fetch invoices error:', err);
-      setError('Failed to fetch invoices');
+      console.error("Fetch invoices error:", err);
+      setError("Failed to fetch invoices");
     } finally {
       setLoading(false);
     }
@@ -131,24 +169,24 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
 
   const transformCustomInvoice = (inv) => {
     const content = inv.content || {};
-    
-    const totalString = content.total || content.grandTotal || '0';
-    const totalValue = parseFloat(totalString.replace(/[^0-9.-]+/g, '')) || 0;
-    
+
+    const totalString = content.total || content.grandTotal || "0";
+    const totalValue = parseFloat(totalString.replace(/[^0-9.-]+/g, "")) || 0;
+
     return {
       id: inv._id,
       _id: inv._id,
-      templateName: inv.templateName || 'Untitled Template',
-      customer: content.clientName || content.businessName || '—',
-      number: content.invoiceNumber || content.invoiceNo || '—',
-      date: inv.createdAt 
-        ? new Date(inv.createdAt).toLocaleDateString('en-GB') 
-        : '',
+      templateName: inv.templateName || "Untitled Template",
+      customer: content.clientName || content.businessName || "—",
+      number: content.invoiceNumber || content.invoiceNo || "—",
+      date: inv.createdAt
+        ? new Date(inv.createdAt).toLocaleDateString("en-GB")
+        : "",
       total: totalValue,
-      paid: 0, 
-      currency: inv.currency || 'INR',
-      status: 'custom',
-      type: 'custom',
+      paid: 0,
+      currency: inv.currency || "INR",
+      status: "custom",
+      type: "custom",
     };
   };
 
@@ -157,44 +195,63 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
   }, [refreshKey]);
 
   const handleSelectInvoice = (id) => {
-    setSelectedIds(prev => 
-      prev.includes(id) 
-        ? prev.filter(i => i !== id) 
-        : [...prev, id]
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
   const handleSelectAll = () => {
-    const currentIds = filteredInvoices.map(inv => inv.id);
-    const allSelected = currentIds.every(id => selectedIds.includes(id));
-    
+    const currentIds = filteredInvoices.map((inv) => inv.id);
+    const allSelected = currentIds.every((id) => selectedIds.includes(id));
+
     if (allSelected) {
-      setSelectedIds(prev => prev.filter(id => !currentIds.includes(id)));
+      setSelectedIds((prev) => prev.filter((id) => !currentIds.includes(id)));
     } else {
-      setSelectedIds(prev => [...new Set([...prev, ...currentIds])]);
+      setSelectedIds((prev) => [...new Set([...prev, ...currentIds])]);
     }
   };
 
   const handleDeleteSelected = async () => {
     if (selectedIds.length === 0) return;
-    
-    if (!confirm(`Are you sure you want to move ${selectedIds.length} invoice(s) to trash?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to move ${selectedIds.length} invoice(s) to trash?`,
+      )
+    )
       return;
-    }
 
     setDeleting(true);
     try {
-      await Promise.all(selectedIds.map(id => invoiceAPI.delete(id)));
-      
-      const deletedInvoices = invoices.filter(inv => selectedIds.includes(inv.id));
-      const updatedTrash = [...deletedInvoices.map(inv => ({ ...inv, status: 'trash', deletedAt: new Date().toLocaleDateString('en-GB') })), ...trashInvoices];
-      
-      setInvoices(prev => prev.filter(inv => !selectedIds.includes(inv.id)));
-      setTrashInvoices(updatedTrash);
+      await Promise.all(
+        selectedIds.map((id) => {
+          const inv = [...invoices, ...customInvoices].find((i) => i.id === id);
+          return inv?.type === "custom"
+            ? buildInvoiceAPI.delete(id)
+            : invoiceAPI.delete(id);
+        }),
+      );
+
+      const deletedStandard = invoices.filter((inv) =>
+        selectedIds.includes(inv.id),
+      );
+      setInvoices((prev) =>
+        prev.filter((inv) => !selectedIds.includes(inv.id)),
+      );
+      setCustomInvoices((prev) =>
+        prev.filter((inv) => !selectedIds.includes(inv.id)),
+      );
+      setTrashInvoices((prev) => [
+        ...deletedStandard.map((inv) => ({
+          ...inv,
+          status: "trash",
+          deletedAt: new Date().toLocaleDateString("en-GB"),
+        })),
+        ...prev,
+      ]);
       setSelectedIds([]);
     } catch (err) {
-      console.error('Delete error:', err);
-      toast.error('Failed to delete some invoices. Please try again.');
+      console.error("Delete error:", err);
+      toast.error("Failed to delete some invoices. Please try again.");
     } finally {
       setDeleting(false);
     }
@@ -205,17 +262,35 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
 
     setRestoring(true);
     try {
-      await Promise.all(selectedIds.map(id => invoiceAPI.restore(id)));
-      
-      const restoredInvoices = trashInvoices.filter(inv => selectedIds.includes(inv.id));
-      const updatedInvoices = [...restoredInvoices.map(inv => ({ ...inv, status: inv.paymentStatus === 'paid' ? 'paid' : inv.paymentStatus === 'partiallyPaid' ? 'partial' : 'unpaid' })), ...invoices];
-      
-      setTrashInvoices(prev => prev.filter(inv => !selectedIds.includes(inv.id)));
-      setInvoices(updatedInvoices);
+      await Promise.all(
+        selectedIds.map((id) => {
+          const inv = trashInvoices.find((i) => i.id === id);
+          return inv?.type === "custom"
+            ? buildInvoiceAPI.restore(id)
+            : invoiceAPI.restore(id);
+        }),
+      );
+
+      const restoredInvoices = trashInvoices.filter((inv) =>
+        selectedIds.includes(inv.id),
+      );
+      setTrashInvoices((prev) =>
+        prev.filter((inv) => !selectedIds.includes(inv.id)),
+      );
+      setInvoices((prev) => [
+        ...restoredInvoices
+          .filter((i) => i.type !== "custom")
+          .map((inv) => ({ ...inv, status: "unpaid" })),
+        ...prev,
+      ]);
+      setCustomInvoices((prev) => [
+        ...restoredInvoices.filter((i) => i.type === "custom"),
+        ...prev,
+      ]);
       setSelectedIds([]);
     } catch (err) {
-      console.error('Restore error:', err);
-      toast.error('Failed to restore some invoices. Please try again.');
+      console.error("Restore error:", err);
+      toast.error("Failed to restore some invoices. Please try again.");
     } finally {
       setRestoring(false);
     }
@@ -223,20 +298,33 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
 
   const handlePermanentDelete = async () => {
     if (selectedIds.length === 0) return;
-    
-    if (!confirm(`Are you sure you want to PERMANENTLY delete ${selectedIds.length} invoice(s)? This cannot be undone!`)) {
+    if (
+      !confirm(
+        `Are you sure you want to PERMANENTLY delete ${selectedIds.length} invoice(s)? This cannot be undone!`,
+      )
+    )
       return;
-    }
 
     setDeleting(true);
     try {
-      await Promise.all(selectedIds.map(id => invoiceAPI.permanentDelete(id)));
-      
-      setTrashInvoices(prev => prev.filter(inv => !selectedIds.includes(inv.id)));
+      await Promise.all(
+        selectedIds.map((id) => {
+          const inv = trashInvoices.find((i) => i.id === id);
+          return inv?.type === "custom"
+            ? buildInvoiceAPI.permanentDelete(id)
+            : invoiceAPI.permanentDelete(id);
+        }),
+      );
+
+      setTrashInvoices((prev) =>
+        prev.filter((inv) => !selectedIds.includes(inv.id)),
+      );
       setSelectedIds([]);
     } catch (err) {
-      console.error('Permanent delete error:', err);
-      toast.error('Failed to permanently delete some invoices. Please try again.');
+      console.error("Permanent delete error:", err);
+      toast.error(
+        "Failed to permanently delete some invoices. Please try again.",
+      );
     } finally {
       setDeleting(false);
     }
@@ -244,60 +332,74 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
 
   const getFilteredInvoices = () => {
     let filtered = [];
-    
-    if (invoiceFilter === 'trash') {
+
+    if (invoiceFilter === "trash") {
       filtered = trashInvoices;
-    } else if (invoiceFilter === 'all') {
-      filtered = invoiceType === 'custom' ? customInvoices : invoices;
+    } else if (invoiceFilter === "all") {
+      filtered = invoiceType === "custom" ? customInvoices : invoices;
     } else {
       switch (invoiceFilter) {
-        case 'paid': filtered = invoices.filter(inv => inv.status === 'paid'); break;
-        case 'unpaid': filtered = invoices.filter(inv => inv.status === 'unpaid'); break;
-        case 'partial': filtered = invoices.filter(inv => inv.status === 'partial'); break;
-        case 'overdue': filtered = invoices.filter(inv => inv.isOverdue); break;
-        default: filtered = invoices;
+        case "paid":
+          filtered = invoices.filter((inv) => inv.status === "paid");
+          break;
+        case "unpaid":
+          filtered = invoices.filter((inv) => inv.status === "unpaid");
+          break;
+        case "partial":
+          filtered = invoices.filter((inv) => inv.status === "partial");
+          break;
+        case "overdue":
+          filtered = invoices.filter((inv) => inv.isOverdue);
+          break;
+        default:
+          filtered = invoices;
       }
     }
-    
+
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(inv => 
-        (inv.customer && inv.customer.toLowerCase().includes(query)) ||
-        (inv.number && inv.number.toLowerCase().includes(query)) ||
-        (inv.billTo?.address && inv.billTo.address.toLowerCase().includes(query)) ||
-        (inv.items && inv.items.some(item => 
-          item.description && item.description.toLowerCase().includes(query)
-        ))
+      filtered = filtered.filter(
+        (inv) =>
+          (inv.customer && inv.customer.toLowerCase().includes(query)) ||
+          (inv.number && inv.number.toLowerCase().includes(query)) ||
+          (inv.billTo?.address &&
+            inv.billTo.address.toLowerCase().includes(query)) ||
+          (inv.items &&
+            inv.items.some(
+              (item) =>
+                item.description &&
+                item.description.toLowerCase().includes(query),
+            )),
       );
     }
-    
+
     return filtered;
   };
 
   const getFilterCounts = () => ({
     all: invoices.length + customInvoices.length,
-    overdue: invoices.filter(inv => inv.isOverdue).length,
-    partial: invoices.filter(inv => inv.status === 'partial').length,
-    unpaid: invoices.filter(inv => inv.status === 'unpaid').length,
-    paid: invoices.filter(inv => inv.status === 'paid').length,
+    overdue: invoices.filter((inv) => inv.isOverdue).length,
+    partial: invoices.filter((inv) => inv.status === "partial").length,
+    unpaid: invoices.filter((inv) => inv.status === "unpaid").length,
+    paid: invoices.filter((inv) => inv.status === "paid").length,
     trash: trashInvoices.length,
   });
 
   const filterCounts = getFilterCounts();
   const filteredInvoices = getFilteredInvoices();
-  const isTrashView = invoiceFilter === 'trash';
+  const isTrashView = invoiceFilter === "trash";
 
   const totalAmount = filteredInvoices.reduce((sum, inv) => sum + inv.total, 0);
   const paidAmount = filteredInvoices.reduce((sum, inv) => sum + inv.paid, 0);
   const balanceDue = totalAmount - paidAmount;
 
   const invoiceFilters = [
-    { id: 'all', label: 'All Invoices', color: 'bg-slate-500' },
-    { id: 'overdue', label: 'Overdue', color: 'bg-orange-500' },
-    { id: 'partial', label: 'Partially Paid', color: 'bg-amber-500' },
-    { id: 'unpaid', label: 'Unpaid', color: 'bg-blue-500' },
-    { id: 'paid', label: 'Paid', color: 'bg-emerald-500' },
-    { id: 'trash', label: 'Trash', color: 'bg-red-500' },
+    { id: "all", label: "All Invoices", color: "bg-slate-500" },
+    { id: "overdue", label: "Overdue", color: "bg-orange-500" },
+    { id: "partial", label: "Partially Paid", color: "bg-amber-500" },
+    { id: "unpaid", label: "Unpaid", color: "bg-blue-500" },
+    { id: "paid", label: "Paid", color: "bg-emerald-500" },
+    { id: "trash", label: "Trash", color: "bg-red-500" },
   ];
 
   useEffect(() => {
@@ -312,31 +414,51 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
     e.stopPropagation();
     try {
       await paymentAPI.updatePaymentStatus(invoice.id, {
-        paymentStatus: 'paid',
+        paymentStatus: "paid",
         paidAmount: invoice.total,
-        paidDate: new Date().toISOString().split('T')[0],
-        paymentMethod: 'Other',
+        paidDate: new Date().toISOString().split("T")[0],
+        paymentMethod: "Other",
       });
       toast.success(`Invoice ${invoice.number} marked as paid`);
       fetchInvoices();
     } catch (err) {
-      toast.error('Failed to mark as paid: ' + err.message);
+      toast.error("Failed to mark as paid: " + err.message);
     }
   };
 
   const getStatusBadge = (invoice) => {
     if (invoice.isOverdue) {
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">● Overdue</span>;
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+          ● Overdue
+        </span>
+      );
     }
     switch (invoice.status) {
-      case 'paid':
-        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">● Paid</span>;
-      case 'partial':
-        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">● Partial</span>;
-      case 'unpaid':
-        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">● Unpaid</span>;
+      case "paid":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+            ● Paid
+          </span>
+        );
+      case "partial":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+            ● Partial
+          </span>
+        );
+      case "unpaid":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+            ● Unpaid
+          </span>
+        );
       default:
-        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">● —</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">
+            ● —
+          </span>
+        );
     }
   };
 
@@ -346,12 +468,24 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-8 py-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isTrashView ? 'bg-gradient-to-br from-red-500 to-orange-400' : 'bg-gradient-to-br from-indigo-500 to-emerald-400'}`}>
-              {isTrashView ? <Trash2 className="w-5 h-5 text-white" /> : <FileText className="w-5 h-5 text-white" />}
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center ${isTrashView ? "bg-gradient-to-br from-red-500 to-orange-400" : "bg-gradient-to-br from-indigo-500 to-emerald-400"}`}
+            >
+              {isTrashView ? (
+                <Trash2 className="w-5 h-5 text-white" />
+              ) : (
+                <FileText className="w-5 h-5 text-white" />
+              )}
             </div>
             <div>
-              <h2 className="text-white font-semibold text-lg">{isTrashView ? 'Trash' : 'My Invoices'}</h2>
-              <p className="text-slate-400 text-sm">{isTrashView ? 'Deleted invoices can be restored or permanently deleted' : 'Manage and track all your invoices'}</p>
+              <h2 className="text-white font-semibold text-lg">
+                {isTrashView ? "Trash" : "My Invoices"}
+              </h2>
+              <p className="text-slate-400 text-sm">
+                {isTrashView
+                  ? "Deleted invoices can be restored or permanently deleted"
+                  : "Manage and track all your invoices"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-slate-400">
@@ -369,25 +503,27 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
               key={filter.id}
               onClick={() => {
                 setInvoiceFilter(filter.id);
-                if (filter.id !== 'all') {
-                  setInvoiceType('standard'); // Reset to standard for non-all filters
+                if (filter.id !== "all") {
+                  setInvoiceType("standard"); // Reset to standard for non-all filters
                 }
               }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 invoiceFilter === filter.id
-                  ? filter.id === 'trash' 
-                    ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-lg'
-                    : 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? filter.id === "trash"
+                    ? "bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-lg"
+                    : "bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {filter.id === 'trash' && <Trash2 className="w-4 h-4" />}
+              {filter.id === "trash" && <Trash2 className="w-4 h-4" />}
               {filter.label}
-              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                invoiceFilter === filter.id 
-                  ? 'bg-white/20 text-white' 
-                  : `${filter.color} text-white`
-              }`}>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  invoiceFilter === filter.id
+                    ? "bg-white/20 text-white"
+                    : `${filter.color} text-white`
+                }`}
+              >
                 {filterCounts[filter.id]}
               </span>
             </button>
@@ -395,47 +531,51 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
         </div>
 
         {/* Sub-tabs for Standard/Custom when "All Invoices" is selected */}
-        {invoiceFilter === 'all' && (
+        {invoiceFilter === "all" && (
           <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
             <button
-              onClick={() => setInvoiceType('standard')}
+              onClick={() => setInvoiceType("standard")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                invoiceType === 'standard'
-                  ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-500'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-2 border-transparent'
+                invoiceType === "standard"
+                  ? "bg-indigo-100 text-indigo-700 border-2 border-indigo-500"
+                  : "bg-slate-50 text-slate-600 hover:bg-slate-100 border-2 border-transparent"
               }`}
             >
               <FileText className="w-4 h-4" />
               Standard Invoices
-              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                invoiceType === 'standard' 
-                  ? 'bg-indigo-500 text-white' 
-                  : 'bg-slate-200 text-slate-600'
-              }`}>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  invoiceType === "standard"
+                    ? "bg-indigo-500 text-white"
+                    : "bg-slate-200 text-slate-600"
+                }`}
+              >
                 {invoices.length}
               </span>
             </button>
             <button
-              onClick={() => setInvoiceType('custom')}
+              onClick={() => setInvoiceType("custom")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                invoiceType === 'custom'
-                  ? 'bg-purple-100 text-purple-700 border-2 border-purple-500'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-2 border-transparent'
+                invoiceType === "custom"
+                  ? "bg-purple-100 text-purple-700 border-2 border-purple-500"
+                  : "bg-slate-50 text-slate-600 hover:bg-slate-100 border-2 border-transparent"
               }`}
             >
               <Palette className="w-4 h-4" />
               Custom Invoices
-              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                invoiceType === 'custom' 
-                  ? 'bg-purple-500 text-white' 
-                  : 'bg-slate-200 text-slate-600'
-              }`}>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs ${
+                  invoiceType === "custom"
+                    ? "bg-purple-500 text-white"
+                    : "bg-slate-200 text-slate-600"
+                }`}
+              >
                 {customInvoices.length}
               </span>
             </button>
           </div>
         )}
-        
+
         {/* Action Buttons */}
         {selectedIds.length > 0 && (
           <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
@@ -447,7 +587,9 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
                   className="flex items-center gap-2 px-4 py-2 text-emerald-600 hover:bg-emerald-50 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  {restoring ? 'Restoring...' : `Restore Selected (${selectedIds.length})`}
+                  {restoring
+                    ? "Restoring..."
+                    : `Restore Selected (${selectedIds.length})`}
                 </button>
                 <button
                   onClick={handlePermanentDelete}
@@ -455,7 +597,9 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
                   className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
                 >
                   <AlertTriangle className="w-4 h-4" />
-                  {deleting ? 'Deleting...' : `Delete Forever (${selectedIds.length})`}
+                  {deleting
+                    ? "Deleting..."
+                    : `Delete Forever (${selectedIds.length})`}
                 </button>
               </>
             ) : (
@@ -465,7 +609,9 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
                 className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
               >
                 <Trash2 className="w-4 h-4" />
-                {deleting ? 'Moving to trash...' : `Move to Trash (${selectedIds.length})`}
+                {deleting
+                  ? "Moving to trash..."
+                  : `Move to Trash (${selectedIds.length})`}
               </button>
             )}
           </div>
@@ -481,7 +627,7 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20">
           <p className="text-red-500 mb-4">{error}</p>
-          <button 
+          <button
             onClick={fetchInvoices}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
           >
@@ -501,9 +647,12 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-100 to-emerald-100 flex items-center justify-center mx-auto mb-5">
                 <FileText className="w-10 h-10 text-indigo-500" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">No invoices yet</h3>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                No invoices yet
+              </h3>
               <p className="text-slate-500 mb-6 text-sm leading-relaxed">
-                Create your first invoice in seconds. Add your business details, items, and send it straight to your client.
+                Create your first invoice in seconds. Add your business details,
+                items, and send it straight to your client.
               </p>
               {onNewInvoice && (
                 <button
@@ -530,26 +679,47 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   <th className="p-4 text-left w-10">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="rounded border-slate-300"
-                      checked={filteredInvoices.length > 0 && filteredInvoices.every(inv => selectedIds.includes(inv.id))}
+                      checked={
+                        filteredInvoices.length > 0 &&
+                        filteredInvoices.every((inv) =>
+                          selectedIds.includes(inv.id),
+                        )
+                      }
                       onChange={handleSelectAll}
                     />
                   </th>
-                  <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
-                  <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Number</th>
-                  <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{isTrashView ? 'Deleted On' : 'Date'}</th>
-                  {!isTrashView && <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>}
-                  {!isTrashView && <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Paid</th>}
-                  <th className="p-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</th>
+                  <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Customer
+                  </th>
+                  <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Number
+                  </th>
+                  <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    {isTrashView ? "Deleted On" : "Date"}
+                  </th>
+                  {!isTrashView && (
+                    <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      Status
+                    </th>
+                  )}
+                  {!isTrashView && (
+                    <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      Paid
+                    </th>
+                  )}
+                  <th className="p-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Total
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredInvoices.map((invoice, index) => {
-                  const isCustom = invoice.type === 'custom';
+                  const isCustom = invoice.type === "custom";
                   return (
-                    <tr 
+                    <tr
                       key={invoice.id}
                       onClick={() => {
                         if (isTrashView) return;
@@ -559,28 +729,36 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
                           onInvoiceClick && onInvoiceClick(invoice);
                         }
                       }}
-                      className={`border-b border-slate-100 hover:bg-slate-50 transition-colors group ${!isTrashView ? 'cursor-pointer' : ''} ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-                      } ${isCustom ? 'bg-purple-50/30' : ''}`}
+                      className={`border-b border-slate-100 hover:bg-slate-50 transition-colors group ${!isTrashView ? "cursor-pointer" : ""} ${
+                        index % 2 === 0 ? "bg-white" : "bg-slate-50/50"
+                      } ${isCustom ? "bg-purple-50/30" : ""}`}
                     >
                       <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           className="rounded border-slate-300"
                           checked={selectedIds.includes(invoice.id)}
                           onChange={() => handleSelectInvoice(invoice.id)}
                         />
                       </td>
                       <td className="p-4 text-sm text-slate-700 font-medium">
-                        {isCustom && <Palette className="w-3 h-3 inline mr-1 text-purple-500" />}
-                        {invoice.customer || '—'}
+                        {isCustom && (
+                          <Palette className="w-3 h-3 inline mr-1 text-purple-500" />
+                        )}
+                        {invoice.customer || "—"}
                       </td>
-                      <td className="p-4 text-sm text-slate-600">{invoice.number}</td>
-                      <td className="p-4 text-sm text-slate-600">{isTrashView ? invoice.deletedAt : invoice.date}</td>
+                      <td className="p-4 text-sm text-slate-600">
+                        {invoice.number}
+                      </td>
+                      <td className="p-4 text-sm text-slate-600">
+                        {isTrashView ? invoice.deletedAt : invoice.date}
+                      </td>
                       {!isTrashView && (
                         <td className="p-4 text-sm">
                           {isCustom ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">● Custom</span>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
+                              ● Custom
+                            </span>
                           ) : (
                             getStatusBadge(invoice)
                           )}
@@ -591,7 +769,9 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
                           {isCustom ? (
                             <span className="text-slate-400 text-xs">—</span>
                           ) : (
-                            <span className={`font-medium ${invoice.paid > 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
+                            <span
+                              className={`font-medium ${invoice.paid > 0 ? "text-emerald-600" : "text-orange-500"}`}
+                            >
                               {formatCurrency(invoice.paid, invoice.currency)}
                             </span>
                           )}
@@ -599,16 +779,18 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
                       )}
                       <td className="p-4 text-sm text-slate-700 text-right font-medium">
                         <div className="flex items-center justify-end gap-2">
-                          {!isTrashView && !isCustom && invoice.status !== 'paid' && (
-                            <button
-                              onClick={(e) => handleQuickMarkPaid(e, invoice)}
-                              className="opacity-0 group-hover:opacity-100 inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-lg border border-emerald-200 hover:bg-emerald-100 transition-all"
-                              title="Mark as paid"
-                            >
-                              <CheckCircle className="w-3 h-3" />
-                              Paid
-                            </button>
-                          )}
+                          {!isTrashView &&
+                            !isCustom &&
+                            invoice.status !== "paid" && (
+                              <button
+                                onClick={(e) => handleQuickMarkPaid(e, invoice)}
+                                className="opacity-0 group-hover:opacity-100 inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-lg border border-emerald-200 hover:bg-emerald-100 transition-all"
+                                title="Mark as paid"
+                              >
+                                <CheckCircle className="w-3 h-3" />
+                                Paid
+                              </button>
+                            )}
                           {formatCurrency(invoice.total, invoice.currency)}
                         </div>
                       </td>
@@ -624,16 +806,28 @@ const MyInvoices = ({ onInvoiceClick, onNewInvoice, refreshKey, searchQuery = ''
             <div className="bg-gradient-to-br from-slate-50 to-white p-6 border-t border-slate-200">
               <div className="grid grid-cols-3 gap-6">
                 <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Total</p>
-                  <p className="text-xl font-bold text-slate-800">{formatCurrency(totalAmount, 'INR')}</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                    Total
+                  </p>
+                  <p className="text-xl font-bold text-slate-800">
+                    {formatCurrency(totalAmount, "INR")}
+                  </p>
                 </div>
                 <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Paid Amount</p>
-                  <p className="text-xl font-bold text-emerald-600">{formatCurrency(paidAmount, 'INR')}</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                    Paid Amount
+                  </p>
+                  <p className="text-xl font-bold text-emerald-600">
+                    {formatCurrency(paidAmount, "INR")}
+                  </p>
                 </div>
                 <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Balance Due</p>
-                  <p className="text-xl font-bold text-orange-500">{formatCurrency(balanceDue, 'INR')}</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                    Balance Due
+                  </p>
+                  <p className="text-xl font-bold text-orange-500">
+                    {formatCurrency(balanceDue, "INR")}
+                  </p>
                 </div>
               </div>
             </div>
