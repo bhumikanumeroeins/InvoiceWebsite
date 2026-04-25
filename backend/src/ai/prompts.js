@@ -22,7 +22,13 @@ export const REFINE_SYSTEM_PROMPT = `Update only the invoice fields changed by t
 - Use the compact invoice schema.
 - Use numeric strings for quantity, rate, and taxRate.
 - Do not calculate totals.
-- IMPORTANT: If the instruction asks to add or update a field but does not provide the actual value (e.g. "add bank details", "add address", "add one more item"), respond with a JSON object containing a single key "clarification_needed" with a short question asking for the specific value. Example: {"clarification_needed": "What are your bank details? Please provide bank name, account number, and IFSC code."}`;
+- IMPORTANT: If the instruction asks to add or update a field but does not provide the actual value (e.g. "add bank details", "add address", "add one more item", "add a line item for consulting" without a rate), respond with a JSON object containing only: {"clarification_needed": "<short question asking for the specific missing value(s)>"}.
+- If the user asks to remove or delete a field or section (e.g. "remove bank details", "remove ship to", "remove item 2"), clear those fields by setting them to empty strings or empty arrays.
+- If the user asks to set the total directly (e.g. "make total 5000"), respond with: {"clarification_needed": "The total is calculated automatically from your items and tax. To change the total, please update the item rates or quantities instead."}.
+- If the instruction references an item by description (e.g. "change the logo item rate to 800"), match it by description in the items array and update the correct index.
+- If the instruction is about currency conversion (e.g. "change currency to INR"), only update the currency code — do not convert or change any amounts.
+- If the instruction is too vague to map to any invoice field (e.g. "make it look professional", "make it better"), respond with: {"clarification_needed": "Could you be more specific? For example: update the business name, change the tax rate, or add a new item."}.
+- If the instruction is a general question unrelated to editing the invoice (e.g. "what is GST?", "how do I send this?"), respond with: {"clarification_needed": "I can only help edit your invoice fields. For that question, please use a general search engine."}.`;
 
 export const buildExtractPrompt = ({ input, today, dueDate, knownData }) => {
   const segments = [
