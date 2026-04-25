@@ -11,6 +11,34 @@ import { getCurrentUser } from '../../services/authService';
 import { currencyService } from '../../services/currencyService';
 import TemplateBuilderTabs from './TemplateBuilderTabs';
 import SignatureModal from '../invoice/SignatureModal';
+import Templates1 from '../templates/Templates1';
+import Templates2 from '../templates/Templates2';
+import Templates3 from '../templates/Templates3';
+import Templates4 from '../templates/Templates4';
+import Templates5 from '../templates/Templates5';
+import Templates6 from '../templates/Templates6';
+import Templates7 from '../templates/Templates7';
+import Templates8 from '../templates/Templates8';
+import Templates9 from '../templates/Templates9';
+import Templates10 from '../templates/Templates10';
+import Templates11 from '../templates/Templates11';
+import Templates12 from '../templates/Templates12';
+import { aiDataToTemplateFormat } from '../../utils/aiDataToTemplate';
+
+const INVOICE_TEMPLATES = {
+  1: Templates1,
+  2: Templates2,
+  3: Templates3,
+  4: Templates4,
+  5: Templates5,
+  6: Templates6,
+  7: Templates7,
+  8: Templates8,
+  9: Templates9,
+  10: Templates10,
+  11: Templates11,
+  12: Templates12,
+};
 
 const CURRENCIES = [
   { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
@@ -236,8 +264,14 @@ Best regards`,
   const [previewMode, setPreviewMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastAiSnapshot, setLastAiSnapshot] = useState(null);
+  const hasInitializedDraftRef = useRef(false);
   
   const isEditMode = activeTab === 'edit';
+  const selectedTemplateIdFromAi = Number(location.state?.selectedTemplateId || 0);
+  const useAiTemplatePreview = !customInvoiceId && selectedTemplateIdFromAi >= 1 && selectedTemplateIdFromAi <= 12;
+  const SelectedTemplateComponent = useAiTemplatePreview ? INVOICE_TEMPLATES[selectedTemplateIdFromAi] : null;
 
   const generatePDF = async (forDownload = false) => {
     try {
@@ -370,6 +404,11 @@ Best regards`,
   };
 
   const currencySymbol = CURRENCIES.find(c => c.code === templateConfig.currency)?.symbol || '$';
+  const selectedTemplatePreviewData = aiDataToTemplateFormat({
+    ...templateConfig.content,
+    currency: templateConfig.currency,
+  });
+  const builderDraftKey = `invoicepro_builder_draft_${customInvoiceId || 'ai'}`;
 
   const parseNum = (val) => parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
 
@@ -484,6 +523,14 @@ Best regards`,
     });
   };
 
+  const handleUndoAiRefine = (snapshotContent) => {
+    if (!snapshotContent) return;
+    setTemplateConfig((prev) => ({
+      ...prev,
+      content: recalcTotals(snapshotContent),
+    }));
+  };
+
   useEffect(() => {
     const loadCustomInvoice = async () => {
       if (!customInvoiceId) return;
@@ -561,14 +608,58 @@ Best regards`,
       const merged = { ...prev.content, ...cleanContent };
       return {
         ...prev,
-        templateName: templateName || prev.templateName,
+        templateName: templateName || (useAiTemplatePreview ? `Template ${selectedTemplateIdFromAi}` : prev.templateName),
         ...(currency && { currency }),
         ...(aiVisibility && { visibility: { ...prev.visibility, ...aiVisibility } }),
         content: recalcTotals(merged),
       };
     });
     setActiveTab('edit');
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [customInvoiceId, location.state, selectedTemplateIdFromAi, useAiTemplatePreview]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(builderDraftKey);
+      if (!raw || customInvoiceId) {
+        hasInitializedDraftRef.current = true;
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (parsed?.templateConfig) {
+        setTemplateConfig((prev) => ({ ...prev, ...parsed.templateConfig }));
+        setActiveTab(parsed.activeTab || 'edit');
+        toast.info('Recovered an unsaved builder draft');
+      }
+    } catch (error) {
+      console.error('Failed to restore template draft', error);
+    } finally {
+      hasInitializedDraftRef.current = true;
+    }
+  }, [builderDraftKey, customInvoiceId]);
+
+  useEffect(() => {
+    if (!hasInitializedDraftRef.current || customInvoiceId) return;
+    const saveDraft = () => {
+      localStorage.setItem(builderDraftKey, JSON.stringify({
+        templateConfig,
+        activeTab,
+        updatedAt: Date.now(),
+      }));
+      setHasUnsavedChanges(true);
+    };
+    const timeout = setTimeout(saveDraft, 800);
+    return () => clearTimeout(timeout);
+  }, [templateConfig, activeTab, builderDraftKey, customInvoiceId]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (!hasUnsavedChanges) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -608,6 +699,8 @@ Best regards`,
       });
       
       if (response.success) {
+        localStorage.removeItem(builderDraftKey);
+        setHasUnsavedChanges(false);
         toast.success('Template saved successfully!');
         navigate('/dashboard');
       } else {
@@ -659,8 +752,17 @@ Best regards`,
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-lg font-semibold text-slate-900">Custom Invoice Builder</h1>
-              <p className="text-sm text-gray-500">{templateConfig.templateName}</p>
+              <h1 className="text-lg font-semibold text-slate-900">
+                {useAiTemplatePreview ? `Editing Template ${selectedTemplateIdFromAi}` : 'Custom Invoice Builder'}
+              </h1>
+              <p className="text-sm text-gray-500">
+                {useAiTemplatePreview
+                  ? `AI data loaded into Template ${selectedTemplateIdFromAi}`
+                  : templateConfig.templateName}
+              </p>
+              {hasUnsavedChanges && (
+                <p className="text-xs text-amber-600 mt-0.5">Unsaved changes</p>
+              )}
             </div>
           </div>
           <button
@@ -768,7 +870,13 @@ Best regards`,
                 </div>
 
                 {/* AI Refine Panel */}
-                <AIRefinePanel content={templateConfig.content} onUpdate={handleAIUpdate} />
+                <AIRefinePanel
+                  content={templateConfig.content}
+                  onBeforeUpdate={setLastAiSnapshot}
+                  onUpdate={handleAIUpdate}
+                  onUndo={handleUndoAiRefine}
+                  lastSnapshot={lastAiSnapshot}
+                />
 
                 {/* Currency */}
                 <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
@@ -1147,6 +1255,10 @@ Best regards`,
                     paddingBottom: '60px'
                   }}
                 >
+                  {useAiTemplatePreview && SelectedTemplateComponent ? (
+                    <SelectedTemplateComponent data={selectedTemplatePreviewData} />
+                  ) : (
+                    <>
                   {/* Background Patterns */}
                   <BackgroundPattern 
                     pattern={templateConfig.backgroundPattern} 
@@ -1998,6 +2110,8 @@ Best regards`,
                       This invoice has been generated electronically and is valid without signature.
                     </p>
                   </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

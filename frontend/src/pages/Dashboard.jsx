@@ -192,7 +192,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* AI Generate button */}
             <button
-              onClick={() => navigate('/ai-invoice')}
+              onClick={() => navigate('/')}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all"
             >
               <Sparkles className="w-4 h-4" />

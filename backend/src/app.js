@@ -28,6 +28,21 @@ import path from "path";
 
 const app = express();
 
+const trustProxySetting = (() => {
+  const value = process.env.TRUST_PROXY;
+  if (value === undefined) {
+    return false;
+  }
+
+  if (value === "true") return true;
+  if (value === "false") return false;
+
+  const numericValue = Number(value);
+  return Number.isNaN(numericValue) ? value : numericValue;
+})();
+
+app.set("trust proxy", trustProxySetting);
+
 app.use(cors());
 // Increase body size limit for PDF attachments
 app.use(express.json({ limit: '50mb' }));

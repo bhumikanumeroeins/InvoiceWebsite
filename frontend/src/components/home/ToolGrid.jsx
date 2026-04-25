@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 const tools = [
-  { icon: Sparkles,       label: 'AI Invoice',      path: '/ai-invoice',              color: 'bg-violet-100 text-violet-600',  badge: 'AI'  },
+  { icon: Sparkles,       label: 'AI Generate',     path: '/',                        color: 'bg-violet-100 text-violet-600',  badge: 'AI'  },
   { icon: FileText,       label: 'Invoice',          path: '/create/invoice',          color: 'bg-indigo-100 text-indigo-600',  badge: null  },
   { icon: Receipt,        label: 'GST Invoice',      path: '/create/tax-invoice',      color: 'bg-blue-100 text-blue-600',      badge: null  },
   { icon: FileCheck,      label: 'Proforma',         path: '/create/proforma-invoice', color: 'bg-sky-100 text-sky-600',        badge: null  },

@@ -18,25 +18,25 @@ export const aiDataToTemplateFormat = (aiData = {}) => {
 
   return {
     business: {
-      name: aiData.businessName || '',
-      address: aiData.businessAddress1 || '',
-      city: aiData.businessAddress2 || '',
+      name: aiData.businessName || "",
+      address: aiData.businessAddress1 || "",
+      city: aiData.businessAddress2 || "",
     },
     client: {
-      name: aiData.clientName || '',
-      address: aiData.clientAddress1 || '',
-      city: aiData.clientAddress2 || '',
+      name: aiData.clientName || "",
+      address: aiData.clientAddress1 || "",
+      city: aiData.clientAddress2 || "",
     },
     shipTo: {
-      shippingName: aiData.shipToName || '',
-      shippingAddress: aiData.shipToAddress1 || '',
-      shippingCity: aiData.shipToAddress2 || '',
+      shippingName: aiData.shipToName || "",
+      shippingAddress: aiData.shipToAddress1 || "",
+      shippingCity: aiData.shipToAddress2 || "",
     },
     invoiceMeta: {
-      invoiceNo: aiData.invoiceNumber || '',
-      invoiceDate: aiData.invoiceDate || '',
-      dueDate: aiData.dueDate || '',
-      poNumber: aiData.poNumber || '',
+      invoiceNo: aiData.invoiceNumber || "",
+      invoiceDate: aiData.invoiceDate || "",
+      dueDate: aiData.dueDate || "",
+      poNumber: aiData.poNumber || "",
     },
     items,
     totals: {
@@ -45,11 +45,16 @@ export const aiDataToTemplateFormat = (aiData = {}) => {
       grandTotal: parseFloat(aiData.total) || 0,
     },
     payment: {
-      bankName: aiData.bankName || '',
-      accountNo: aiData.accountNumber || '',
-      ifscCode: aiData.ifscCode || '',
+      bankName: aiData.bankName || "",
+      accountNo: aiData.accountNumber || "",
+      ifscCode: aiData.ifscCode || "",
     },
     terms: aiData.terms ? [aiData.terms] : [],
-    currency: aiData.currency || 'USD',
+    currency: aiData.currency || "USD",
+    footer: {
+      email: aiData.footerEmail || "",
+      phone: aiData.footerPhone || "",
+      website: aiData.footerWebsite || "",
+    },
   };
 };

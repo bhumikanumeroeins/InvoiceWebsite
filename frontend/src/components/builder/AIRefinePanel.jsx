@@ -5,15 +5,17 @@ import { aiService } from '../../services/aiService';
 
 const QUICK_ACTIONS = [
   'Change due date to 30 days from today',
-  'Add 10% discount to all items',
   'Update tax to 18%',
+  'Change currency to INR',
   'Make terms Net 15',
 ];
 
-const AIRefinePanel = ({ content, onUpdate }) => {
+const AIRefinePanel = ({ content, onUpdate, onBeforeUpdate, onUndo }) => {
   const [open, setOpen] = useState(false);
   const [instruction, setInstruction] = useState('');
   const [loading, setLoading] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [snapshot, setSnapshot] = useState(null);
 
   const handleRefine = async (text) => {
     const msg = text || instruction;
@@ -21,9 +23,13 @@ const AIRefinePanel = ({ content, onUpdate }) => {
 
     setLoading(true);
     try {
+      const previousState = JSON.parse(JSON.stringify(content || {}));
       const res = await aiService.refine(content, msg);
       if (res.success && res.data) {
+        onBeforeUpdate?.(previousState);
         onUpdate(res.data);
+        setSnapshot(previousState);
+        setCanUndo(true);
         setInstruction('');
         toast.success('Invoice updated by AI');
       } else {
@@ -34,6 +40,14 @@ const AIRefinePanel = ({ content, onUpdate }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUndo = () => {
+    if (!canUndo || !snapshot) return;
+    onUndo?.(snapshot);
+    setCanUndo(false);
+    setSnapshot(null);
+    toast.info('Last AI change undone');
   };
 
   return (
@@ -88,6 +102,14 @@ const AIRefinePanel = ({ content, onUpdate }) => {
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </div>
+          {canUndo && (
+            <button
+              onClick={handleUndo}
+              className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 hover:bg-amber-100 transition"
+            >
+              Undo last AI refine
+            </button>
+          )}
         </div>
       )}
     </div>
