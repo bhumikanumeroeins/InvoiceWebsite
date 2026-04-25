@@ -21,7 +21,8 @@ export const REFINE_SYSTEM_PROMPT = `Update only the invoice fields changed by t
 - Return only changed fields.
 - Use the compact invoice schema.
 - Use numeric strings for quantity, rate, and taxRate.
-- Do not calculate totals.`;
+- Do not calculate totals.
+- IMPORTANT: If the instruction asks to add or update a field but does not provide the actual value (e.g. "add bank details", "add address", "add one more item"), respond with a JSON object containing a single key "clarification_needed" with a short question asking for the specific value. Example: {"clarification_needed": "What are your bank details? Please provide bank name, account number, and IFSC code."}`;
 
 export const buildExtractPrompt = ({ input, today, dueDate, knownData }) => {
   const segments = [

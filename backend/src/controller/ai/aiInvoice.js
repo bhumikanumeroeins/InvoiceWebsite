@@ -349,6 +349,19 @@ export const chatInvoice = async (req, res) => {
           }),
         });
 
+        // AI needs clarification before it can make the update
+        if (rawUpdates?.clarification_needed) {
+          return res.status(200).json({
+            success: true,
+            sessionId: session.sessionId,
+            action: "clarify",
+            question: rawUpdates.clarification_needed,
+            remaining: isAuthenticated
+              ? null
+              : getRemainingPublicUsage(await getPublicUsage(ipAddress)),
+          });
+        }
+
         updatedCanonical = mergeCanonicalInvoices(knownCanonical, rawUpdates);
       }
 

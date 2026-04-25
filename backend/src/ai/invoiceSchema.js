@@ -163,4 +163,12 @@ export const CANONICAL_INVOICE_SCHEMA = {
 
 export const EXTRACT_RESPONSE_SCHEMA = CANONICAL_INVOICE_SCHEMA;
 export const GENERATE_RESPONSE_SCHEMA = CANONICAL_INVOICE_SCHEMA;
-export const REFINE_RESPONSE_SCHEMA = CANONICAL_INVOICE_SCHEMA;
+export const REFINE_RESPONSE_SCHEMA = {
+  type: SchemaType.OBJECT,
+  properties: {
+    ...canonicalInvoiceProperties,
+    clarification_needed: stringField(
+      "Ask the user for the specific value needed before making the update",
+    ),
+  },
+};

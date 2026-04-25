@@ -270,7 +270,16 @@ const MainWorkspace = ({ loadSessionId }) => {
         return;
       }
 
-      if (res.action === "ask") {
+      if (res.action === "clarify") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            kind: "clarify",
+            content: res.question,
+          },
+        ]);
+      } else if (res.action === "ask") {
         // AI needs required fields — store extracted data but DON'T show preview yet
         if (res.extracted && Object.keys(res.extracted).length > 0) {
           setAiData(res.extracted);
