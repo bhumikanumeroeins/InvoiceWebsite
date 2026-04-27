@@ -1092,6 +1092,82 @@ export const extractDeterministicRefinement = (
     };
   }
 
+  // Address copy patterns — covers many natural phrasings
+  const current = normalizeCanonicalInvoice(currentContent, { partial: true });
+
+  // Helper: strip placeholder values from a contact block
+  const PLACEHOLDER_RE = /^\[.+\]$|^\[.*address.*\]$|^\[.*city.*\]$/i;
+  const cleanContactBlock = (block) => {
+    if (!block) return null;
+    const name = trimString(block.name);
+    const address1 = trimString(block.address1);
+    const address2 = trimString(block.address2);
+    // If name looks like it has address data concatenated into it, extract just the first segment
+    const cleanName = name.includes('[') || name.split(/[.\n]/).length > 2
+      ? name.split(/[.\n]/)[0].trim()
+      : name;
+    return {
+      name: cleanName,
+      address1: PLACEHOLDER_RE.test(address1) ? '' : address1,
+      address2: PLACEHOLDER_RE.test(address2) ? '' : address2,
+    };
+  };
+
+  const copyAddressPatterns = [
+    // client → shipTo
+    { from: 'client', to: 'shipTo', pattern: /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:client|billing|bill\s*to)\b.{0,30}\b(?:in\s+)?(?:ship(?:ping)?(?:\s+to)?|ship\s+to)\b/i },
+    // shipTo → client
+    { from: 'shipTo', to: 'client', pattern: /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:ship(?:ping)?(?:\s+to)?|ship\s+to)\b.{0,30}\b(?:in\s+)?(?:client|billing|bill\s*to)\b/i },
+    // business → client
+    { from: 'business', to: 'client', pattern: /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:business|from|sender|my)\b.{0,30}\b(?:in\s+)?(?:client|billing|bill\s*to)\b/i },
+    // client → business
+    { from: 'client', to: 'business', pattern: /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:client|billing|bill\s*to)\b.{0,30}\b(?:in\s+)?(?:business|from|sender)\b/i },
+    // "ship to same as client" / "shipping same as billing"
+    { from: 'client', to: 'shipTo', pattern: /\bship(?:ping)?(?:\s+to)?\s+(?:same\s+as|=|is\s+same\s+as)\s+(?:client|billing|bill\s*to)\b/i },
+    // "client same as shipping"
+    { from: 'shipTo', to: 'client', pattern: /\bclient\s+(?:same\s+as|=|is\s+same\s+as)\s+(?:ship(?:ping)?(?:\s+to)?)\b/i },
+  ];
+
+  for (const { from, to, pattern } of copyAddressPatterns) {
+    if (pattern.test(text)) {
+      const cleaned = cleanContactBlock(current[from]);
+      const fieldMap = {
+        client:   ['clientName',   'clientAddress1',   'clientAddress2'],
+        shipTo:   ['shipToName',   'shipToAddress1',   'shipToAddress2'],
+        business: ['businessName', 'businessAddress1', 'businessAddress2'],
+      };
+
+      if (cleaned && cleaned.name) {
+        const [nameKey, addr1Key, addr2Key] = fieldMap[to];
+
+        // If source has no real address (only placeholders stripped),
+        // try the reverse direction — user may have the intent backwards
+        if (!cleaned.address1 && !cleaned.address2) {
+          const reverseCleaned = cleanContactBlock(current[to]);
+          if (reverseCleaned && reverseCleaned.address1) {
+            const [rNameKey, rAddr1Key, rAddr2Key] = fieldMap[from];
+            return {
+              [rNameKey]:  reverseCleaned.name,
+              [rAddr1Key]: reverseCleaned.address1,
+              [rAddr2Key]: reverseCleaned.address2,
+            };
+          }
+          // Neither side has real address data — fall through to AI
+          break;
+        }
+
+        // Return flat legacy fields directly — bypass applyInvoiceRefinement
+        // so an identical-looking source/target still produces a real update
+        return {
+          [nameKey]:  cleaned.name,
+          [addr1Key]: cleaned.address1,
+          [addr2Key]: cleaned.address2,
+        };
+      }
+      break;
+    }
+  }
+
   if (Object.keys(updates).length === 0) {
     return null;
   }

@@ -22,6 +22,8 @@ export const REFINE_SYSTEM_PROMPT = `Update only the invoice fields changed by t
 - Use the compact invoice schema.
 - Use numeric strings for quantity, rate, and taxRate.
 - Do not calculate totals.
+- CRITICAL: NEVER concatenate address data into a name field. name, address1, and address2 are always separate fields. If copying an address block, set each field individually.
+- IMPORTANT: If the instruction asks to copy an address from one section to another (e.g. "use client address as ship to", "use shipping address as billing", "same address as client", "in ship to use client name and address"), copy the EXACT name, address1, and address2 values from the source section into the target section as separate fields. Do NOT use placeholders like "[Shipping Address]".
 - IMPORTANT: If the instruction asks to add or update a field but does not provide the actual value (e.g. "add bank details", "add address", "add one more item", "add a line item for consulting" without a rate), respond with a JSON object containing only: {"clarification_needed": "<short question asking for the specific missing value(s)>"}.
 - If the user asks to remove or delete a field or section (e.g. "remove bank details", "remove ship to", "remove item 2"), clear those fields by setting them to empty strings or empty arrays.
 - If the user asks to set the total directly (e.g. "make total 5000"), respond with: {"clarification_needed": "The total is calculated automatically from your items and tax. To change the total, please update the item rates or quantities instead."}.
