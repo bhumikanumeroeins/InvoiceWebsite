@@ -167,6 +167,62 @@ const isCanonicalInvoiceShape = (value) =>
     hasOwn(value, "items") ||
     hasOwn(value, "taxRate"));
 
+const isAddressPlaceholder = (value) => {
+  const text = trimString(value);
+  if (!text) return true;
+  return (
+    /^\[.*\]$/.test(text) ||
+    /^(your business address|client address|shipping address|city, state, zip|city, state)$/i.test(
+      text,
+    )
+  );
+};
+
+const splitAddressLines = (address1 = "", address2 = "") => {
+  const line1 = trimString(address1);
+  const line2 = trimString(address2);
+  const shouldSplit = line1 && (!line2 || isAddressPlaceholder(line2));
+  if (!shouldSplit) {
+    return { address1: line1, address2: line2 };
+  }
+
+  const newlineParts = line1.split(/\r?\n/).map(trimString).filter(Boolean);
+  if (newlineParts.length >= 2) {
+    return {
+      address1: newlineParts[0],
+      address2: newlineParts.slice(1).join(", "),
+    };
+  }
+
+  const commaParts = line1
+    .split(/\s*,\s*/)
+    .map(trimString)
+    .filter(Boolean);
+  if (commaParts.length >= 2) {
+    if (commaParts.length >= 4) {
+      return {
+        address1: commaParts.slice(0, commaParts.length - 3).join(", "),
+        address2: commaParts.slice(commaParts.length - 3).join(", "),
+      };
+    }
+    return {
+      address1: commaParts.slice(0, commaParts.length - 1).join(", "),
+      address2: commaParts.slice(commaParts.length - 1).join(", "),
+    };
+  }
+
+  if (line1.length > 40) {
+    const words = line1.split(/\s+/).filter(Boolean);
+    const splitIndex = Math.ceil(words.length / 2);
+    return {
+      address1: words.slice(0, splitIndex).join(" "),
+      address2: words.slice(splitIndex).join(" "),
+    };
+  }
+
+  return { address1: line1, address2: "" };
+};
+
 const normalizeContactBlock = (block = {}, partial = false, fallback = {}) => {
   if (!block || typeof block !== "object" || Array.isArray(block)) {
     return partial ? undefined : { name: "", address1: "", address2: "" };
@@ -185,6 +241,12 @@ const normalizeContactBlock = (block = {}, partial = false, fallback = {}) => {
     if (value || !partial) {
       normalized[key] = value;
     }
+  }
+
+  if (normalized.address1) {
+    const split = splitAddressLines(normalized.address1, normalized.address2);
+    normalized.address1 = split.address1;
+    normalized.address2 = split.address2;
   }
 
   return normalized;
@@ -648,6 +710,29 @@ const mergeObjects = (current, updates) => ({
   ...(updates || {}),
 });
 
+const isPlaceholderAddressLine = (value) => {
+  const text = trimString(value);
+  return (
+    !text ||
+    /^\[.*\]$/.test(text) ||
+    /^(city,?\s*state,?\s*zip|city,?\s*state)$/i.test(text)
+  );
+};
+
+const getUpdatedContactBlock = (currentBlock = {}, updateBlock = {}) => {
+  const merged = mergeObjects(currentBlock, updateBlock);
+
+  if (
+    hasOwn(updateBlock, "address1") &&
+    !hasOwn(updateBlock, "address2") &&
+    isPlaceholderAddressLine(currentBlock.address2)
+  ) {
+    merged.address2 = "";
+  }
+
+  return merged;
+};
+
 export const mergeCanonicalInvoices = (current, updates) => {
   const currentCanonical = normalizeCanonicalInvoice(current, {
     partial: true,
@@ -657,9 +742,18 @@ export const mergeCanonicalInvoices = (current, updates) => {
   const merged = {
     ...currentCanonical,
     ...updateCanonical,
-    business: mergeObjects(currentCanonical.business, updateCanonical.business),
-    client: mergeObjects(currentCanonical.client, updateCanonical.client),
-    shipTo: mergeObjects(currentCanonical.shipTo, updateCanonical.shipTo),
+    business: getUpdatedContactBlock(
+      currentCanonical.business,
+      updateCanonical.business,
+    ),
+    client: getUpdatedContactBlock(
+      currentCanonical.client,
+      updateCanonical.client,
+    ),
+    shipTo: getUpdatedContactBlock(
+      currentCanonical.shipTo,
+      updateCanonical.shipTo,
+    ),
     payment: mergeObjects(currentCanonical.payment, updateCanonical.payment),
     footer: mergeObjects(currentCanonical.footer, updateCanonical.footer),
   };
