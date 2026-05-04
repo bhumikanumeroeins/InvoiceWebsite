@@ -1,29 +1,37 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import AIRefinePanel from './AIRefinePanel';
-import { toast } from 'react-toastify';
-import { Rnd } from 'react-rnd';
-import { Save, Eye, ArrowLeft, Loader2, Mail, Download, Edit } from 'lucide-react';
-import { backgroundPatterns, BackgroundPattern } from './BackgroundPatterns';
-import { apiCall } from '../../services/apiConfig';
-import { buildInvoiceAPI } from '../../services/buildInvoiceService';
-import { getCurrentUser } from '../../services/authService';
-import { currencyService } from '../../services/currencyService';
-import TemplateBuilderTabs from './TemplateBuilderTabs';
-import SignatureModal from '../invoice/SignatureModal';
-import Templates1 from '../templates/Templates1';
-import Templates2 from '../templates/Templates2';
-import Templates3 from '../templates/Templates3';
-import Templates4 from '../templates/Templates4';
-import Templates5 from '../templates/Templates5';
-import Templates6 from '../templates/Templates6';
-import Templates7 from '../templates/Templates7';
-import Templates8 from '../templates/Templates8';
-import Templates9 from '../templates/Templates9';
-import Templates10 from '../templates/Templates10';
-import Templates11 from '../templates/Templates11';
-import Templates12 from '../templates/Templates12';
-import { aiDataToTemplateFormat } from '../../utils/aiDataToTemplate';
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import AIRefinePanel from "./AIRefinePanel";
+import { toast } from "react-toastify";
+import { Rnd } from "react-rnd";
+import {
+  Save,
+  Eye,
+  ArrowLeft,
+  Loader2,
+  Mail,
+  Download,
+  Edit,
+} from "lucide-react";
+import { backgroundPatterns, BackgroundPattern } from "./BackgroundPatterns";
+import { apiCall } from "../../services/apiConfig";
+import { buildInvoiceAPI } from "../../services/buildInvoiceService";
+import { getCurrentUser } from "../../services/authService";
+import { currencyService } from "../../services/currencyService";
+import TemplateBuilderTabs from "./TemplateBuilderTabs";
+import SignatureModal from "../invoice/SignatureModal";
+import Templates1 from "../templates/Templates1";
+import Templates2 from "../templates/Templates2";
+import Templates3 from "../templates/Templates3";
+import Templates4 from "../templates/Templates4";
+import Templates5 from "../templates/Templates5";
+import Templates6 from "../templates/Templates6";
+import Templates7 from "../templates/Templates7";
+import Templates8 from "../templates/Templates8";
+import Templates9 from "../templates/Templates9";
+import Templates10 from "../templates/Templates10";
+import Templates11 from "../templates/Templates11";
+import Templates12 from "../templates/Templates12";
+import { aiDataToTemplateFormat } from "../../utils/aiDataToTemplate";
 
 const INVOICE_TEMPLATES = {
   1: Templates1,
@@ -41,19 +49,26 @@ const INVOICE_TEMPLATES = {
 };
 
 const CURRENCIES = [
-  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-  { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
-  { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
-  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+  { code: "INR", name: "Indian Rupee", symbol: "₹" },
+  { code: "USD", name: "US Dollar", symbol: "$" },
+  { code: "EUR", name: "Euro", symbol: "€" },
+  { code: "GBP", name: "British Pound", symbol: "£" },
+  { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+  { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+  { code: "SGD", name: "Singapore Dollar", symbol: "S$" },
+  { code: "AED", name: "UAE Dirham", symbol: "د.إ" },
+  { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+  { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
 ];
 
-const EditableText = ({ value, onChange, style, className, placeholder, readOnly = false }) => {
+const EditableText = ({
+  value,
+  onChange,
+  style,
+  className,
+  placeholder,
+  readOnly = false,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState(value);
   const [isHovered, setIsHovered] = useState(false);
@@ -64,7 +79,7 @@ const EditableText = ({ value, onChange, style, className, placeholder, readOnly
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleBlur();
     }
@@ -81,11 +96,11 @@ const EditableText = ({ value, onChange, style, className, placeholder, readOnly
         autoFocus
         style={{
           ...style,
-          border: '2px solid #4F46E5',
-          outline: 'none',
-          background: 'white',
-          padding: '2px 4px',
-          borderRadius: '2px'
+          border: "2px solid #4F46E5",
+          outline: "none",
+          background: "white",
+          padding: "2px 4px",
+          borderRadius: "2px",
         }}
         className={className}
       />
@@ -100,18 +115,20 @@ const EditableText = ({ value, onChange, style, className, placeholder, readOnly
           setTempValue(value);
         }
       }}
-      onMouseEnter={() => { if (!readOnly) setIsHovered(true); }}
+      onMouseEnter={() => {
+        if (!readOnly) setIsHovered(true);
+      }}
       onMouseLeave={() => setIsHovered(false)}
       style={{
         ...style,
-        cursor: readOnly ? 'default' : 'pointer',
-        padding: '2px 4px',
-        borderRadius: '2px',
-        transition: 'background 0.2s',
-        background: !readOnly && isHovered ? '#EFF6FF' : 'transparent'
+        cursor: readOnly ? "default" : "pointer",
+        padding: "2px 4px",
+        borderRadius: "2px",
+        transition: "background 0.2s",
+        background: !readOnly && isHovered ? "#EFF6FF" : "transparent",
       }}
       className={className}
-      title={readOnly ? undefined : 'Click to edit'}
+      title={readOnly ? undefined : "Click to edit"}
     >
       {value || placeholder}
     </span>
@@ -122,19 +139,19 @@ const TemplateBuilder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const customInvoiceId = searchParams.get('id');
+  const customInvoiceId = searchParams.get("id");
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
-  const [activeTab, setActiveTab] = useState('preview'); 
+  const [activeTab, setActiveTab] = useState("preview");
   const templateRef = useRef(null);
   const currentUser = getCurrentUser();
-  const userEmail = currentUser?.email || '';
-  
+  const userEmail = currentUser?.email || "";
+
   const [emailData, setEmailData] = useState({
     from: userEmail,
-    to: '',
+    to: "",
     sendCopy: false,
-    subject: 'Custom Invoice',
+    subject: "Custom Invoice",
     message: `Dear Customer,
 
 Please find the attached custom invoice for your reference.
@@ -144,90 +161,90 @@ Thank you for your business!
 Best regards`,
   });
   const [sendingEmail, setSendingEmail] = useState(false);
-  
+
   const [templateConfig, setTemplateConfig] = useState({
-    templateName: 'My Custom Template',
-    currency: 'USD',
-    
-    primaryColor: '#4F46E5',
-    secondaryColor: '#10B981',
-    textColor: '#1F2937',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
-    
+    templateName: "My Custom Template",
+    currency: "USD",
+
+    primaryColor: "#4F46E5",
+    secondaryColor: "#10B981",
+    textColor: "#1F2937",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E5E7EB",
+
     typography: {
-      headingFont: 'Inter',
-      bodyFont: 'Inter',
-      headingSize: '24px',
-      bodySize: '14px'
+      headingFont: "Inter",
+      bodyFont: "Inter",
+      headingSize: "24px",
+      bodySize: "14px",
     },
-    
+
     content: {
-      logoText: 'LOGO',
-      logoImage: '',
-      invoiceTitle: 'INVOICE',
-      invoiceNumberLabel: 'Invoice #:',
-      invoiceNumber: 'INV-001',
-      dateLabel: 'Date:',
-      invoiceDate: 'Jan 29, 2026',
-      poNumberLabel: 'PO #:',
-      poNumber: 'PO-12345',
-      dueDateLabel: 'Due Date:',
-      dueDate: 'Feb 28, 2026',
-      fromLabel: 'From',
-      businessName: 'Your Business Name',
-      businessAddress1: '123 Business St',
-      businessAddress2: 'City, State 12345',
-      billToLabel: 'Bill To',
-      clientName: 'Client Name',
-      clientAddress1: '456 Client Ave',
-      clientAddress2: 'City, State 67890',
-      shipToLabel: 'Ship To',
-      shipToName: 'Ship To Name',
-      shipToAddress1: '789 Shipping St',
-      shipToAddress2: 'City, State 11111',
-      descriptionLabel: 'Description',
-      qtyLabel: 'Qty',
-      rateLabel: 'Rate',
-      amountLabel: 'Amount',
-      item1Desc: 'Sample Item 1',
-      item1Qty: '2',
-      item1Rate: '50.00',
-      item1Amount: '100.00',
-      item2Desc: 'Sample Item 2',
-      item2Qty: '1',
-      item2Rate: '75.00',
-      item2Amount: '75.00',
-      subtotalLabel: 'Subtotal:',
-      subtotal: '175.00',
-      taxLabel: 'Tax (10%):',
-      tax: '17.50',
-      totalLabel: 'Total:',
-      total: '192.50',
-      termsLabel: 'Terms & Conditions',
-      terms: 'Payment is due within 30 days. Thank you for your business!',
-      paymentInfoLabel: 'PAYMENT INFORMATION',
-      paymentInfoType: 'bank',
-      bankLabel: 'Bank:',
-      bankName: 'Bank of America',
-      accountLabel: 'Account:',
-      accountNumber: '****1234',
-      ifscLabel: 'IFSC/Routing:',
-      ifscCode: 'BOFA0001234',
-      upiLabel: 'UPI ID:',
-      upiId: 'business@upi',
-      qrCodeImage: '',
-      qrCodeText: 'Scan to Pay',
-      signatureImage: '',
-      signatureLabel: 'Authorized Signature',
-      emailLabel: 'EMAIL',
-      footerEmail: 'contact@business.com',
-      phoneLabel: 'PHONE',
-      footerPhone: '+1 (555) 123-4567',
-      websiteLabel: 'WEBSITE',
-      footerWebsite: 'www.business.com'
+      logoText: "LOGO",
+      logoImage: "",
+      invoiceTitle: "INVOICE",
+      invoiceNumberLabel: "Invoice #:",
+      invoiceNumber: "INV-001",
+      dateLabel: "Date:",
+      invoiceDate: "Jan 29, 2026",
+      poNumberLabel: "PO #:",
+      poNumber: "PO-12345",
+      dueDateLabel: "Due Date:",
+      dueDate: "Feb 28, 2026",
+      fromLabel: "From",
+      businessName: "Your Business Name",
+      businessAddress1: "123 Business St",
+      businessAddress2: "City, State 12345",
+      billToLabel: "Bill To",
+      clientName: "Client Name",
+      clientAddress1: "456 Client Ave",
+      clientAddress2: "City, State 67890",
+      shipToLabel: "Ship To",
+      shipToName: "Ship To Name",
+      shipToAddress1: "789 Shipping St",
+      shipToAddress2: "City, State 11111",
+      descriptionLabel: "Description",
+      qtyLabel: "Qty",
+      rateLabel: "Rate",
+      amountLabel: "Amount",
+      item1Desc: "Sample Item 1",
+      item1Qty: "2",
+      item1Rate: "50.00",
+      item1Amount: "100.00",
+      item2Desc: "Sample Item 2",
+      item2Qty: "1",
+      item2Rate: "75.00",
+      item2Amount: "75.00",
+      subtotalLabel: "Subtotal:",
+      subtotal: "175.00",
+      taxLabel: "Tax (10%):",
+      tax: "17.50",
+      totalLabel: "Total:",
+      total: "192.50",
+      termsLabel: "Terms & Conditions",
+      terms: "Payment is due within 30 days. Thank you for your business!",
+      paymentInfoLabel: "PAYMENT INFORMATION",
+      paymentInfoType: "bank",
+      bankLabel: "Bank:",
+      bankName: "Bank of America",
+      accountLabel: "Account:",
+      accountNumber: "****1234",
+      ifscLabel: "IFSC/Routing:",
+      ifscCode: "BOFA0001234",
+      upiLabel: "UPI ID:",
+      upiId: "business@upi",
+      qrCodeImage: "",
+      qrCodeText: "Scan to Pay",
+      signatureImage: "",
+      signatureLabel: "Authorized Signature",
+      emailLabel: "EMAIL",
+      footerEmail: "contact@business.com",
+      phoneLabel: "PHONE",
+      footerPhone: "+1 (555) 123-4567",
+      websiteLabel: "WEBSITE",
+      footerWebsite: "www.business.com",
     },
-    
+
     visibility: {
       businessInfo: true,
       clientInfo: true,
@@ -239,13 +256,13 @@ Best regards`,
       paymentInfo: true,
       signature: true,
       qrCodeSection: true,
-      logoSection: true
+      logoSection: true,
     },
-    
-    backgroundPattern: 'none',
-    backgroundHeaderColor: '#4F46E5',
-    backgroundFooterColor: '#4F46E5',
-    
+
+    backgroundPattern: "none",
+    backgroundHeaderColor: "#4F46E5",
+    backgroundFooterColor: "#4F46E5",
+
     logoPosition: { x: 50, y: 50, width: 120, height: 120 },
     invoiceMetaPosition: { x: 500, y: 50, width: 250, height: 120 },
     invoiceTitlePosition: { x: 50, y: 190, width: 300, height: 40 },
@@ -258,7 +275,7 @@ Best regards`,
     paymentInfoPosition: { x: 50, y: 780, width: 300, height: 120 },
     qrCodePosition: { x: 380, y: 780, width: 150, height: 150 },
     signaturePosition: { x: 560, y: 780, width: 190, height: 100 },
-    footerPosition: { x: 50, y: 950, width: 700, height: 60 }
+    footerPosition: { x: 50, y: 950, width: 700, height: 60 },
   });
 
   const [previewMode, setPreviewMode] = useState(false);
@@ -267,88 +284,99 @@ Best regards`,
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastAiSnapshot, setLastAiSnapshot] = useState(null);
   const hasInitializedDraftRef = useRef(false);
-  
-  const isEditMode = activeTab === 'edit';
-  const selectedTemplateIdFromAi = Number(location.state?.selectedTemplateId || 0);
-  const useAiTemplatePreview = !customInvoiceId && selectedTemplateIdFromAi >= 1 && selectedTemplateIdFromAi <= 12;
-  const SelectedTemplateComponent = useAiTemplatePreview ? INVOICE_TEMPLATES[selectedTemplateIdFromAi] : null;
+
+  const isEditMode = activeTab === "edit";
+  const selectedTemplateIdFromAi = Number(
+    location.state?.selectedTemplateId || 0,
+  );
+  const useAiTemplatePreview =
+    !customInvoiceId &&
+    selectedTemplateIdFromAi >= 1 &&
+    selectedTemplateIdFromAi <= 12;
+  const SelectedTemplateComponent = useAiTemplatePreview
+    ? INVOICE_TEMPLATES[selectedTemplateIdFromAi]
+    : null;
 
   const generatePDF = async (forDownload = false) => {
     try {
       if (!templateRef.current) {
-        throw new Error('Template reference not found');
+        throw new Error("Template reference not found");
       }
 
-      const { domToPng } = await import('modern-screenshot');
-      const { jsPDF } = await import('jspdf');
+      const { domToPng } = await import("modern-screenshot");
+      const { jsPDF } = await import("jspdf");
 
       const wasPreviewMode = previewMode;
       setPreviewMode(true);
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const dataUrl = await domToPng(templateRef.current, {
         scale: 2,
-        backgroundColor: templateConfig.backgroundColor || '#ffffff',
+        backgroundColor: templateConfig.backgroundColor || "#ffffff",
         quality: 0.95,
         filter: (node) => {
-          if (node.classList && node.classList.contains('opacity-0')) {
+          if (node.classList && node.classList.contains("opacity-0")) {
             return false;
           }
-          if (node.classList && (
-            node.classList.contains('react-draggable-handle') ||
-            node.classList.contains('react-resizable-handle')
-          )) {
+          if (
+            node.classList &&
+            (node.classList.contains("react-draggable-handle") ||
+              node.classList.contains("react-resizable-handle"))
+          ) {
             return false;
           }
           return true;
-        }
+        },
       });
 
       setPreviewMode(wasPreviewMode);
 
       if (!dataUrl || dataUrl.length < 100) {
-        throw new Error('Failed to capture template - data URL too short. Element might be empty or hidden.');
+        throw new Error(
+          "Failed to capture template - data URL too short. Element might be empty or hidden.",
+        );
       }
 
       const pdfWidth = 210;
 
       const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
+      img.crossOrigin = "anonymous";
+
       await Promise.race([
         new Promise((resolve, reject) => {
           img.onload = () => resolve(true);
-          img.onerror = () => reject(new Error('Failed to load image from data URL'));
+          img.onerror = () =>
+            reject(new Error("Failed to load image from data URL"));
           img.src = dataUrl;
         }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Image load timeout')), 10000)
-        )
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Image load timeout")), 10000),
+        ),
       ]);
 
       const imgWidth = pdfWidth;
       const imgHeight = (img.height * pdfWidth) / img.width;
 
       const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
+        orientation: "portrait",
+        unit: "mm",
         format: [pdfWidth, imgHeight],
       });
 
-      pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.addImage(dataUrl, "PNG", 0, 0, imgWidth, imgHeight);
 
       if (forDownload) {
-        pdf.save(`${templateConfig.templateName || 'Custom-Invoice'}.pdf`);
+        pdf.save(`${templateConfig.templateName || "Custom-Invoice"}.pdf`);
         return true;
       } else {
-        const pdfBase64 = pdf.output('datauristring').split(',')[1];
+        const pdfBase64 = pdf.output("datauristring").split(",")[1];
         return pdfBase64;
       }
     } catch (error) {
       setPreviewMode(false);
-      console.error('PDF Generation Error:', error);
-      throw new Error(error.message || 'Failed to generate PDF');
+      console.error("PDF Generation Error:", error);
+      throw new Error(error.message || "Failed to generate PDF");
     }
   };
 
@@ -357,7 +385,7 @@ Best regards`,
     try {
       await generatePDF(true);
     } catch (error) {
-      toast.error('Failed to generate PDF: ' + error.message);
+      toast.error("Failed to generate PDF: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -365,65 +393,76 @@ Best regards`,
 
   const handleSendEmail = async () => {
     if (!emailData.to) {
-      toast.warning('Please enter recipient email address.');
+      toast.warning("Please enter recipient email address.");
       return;
     }
 
     if (!customInvoiceId) {
-      toast.warning('Please save the invoice first before sending email.');
+      toast.warning("Please save the invoice first before sending email.");
       return;
     }
 
     setSendingEmail(true);
-    
+
     try {
       const pdfBase64 = await generatePDF(false);
-      
-      const response = await apiCall(`/build-invoice/send-email/${customInvoiceId}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          to: emailData.to,
-          subject: emailData.subject,
-          message: emailData.message,
-          sendCopy: emailData.sendCopy,
-          pdfBase64,
-        }),
-      });
-      
+
+      const response = await apiCall(
+        `/build-invoice/send-email/${customInvoiceId}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            to: emailData.to,
+            subject: emailData.subject,
+            message: emailData.message,
+            sendCopy: emailData.sendCopy,
+            pdfBase64,
+          }),
+        },
+      );
+
       if (response && response.success) {
-        toast.success('Email sent successfully with PDF attachment!');
-        setActiveTab('preview');
+        toast.success("Email sent successfully with PDF attachment!");
+        setActiveTab("preview");
       } else {
-        toast.error('Failed to send email: ' + (response?.message || 'Unknown error'));
+        toast.error(
+          "Failed to send email: " + (response?.message || "Unknown error"),
+        );
       }
     } catch (err) {
-      toast.error('Failed to send email: ' + (err?.message || 'Unknown error'));
+      toast.error("Failed to send email: " + (err?.message || "Unknown error"));
     } finally {
       setSendingEmail(false);
     }
   };
 
-  const currencySymbol = CURRENCIES.find(c => c.code === templateConfig.currency)?.symbol || '$';
+  const currencySymbol =
+    CURRENCIES.find((c) => c.code === templateConfig.currency)?.symbol || "$";
   const selectedTemplatePreviewData = aiDataToTemplateFormat({
     ...templateConfig.content,
     currency: templateConfig.currency,
   });
-  const builderDraftKey = `invoicepro_builder_draft_${customInvoiceId || 'ai'}`;
+  const builderDraftKey = `invoicepro_builder_draft_${customInvoiceId || "ai"}`;
 
-  const parseNum = (val) => parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
+  const parseNum = (val) =>
+    parseFloat(String(val).replace(/[^0-9.]/g, "")) || 0;
 
   const recalcTotals = (content) => {
-    const item1Amount = parseNum(content.item1Qty) * parseNum(content.item1Rate);
-    const item2Amount = parseNum(content.item2Qty) * parseNum(content.item2Rate);
-    const item3Amount = parseNum(content.item3Qty) * parseNum(content.item3Rate);
-    const item4Amount = parseNum(content.item4Qty) * parseNum(content.item4Rate);
+    const item1Amount =
+      parseNum(content.item1Qty) * parseNum(content.item1Rate);
+    const item2Amount =
+      parseNum(content.item2Qty) * parseNum(content.item2Rate);
+    const item3Amount =
+      parseNum(content.item3Qty) * parseNum(content.item3Rate);
+    const item4Amount =
+      parseNum(content.item4Qty) * parseNum(content.item4Rate);
 
     const subtotal = item1Amount + item2Amount + item3Amount + item4Amount;
 
     // Extract tax % from taxLabel e.g. "Tax (10%):" → 10
     const taxMatch = String(content.taxLabel).match(/(\d+(\.\d+)?)\s*%/);
     const taxRate = taxMatch ? parseFloat(taxMatch[1]) : 0;
-    const tax = subtotal * taxRate / 100;
+    const tax = (subtotal * taxRate) / 100;
     const total = subtotal + tax;
 
     return {
@@ -439,26 +478,49 @@ Best regards`,
   };
 
   const handleContentChange = (key, value) => {
-    const itemRecalcKeys = ['item1Qty', 'item1Rate', 'item2Qty', 'item2Rate', 'item3Qty', 'item3Rate', 'item4Qty', 'item4Rate', 'taxLabel'];
-    setTemplateConfig(prev => {
+    const itemRecalcKeys = [
+      "item1Qty",
+      "item1Rate",
+      "item2Qty",
+      "item2Rate",
+      "item3Qty",
+      "item3Rate",
+      "item4Qty",
+      "item4Rate",
+      "taxLabel",
+    ];
+    setTemplateConfig((prev) => {
       const updatedContent = { ...prev.content, [key]: value };
       let finalContent = updatedContent;
 
       if (itemRecalcKeys.includes(key)) {
         // Recalc everything from items up
         finalContent = recalcTotals(updatedContent);
-      } else if (key === 'subtotal' || key === 'tax') {
+      } else if (key === "subtotal" || key === "tax") {
         // Just recalc total from the new subtotal + tax
-        const subtotal = parseNum(key === 'subtotal' ? value : updatedContent.subtotal);
-        const tax = parseNum(key === 'tax' ? value : updatedContent.tax);
-        finalContent = { ...updatedContent, total: (subtotal + tax).toFixed(2) };
-      } else if (key === 'item1Amount' || key === 'item2Amount') {
+        const subtotal = parseNum(
+          key === "subtotal" ? value : updatedContent.subtotal,
+        );
+        const tax = parseNum(key === "tax" ? value : updatedContent.tax);
+        finalContent = {
+          ...updatedContent,
+          total: (subtotal + tax).toFixed(2),
+        };
+      } else if (key === "item1Amount" || key === "item2Amount") {
         // Recalc subtotal from both amounts, then total
-        const item1Amount = parseNum(key === 'item1Amount' ? value : updatedContent.item1Amount);
-        const item2Amount = parseNum(key === 'item2Amount' ? value : updatedContent.item2Amount);
+        const item1Amount = parseNum(
+          key === "item1Amount" ? value : updatedContent.item1Amount,
+        );
+        const item2Amount = parseNum(
+          key === "item2Amount" ? value : updatedContent.item2Amount,
+        );
         const subtotal = item1Amount + item2Amount;
         const tax = parseNum(updatedContent.tax);
-        finalContent = { ...updatedContent, subtotal: subtotal.toFixed(2), total: (subtotal + tax).toFixed(2) };
+        finalContent = {
+          ...updatedContent,
+          subtotal: subtotal.toFixed(2),
+          total: (subtotal + tax).toFixed(2),
+        };
       }
 
       return { ...prev, content: finalContent };
@@ -477,43 +539,45 @@ Best regards`,
 
   const updatePosition = (key, x, y) => {
     const positionKey = `${key}Position`;
-    setTemplateConfig(prev => ({
+    setTemplateConfig((prev) => ({
       ...prev,
-      [positionKey]: { ...prev[positionKey], x, y }
+      [positionKey]: { ...prev[positionKey], x, y },
     }));
   };
 
   const updateSize = (key, width, height) => {
     const positionKey = `${key}Position`;
-    setTemplateConfig(prev => ({
+    setTemplateConfig((prev) => ({
       ...prev,
-      [positionKey]: { ...prev[positionKey], width, height }
+      [positionKey]: { ...prev[positionKey], width, height },
     }));
   };
 
   const handleColorChange = (key, value) => {
-    setTemplateConfig(prev => ({
+    setTemplateConfig((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
   const handleSectionToggle = (key) => {
-    setTemplateConfig(prev => ({
+    setTemplateConfig((prev) => ({
       ...prev,
       visibility: {
         ...prev.visibility,
-        [key]: !prev.visibility[key]
-      }
+        [key]: !prev.visibility[key],
+      },
     }));
   };
 
   const handleAIUpdate = (updates) => {
     const { currency: updatedCurrency, ...contentUpdates } = updates;
     const cleanUpdates = Object.fromEntries(
-      Object.entries(contentUpdates).filter(([, v]) => v !== null && v !== undefined && v !== '')
+      Object.entries(contentUpdates).filter(
+        ([, v]) => v !== null && v !== undefined && v !== "",
+      ),
     );
-    setTemplateConfig(prev => {
+    setTemplateConfig((prev) => {
       const merged = { ...prev.content, ...cleanUpdates };
       return {
         ...prev,
@@ -534,15 +598,15 @@ Best regards`,
   useEffect(() => {
     const loadCustomInvoice = async () => {
       if (!customInvoiceId) return;
-      
+
       setLoadingData(true);
       try {
         const response = await buildInvoiceAPI.getById(customInvoiceId);
         if (response.success && response.data) {
           const data = response.data;
-          
+
           const parseIfString = (value) => {
-            if (typeof value === 'string') {
+            if (typeof value === "string") {
               try {
                 return JSON.parse(value);
               } catch {
@@ -551,8 +615,8 @@ Best regards`,
             }
             return value;
           };
-          
-          setTemplateConfig(prev => ({
+
+          setTemplateConfig((prev) => ({
             ...prev,
             templateName: data.templateName || prev.templateName,
             currency: data.currency || prev.currency,
@@ -565,57 +629,80 @@ Best regards`,
             content: parseIfString(data.content) || prev.content,
             visibility: parseIfString(data.visibility) || prev.visibility,
             items: parseIfString(data.items) || prev.items,
-            paymentInformation: parseIfString(data.paymentInformation) || prev.paymentInformation,
-            termsAndConditions: parseIfString(data.termsAndConditions) || prev.termsAndConditions,
+            paymentInformation:
+              parseIfString(data.paymentInformation) || prev.paymentInformation,
+            termsAndConditions:
+              parseIfString(data.termsAndConditions) || prev.termsAndConditions,
             backgroundPattern: data.backgroundPattern || prev.backgroundPattern,
-            backgroundHeaderColor: data.backgroundHeaderColor || prev.backgroundHeaderColor,
-            backgroundFooterColor: data.backgroundFooterColor || prev.backgroundFooterColor,
+            backgroundHeaderColor:
+              data.backgroundHeaderColor || prev.backgroundHeaderColor,
+            backgroundFooterColor:
+              data.backgroundFooterColor || prev.backgroundFooterColor,
             logoPosition: data.logoPosition || prev.logoPosition,
-            invoiceMetaPosition: data.invoiceMetaPosition || prev.invoiceMetaPosition,
-            businessInfoPosition: data.businessInfoPosition || prev.businessInfoPosition,
-            clientInfoPosition: data.clientInfoPosition || prev.clientInfoPosition,
+            invoiceMetaPosition:
+              data.invoiceMetaPosition || prev.invoiceMetaPosition,
+            businessInfoPosition:
+              data.businessInfoPosition || prev.businessInfoPosition,
+            clientInfoPosition:
+              data.clientInfoPosition || prev.clientInfoPosition,
             shipToPosition: data.shipToPosition || prev.shipToPosition,
-            itemsTablePosition: data.itemsTablePosition || prev.itemsTablePosition,
+            itemsTablePosition:
+              data.itemsTablePosition || prev.itemsTablePosition,
             totalsPosition: data.totalsPosition || prev.totalsPosition,
             termsPosition: data.termsPosition || prev.termsPosition,
-            paymentInfoPosition: data.paymentInfoPosition || prev.paymentInfoPosition,
+            paymentInfoPosition:
+              data.paymentInfoPosition || prev.paymentInfoPosition,
             qrCodePosition: data.qrCodePosition || prev.qrCodePosition,
             signaturePosition: data.signaturePosition || prev.signaturePosition,
             footerPosition: data.footerPosition || prev.footerPosition,
-            invoiceTitlePosition: data.invoiceTitlePosition || prev.invoiceTitlePosition,
+            invoiceTitlePosition:
+              data.invoiceTitlePosition || prev.invoiceTitlePosition,
           }));
         }
       } catch (error) {
-        console.error('Failed to load custom invoice:', error);
-        toast.error('Failed to load custom invoice data');
+        console.error("Failed to load custom invoice:", error);
+        toast.error("Failed to load custom invoice data");
       } finally {
         setLoadingData(false);
       }
     };
-    
+
     loadCustomInvoice();
   }, [customInvoiceId]);
 
   useEffect(() => {
     const aiContent = location.state?.aiContent;
-    if (!aiContent || customInvoiceId) return; 
+    if (!aiContent || customInvoiceId) return;
     const { currency, templateName, ...contentFields } = aiContent;
     const cleanContent = Object.fromEntries(
-      Object.entries(contentFields).filter(([, v]) => v !== null && v !== undefined && v !== '')
+      Object.entries(contentFields).filter(
+        ([, v]) => v !== null && v !== undefined && v !== "",
+      ),
     );
     const aiVisibility = location.state?.visibility;
-    setTemplateConfig(prev => {
+    setTemplateConfig((prev) => {
       const merged = { ...prev.content, ...cleanContent };
       return {
         ...prev,
-        templateName: templateName || (useAiTemplatePreview ? `Template ${selectedTemplateIdFromAi}` : prev.templateName),
+        templateName:
+          templateName ||
+          (useAiTemplatePreview
+            ? `Template ${selectedTemplateIdFromAi}`
+            : prev.templateName),
         ...(currency && { currency }),
-        ...(aiVisibility && { visibility: { ...prev.visibility, ...aiVisibility } }),
+        ...(aiVisibility && {
+          visibility: { ...prev.visibility, ...aiVisibility },
+        }),
         content: recalcTotals(merged),
       };
     });
-    setActiveTab('edit');
-  }, [customInvoiceId, location.state, selectedTemplateIdFromAi, useAiTemplatePreview]);  // eslint-disable-line react-hooks/exhaustive-deps
+    setActiveTab("edit");
+  }, [
+    customInvoiceId,
+    location.state,
+    selectedTemplateIdFromAi,
+    useAiTemplatePreview,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     try {
@@ -627,11 +714,10 @@ Best regards`,
       const parsed = JSON.parse(raw);
       if (parsed?.templateConfig) {
         setTemplateConfig((prev) => ({ ...prev, ...parsed.templateConfig }));
-        setActiveTab(parsed.activeTab || 'edit');
-        toast.info('Recovered an unsaved builder draft');
+        setActiveTab(parsed.activeTab || "edit");
       }
     } catch (error) {
-      console.error('Failed to restore template draft', error);
+      console.error("Failed to restore template draft", error);
     } finally {
       hasInitializedDraftRef.current = true;
     }
@@ -640,11 +726,14 @@ Best regards`,
   useEffect(() => {
     if (!hasInitializedDraftRef.current || customInvoiceId) return;
     const saveDraft = () => {
-      localStorage.setItem(builderDraftKey, JSON.stringify({
-        templateConfig,
-        activeTab,
-        updatedAt: Date.now(),
-      }));
+      localStorage.setItem(
+        builderDraftKey,
+        JSON.stringify({
+          templateConfig,
+          activeTab,
+          updatedAt: Date.now(),
+        }),
+      );
       setHasUnsavedChanges(true);
     };
     const timeout = setTimeout(saveDraft, 800);
@@ -655,36 +744,45 @@ Best regards`,
     const handleBeforeUnload = (event) => {
       if (!hasUnsavedChanges) return;
       event.preventDefault();
-      event.returnValue = '';
+      event.returnValue = "";
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const formData = new FormData();
-      
+
       const positionFields = [
-        'logoPosition', 'invoiceMetaPosition', 'businessInfoPosition',
-        'clientInfoPosition', 'shipToPosition', 'itemsTablePosition',
-        'totalsPosition', 'termsPosition', 'paymentInfoPosition',
-        'qrCodePosition', 'signaturePosition', 'footerPosition', 'invoiceTitlePosition'
+        "logoPosition",
+        "invoiceMetaPosition",
+        "businessInfoPosition",
+        "clientInfoPosition",
+        "shipToPosition",
+        "itemsTablePosition",
+        "totalsPosition",
+        "termsPosition",
+        "paymentInfoPosition",
+        "qrCodePosition",
+        "signaturePosition",
+        "footerPosition",
+        "invoiceTitlePosition",
       ];
-      
-      Object.keys(templateConfig).forEach(key => {
+
+      Object.keys(templateConfig).forEach((key) => {
         const value = templateConfig[key];
-        
-        if (value === null || value === undefined || value === '') {
+
+        if (value === null || value === undefined || value === "") {
           return;
         }
-        
+
         if (positionFields.includes(key)) {
           return;
         }
-        
-        if (typeof value === 'object' && !Array.isArray(value)) {
+
+        if (typeof value === "object" && !Array.isArray(value)) {
           formData.append(key, JSON.stringify(value));
         } else if (Array.isArray(value)) {
           formData.append(key, JSON.stringify(value));
@@ -692,39 +790,39 @@ Best regards`,
           formData.append(key, value);
         }
       });
-      
-      const response = await apiCall('/build-invoice/customize-invoice', {
-        method: 'POST',
-        body: formData
+
+      const response = await apiCall("/build-invoice/customize-invoice", {
+        method: "POST",
+        body: formData,
       });
-      
+
       if (response.success) {
         localStorage.removeItem(builderDraftKey);
         setHasUnsavedChanges(false);
-        toast.success('Template saved successfully!');
-        navigate('/dashboard');
+        toast.success("Template saved successfully!");
+        navigate("/dashboard");
       } else {
-        toast.error('Failed to save template: ' + response.message);
+        toast.error("Failed to save template: " + response.message);
       }
     } catch (error) {
-      console.error('Save error:', error);
-      toast.error('Failed to save template: ' + error.message);
+      console.error("Save error:", error);
+      toast.error("Failed to save template: " + error.message);
     } finally {
       setSaving(false);
     }
   };
 
   const fontOptions = [
-    'Inter',
-    'Roboto',
-    'Open Sans',
-    'Lato',
-    'Montserrat',
-    'Poppins',
-    'Arial',
-    'Times New Roman',
-    'Georgia',
-    'Courier New'
+    "Inter",
+    "Roboto",
+    "Open Sans",
+    "Lato",
+    "Montserrat",
+    "Poppins",
+    "Arial",
+    "Times New Roman",
+    "Georgia",
+    "Courier New",
   ];
 
   if (loadingData) {
@@ -740,1416 +838,2306 @@ Best regards`,
 
   return (
     <>
-    <div className="min-h-screen bg-gray-100">
-      {/* Main Header */}
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/dashboard?tab=myInvoices')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-lg font-semibold text-slate-900">
-                {useAiTemplatePreview ? `Editing Template ${selectedTemplateIdFromAi}` : 'Custom Invoice Builder'}
-              </h1>
-              <p className="text-sm text-gray-500">
-                {useAiTemplatePreview
-                  ? `AI data loaded into Template ${selectedTemplateIdFromAi}`
-                  : templateConfig.templateName}
-              </p>
-              {hasUnsavedChanges && (
-                <p className="text-xs text-amber-600 mt-0.5">Unsaved changes</p>
-              )}
+      <div className="min-h-screen bg-gray-100">
+        {/* Main Header */}
+        <header className="bg-white border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  const chatSessionId = location.state?.fromAiChatSessionId;
+                  navigate(
+                    chatSessionId
+                      ? `/chat/${chatSessionId}`
+                      : "/dashboard?tab=myInvoices",
+                  );
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-slate-900">
+                  {useAiTemplatePreview
+                    ? `Editing Template ${selectedTemplateIdFromAi}`
+                    : "Custom Invoice Builder"}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {useAiTemplatePreview
+                    ? `AI data loaded into Template ${selectedTemplateIdFromAi}`
+                    : templateConfig.templateName}
+                </p>
+                {hasUnsavedChanges && (
+                  <p className="text-xs text-amber-600 mt-0.5">
+                    Unsaved changes
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-emerald-500 hover:shadow-lg text-white rounded-md text-sm font-medium transition-all disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            {saving ? 'Saving...' : 'Save Template'}
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Content Card with Tabs */}
-        <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
-          {/* Action Tabs */}
-          <div className="flex gap-2 p-4 border-b border-slate-200 bg-gray-50">
             <button
-              onClick={() => setActiveTab('preview')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'preview'
-                  ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-emerald-500 hover:shadow-lg text-white rounded-md text-sm font-medium transition-all disabled:opacity-50"
             >
-              <Eye className="w-4 h-4" />
-              Preview
-            </button>
-            <button
-              onClick={() => setActiveTab('edit')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'edit'
-                  ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <Edit className="w-4 h-4" />
-              Edit
-            </button>
-            <button
-              onClick={() => setActiveTab('email')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'email'
-                  ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <Mail className="w-4 h-4" />
-              Email
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('download');
-                handleDownloadPDF();
-              }}
-              disabled={loading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'download'
-                  ? 'bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              } disabled:opacity-50`}
-            >
-              <Download className="w-4 h-4" />
-              {loading ? 'Generating...' : 'Download PDF'}
+              <Save className="w-4 h-4" />
+              {saving ? "Saving..." : "Save Template"}
             </button>
           </div>
+        </header>
 
-          {/* Email Tab Content */}
-          {activeTab === 'email' && (
-            <div className="p-6">
-              <TemplateBuilderTabs
-                emailData={emailData}
-                setEmailData={setEmailData}
-                templateConfig={templateConfig}
-                sendingEmail={sendingEmail}
-                onSendEmail={handleSendEmail}
-                onCancel={() => setActiveTab('preview')}
-              />
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          {/* Content Card with Tabs */}
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+            {/* Action Tabs */}
+            <div className="flex gap-2 p-4 border-b border-slate-200 bg-gray-50">
+              <button
+                onClick={() => setActiveTab("preview")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "preview"
+                    ? "bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                Preview
+              </button>
+              <button
+                onClick={() => setActiveTab("edit")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "edit"
+                    ? "bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Edit className="w-4 h-4" />
+                Edit
+              </button>
+              <button
+                onClick={() => setActiveTab("email")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "email"
+                    ? "bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Mail className="w-4 h-4" />
+                Email
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("download");
+                  handleDownloadPDF();
+                }}
+                disabled={loading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "download"
+                    ? "bg-gradient-to-r from-indigo-600 to-emerald-500 text-white shadow-lg"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                } disabled:opacity-50`}
+              >
+                <Download className="w-4 h-4" />
+                {loading ? "Generating..." : "Download PDF"}
+              </button>
             </div>
-          )}
 
-          {/* Preview/Edit Content - Always rendered for PDF generation */}
-          <div
-              className={
-                activeTab === 'email'
-                  ? 'absolute -left-[9999px] top-0'
-                  : 'p-8 bg-gradient-to-br from-slate-50 via-white to-indigo-50 min-h-screen'
-              }
-            >
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Customization Panel */}
-            {isEditMode && (
-              <div className="lg:col-span-1 space-y-6">
-                {/* Template Name */}
-                <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
-                  <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Template Name</h3>
-                  <input
-                    type="text"
-                    value={templateConfig.templateName}
-                    onChange={(e) => setTemplateConfig(prev => ({ ...prev, templateName: e.target.value }))}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  />
-                </div>
-
-                {/* AI Refine Panel */}
-                <AIRefinePanel
-                  content={templateConfig.content}
-                  onBeforeUpdate={setLastAiSnapshot}
-                  onUpdate={handleAIUpdate}
-                  onUndo={handleUndoAiRefine}
-                  lastSnapshot={lastAiSnapshot}
+            {/* Email Tab Content */}
+            {activeTab === "email" && (
+              <div className="p-6">
+                <TemplateBuilderTabs
+                  emailData={emailData}
+                  setEmailData={setEmailData}
+                  templateConfig={templateConfig}
+                  sendingEmail={sendingEmail}
+                  onSendEmail={handleSendEmail}
+                  onCancel={() => setActiveTab("preview")}
                 />
-
-                {/* Currency */}
-                <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
-                  <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Currency</h3>
-                  <select
-                    value={templateConfig.currency}
-                    onChange={(e) => setTemplateConfig(prev => ({ ...prev, currency: e.target.value }))}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  >
-                    {CURRENCIES.map(c => (
-                      <option key={c.code} value={c.code}>{c.symbol} — {c.name} ({c.code})</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Colors */}
-                <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
-                  <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Colors</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Primary Color
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={templateConfig.primaryColor}
-                          onChange={(e) => handleColorChange('primaryColor', e.target.value)}
-                          className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={templateConfig.primaryColor}
-                          onChange={(e) => handleColorChange('primaryColor', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Secondary Color
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={templateConfig.secondaryColor}
-                          onChange={(e) => handleColorChange('secondaryColor', e.target.value)}
-                          className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={templateConfig.secondaryColor}
-                          onChange={(e) => handleColorChange('secondaryColor', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Text Color
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={templateConfig.textColor}
-                          onChange={(e) => handleColorChange('textColor', e.target.value)}
-                          className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={templateConfig.textColor}
-                          onChange={(e) => handleColorChange('textColor', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Background Color
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={templateConfig.backgroundColor}
-                          onChange={(e) => handleColorChange('backgroundColor', e.target.value)}
-                          className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={templateConfig.backgroundColor}
-                          onChange={(e) => handleColorChange('backgroundColor', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Border Color
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={templateConfig.borderColor}
-                          onChange={(e) => handleColorChange('borderColor', e.target.value)}
-                          className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={templateConfig.borderColor}
-                          onChange={(e) => handleColorChange('borderColor', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Fonts */}
-                <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
-                  <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Typography</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Heading Font
-                      </label>
-                      <select
-                        value={templateConfig.typography.headingFont}
-                        onChange={(e) => setTemplateConfig(prev => ({ ...prev, typography: { ...prev.typography, headingFont: e.target.value } }))}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                      >
-                        {fontOptions.map(font => (
-                          <option key={font} value={font}>{font}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Body Font
-                      </label>
-                      <select
-                        value={templateConfig.typography.bodyFont}
-                        onChange={(e) => setTemplateConfig(prev => ({ ...prev, typography: { ...prev.typography, bodyFont: e.target.value } }))}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                      >
-                        {fontOptions.map(font => (
-                          <option key={font} value={font}>{font}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Heading Size
-                      </label>
-                      <input
-                        type="text"
-                        value={templateConfig.typography.headingSize}
-                        onChange={(e) => setTemplateConfig(prev => ({ ...prev, typography: { ...prev.typography, headingSize: e.target.value } }))}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                        placeholder="24px"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Body Size
-                      </label>
-                      <input
-                        type="text"
-                        value={templateConfig.typography.bodySize}
-                        onChange={(e) => setTemplateConfig(prev => ({ ...prev, typography: { ...prev.typography, bodySize: e.target.value } }))}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                        placeholder="14px"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Background Patterns */}
-                <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
-                  <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Background Pattern</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Pattern Style
-                      </label>
-                      <select
-                        value={templateConfig.backgroundPattern}
-                        onChange={(e) => setTemplateConfig(prev => ({ ...prev, backgroundPattern: e.target.value }))}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                      >
-                        {Object.entries(backgroundPatterns).map(([key, pattern]) => (
-                          <option key={key} value={key}>{pattern.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    {templateConfig.backgroundPattern !== 'none' && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Header Color
-                          </label>
-                          <div className="flex gap-2">
-                            <input
-                              type="color"
-                              value={templateConfig.backgroundHeaderColor}
-                              onChange={(e) => setTemplateConfig(prev => ({ ...prev, backgroundHeaderColor: e.target.value }))}
-                              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                            />
-                            <input
-                              type="text"
-                              value={templateConfig.backgroundHeaderColor}
-                              onChange={(e) => setTemplateConfig(prev => ({ ...prev, backgroundHeaderColor: e.target.value }))}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Footer Color
-                          </label>
-                          <div className="flex gap-2">
-                            <input
-                              type="color"
-                              value={templateConfig.backgroundFooterColor}
-                              onChange={(e) => setTemplateConfig(prev => ({ ...prev, backgroundFooterColor: e.target.value }))}
-                              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                            />
-                            <input
-                              type="text"
-                              value={templateConfig.backgroundFooterColor}
-                              onChange={(e) => setTemplateConfig(prev => ({ ...prev, backgroundFooterColor: e.target.value }))}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Sections */}
-                <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
-                  <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Sections</h3>
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.logoSection}
-                        onChange={() => handleSectionToggle('logoSection')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Logo</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.businessInfo}
-                        onChange={() => handleSectionToggle('businessInfo')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Business Info</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.clientInfo}
-                        onChange={() => handleSectionToggle('clientInfo')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Client Info</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.shipTo}
-                        onChange={() => handleSectionToggle('shipTo')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Ship To</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.invoiceMeta}
-                        onChange={() => handleSectionToggle('invoiceMeta')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Invoice Meta</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.itemsTable}
-                        onChange={() => handleSectionToggle('itemsTable')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Items Table</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.totals}
-                        onChange={() => handleSectionToggle('totals')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Totals</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.terms}
-                        onChange={() => handleSectionToggle('terms')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Terms</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.paymentInfo}
-                        onChange={() => handleSectionToggle('paymentInfo')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Payment Info</span>
-                    </label>
-                    {templateConfig.visibility.paymentInfo && (
-                      <div className="ml-6">
-                        <select
-                          value={templateConfig.content.paymentInfoType}
-                          onChange={(e) => handleContentChange('paymentInfoType', e.target.value)}
-                          className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="bank">Bank Details</option>
-                          <option value="upi">UPI Info</option>
-                        </select>
-                      </div>
-                    )}
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.signature}
-                        onChange={() => handleSectionToggle('signature')}
-                        className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-700">Signature</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={templateConfig.visibility.qrCodeSection}
-                        onChange={() => handleSectionToggle('qrCodeSection')}
-                        className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
-                      />
-                      <span className="text-sm text-gray-700">QR Code</span>
-                    </label>
-                  </div>
-                </div>
               </div>
             )}
 
-            {/* Preview Panel */}
-            <div className={activeTab === 'edit' && !previewMode ? 'lg:col-span-2' : 'lg:col-span-3'}>
-              <div className="flex justify-center">
-                <div 
-                  ref={templateRef}
-                  id="invoice-template-preview"
-                  className="border border-slate-200 rounded-3xl shadow-2xl p-8 bg-white"
-                  style={{
-                    backgroundColor: templateConfig.backgroundColor,
-                    fontFamily: templateConfig.typography.bodyFont,
-                    fontSize: templateConfig.typography.bodySize,
-                    color: templateConfig.textColor,
-                    width: '850px',
-                    minHeight: '1123px',
-                    position: 'relative',
-                    boxSizing: 'border-box',
-                    paddingBottom: '60px'
-                  }}
-                >
-                  {useAiTemplatePreview && SelectedTemplateComponent ? (
-                    <SelectedTemplateComponent data={selectedTemplatePreviewData} />
-                  ) : (
-                    <>
-                  {/* Background Patterns */}
-                  <BackgroundPattern 
-                    pattern={templateConfig.backgroundPattern} 
-                    position="header" 
-                    color={templateConfig.backgroundHeaderColor} 
-                  />
-                  <BackgroundPattern 
-                    pattern={templateConfig.backgroundPattern} 
-                    position="footer" 
-                    color={templateConfig.backgroundFooterColor} 
-                  />
+            {/* Preview/Edit Content - Always rendered for PDF generation */}
+            <div
+              className={
+                activeTab === "email"
+                  ? "absolute -left-[9999px] top-0"
+                  : "p-8 bg-gradient-to-br from-slate-50 via-white to-indigo-50 min-h-screen"
+              }
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Customization Panel */}
+                {isEditMode && (
+                  <div className="lg:col-span-1 space-y-6">
+                    {/* Template Name */}
+                    <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
+                      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
+                        Template Name
+                      </h3>
+                      <input
+                        type="text"
+                        value={templateConfig.templateName}
+                        onChange={(e) =>
+                          setTemplateConfig((prev) => ({
+                            ...prev,
+                            templateName: e.target.value,
+                          }))
+                        }
+                        className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      />
+                    </div>
 
-                  {/* Logo */}
-                  {templateConfig.visibility.logoSection && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.logoPosition.x, y: templateConfig.logoPosition.y }}
-                      size={{ width: templateConfig.logoPosition.width, height: templateConfig.logoPosition.height }}
-                      onDragStop={(_, d) => updatePosition('logo', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('logo', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('logo', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div className="relative group w-full h-full">
-                        {templateConfig.content.logoImage ? (
-                          <img 
-                            src={templateConfig.content.logoImage} 
-                            alt="Logo" 
-                            className="w-full h-full object-contain rounded"
-                          />
-                        ) : (
-                          <div className="w-full h-full rounded flex items-center justify-center text-gray-500 border-2 border-dashed border-gray-300">
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.logoText}
-                              onChange={(val) => handleContentChange('logoText', val)}
-                              placeholder="LOGO"
+                    {/* AI Refine Panel */}
+                    <AIRefinePanel
+                      content={templateConfig.content}
+                      onBeforeUpdate={setLastAiSnapshot}
+                      onUpdate={handleAIUpdate}
+                      onUndo={handleUndoAiRefine}
+                      lastSnapshot={lastAiSnapshot}
+                    />
+
+                    {/* Currency */}
+                    <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
+                      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
+                        Currency
+                      </h3>
+                      <select
+                        value={templateConfig.currency}
+                        onChange={(e) =>
+                          setTemplateConfig((prev) => ({
+                            ...prev,
+                            currency: e.target.value,
+                          }))
+                        }
+                        className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      >
+                        {CURRENCIES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.symbol} — {c.name} ({c.code})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Colors */}
+                    <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
+                      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
+                        Colors
+                      </h3>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Primary Color
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              value={templateConfig.primaryColor}
+                              onChange={(e) =>
+                                handleColorChange(
+                                  "primaryColor",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={templateConfig.primaryColor}
+                              onChange={(e) =>
+                                handleColorChange(
+                                  "primaryColor",
+                                  e.target.value,
+                                )
+                              }
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                           </div>
-                        )}
-                        {isEditMode && (
-                          <>
-                            <label className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700">
-                              📷 Upload
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleImageUpload('logoImage', e.target.files[0])}
-                                className="hidden"
-                              />
-                            </label>
-                            {templateConfig.content.logoImage && (
-                              <button
-                                onClick={() => handleContentChange('logoImage', null)}
-                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-red-600"
-                                title="Remove image"
-                              >
-                                ×
-                              </button>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Secondary Color
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              value={templateConfig.secondaryColor}
+                              onChange={(e) =>
+                                handleColorChange(
+                                  "secondaryColor",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={templateConfig.secondaryColor}
+                              onChange={(e) =>
+                                handleColorChange(
+                                  "secondaryColor",
+                                  e.target.value,
+                                )
+                              }
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Text Color
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              value={templateConfig.textColor}
+                              onChange={(e) =>
+                                handleColorChange("textColor", e.target.value)
+                              }
+                              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={templateConfig.textColor}
+                              onChange={(e) =>
+                                handleColorChange("textColor", e.target.value)
+                              }
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Background Color
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              value={templateConfig.backgroundColor}
+                              onChange={(e) =>
+                                handleColorChange(
+                                  "backgroundColor",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={templateConfig.backgroundColor}
+                              onChange={(e) =>
+                                handleColorChange(
+                                  "backgroundColor",
+                                  e.target.value,
+                                )
+                              }
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Border Color
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              value={templateConfig.borderColor}
+                              onChange={(e) =>
+                                handleColorChange("borderColor", e.target.value)
+                              }
+                              className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={templateConfig.borderColor}
+                              onChange={(e) =>
+                                handleColorChange("borderColor", e.target.value)
+                              }
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Fonts */}
+                    <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
+                      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
+                        Typography
+                      </h3>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Heading Font
+                          </label>
+                          <select
+                            value={templateConfig.typography.headingFont}
+                            onChange={(e) =>
+                              setTemplateConfig((prev) => ({
+                                ...prev,
+                                typography: {
+                                  ...prev.typography,
+                                  headingFont: e.target.value,
+                                },
+                              }))
+                            }
+                            className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                          >
+                            {fontOptions.map((font) => (
+                              <option key={font} value={font}>
+                                {font}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Body Font
+                          </label>
+                          <select
+                            value={templateConfig.typography.bodyFont}
+                            onChange={(e) =>
+                              setTemplateConfig((prev) => ({
+                                ...prev,
+                                typography: {
+                                  ...prev.typography,
+                                  bodyFont: e.target.value,
+                                },
+                              }))
+                            }
+                            className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                          >
+                            {fontOptions.map((font) => (
+                              <option key={font} value={font}>
+                                {font}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Heading Size
+                          </label>
+                          <input
+                            type="text"
+                            value={templateConfig.typography.headingSize}
+                            onChange={(e) =>
+                              setTemplateConfig((prev) => ({
+                                ...prev,
+                                typography: {
+                                  ...prev.typography,
+                                  headingSize: e.target.value,
+                                },
+                              }))
+                            }
+                            className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            placeholder="24px"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Body Size
+                          </label>
+                          <input
+                            type="text"
+                            value={templateConfig.typography.bodySize}
+                            onChange={(e) =>
+                              setTemplateConfig((prev) => ({
+                                ...prev,
+                                typography: {
+                                  ...prev.typography,
+                                  bodySize: e.target.value,
+                                },
+                              }))
+                            }
+                            className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            placeholder="14px"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Background Patterns */}
+                    <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
+                      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
+                        Background Pattern
+                      </h3>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Pattern Style
+                          </label>
+                          <select
+                            value={templateConfig.backgroundPattern}
+                            onChange={(e) =>
+                              setTemplateConfig((prev) => ({
+                                ...prev,
+                                backgroundPattern: e.target.value,
+                              }))
+                            }
+                            className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                          >
+                            {Object.entries(backgroundPatterns).map(
+                              ([key, pattern]) => (
+                                <option key={key} value={key}>
+                                  {pattern.name}
+                                </option>
+                              ),
                             )}
+                          </select>
+                        </div>
+                        {templateConfig.backgroundPattern !== "none" && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Header Color
+                              </label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="color"
+                                  value={templateConfig.backgroundHeaderColor}
+                                  onChange={(e) =>
+                                    setTemplateConfig((prev) => ({
+                                      ...prev,
+                                      backgroundHeaderColor: e.target.value,
+                                    }))
+                                  }
+                                  className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                                />
+                                <input
+                                  type="text"
+                                  value={templateConfig.backgroundHeaderColor}
+                                  onChange={(e) =>
+                                    setTemplateConfig((prev) => ({
+                                      ...prev,
+                                      backgroundHeaderColor: e.target.value,
+                                    }))
+                                  }
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Footer Color
+                              </label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="color"
+                                  value={templateConfig.backgroundFooterColor}
+                                  onChange={(e) =>
+                                    setTemplateConfig((prev) => ({
+                                      ...prev,
+                                      backgroundFooterColor: e.target.value,
+                                    }))
+                                  }
+                                  className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                                />
+                                <input
+                                  type="text"
+                                  value={templateConfig.backgroundFooterColor}
+                                  onChange={(e) =>
+                                    setTemplateConfig((prev) => ({
+                                      ...prev,
+                                      backgroundFooterColor: e.target.value,
+                                    }))
+                                  }
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                              </div>
+                            </div>
                           </>
                         )}
                       </div>
-                    </Rnd>
-                  )}
-
-                  {/* Invoice Meta on Right */}
-                  {templateConfig.visibility.invoiceMeta && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.invoiceMetaPosition.x, y: templateConfig.invoiceMetaPosition.y }}
-                      size={{ width: templateConfig.invoiceMetaPosition.width, height: templateConfig.invoiceMetaPosition.height }}
-                      onDragStop={(_, d) => updatePosition('invoiceMeta', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('invoiceMeta', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('invoiceMeta', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div className="text-right text-sm">
-                        <div className="mb-2">
-                          <span className="font-semibold" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.invoiceNumberLabel}
-                              onChange={(val) => handleContentChange('invoiceNumberLabel', val)}
-                              placeholder="Invoice #:"
-                            />
-                          </span>{' '}
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.invoiceNumber}
-                            onChange={(val) => handleContentChange('invoiceNumber', val)}
-                            placeholder="INV-001"
-                          />
-                        </div>
-                        <div className="mb-2">
-                          <span className="font-semibold" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.dateLabel}
-                              onChange={(val) => handleContentChange('dateLabel', val)}
-                              placeholder="Date:"
-                            />
-                          </span>{' '}
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.invoiceDate}
-                            onChange={(val) => handleContentChange('invoiceDate', val)}
-                            placeholder="Jan 29, 2026"
-                          />
-                        </div>
-                        <div className="mb-2">
-                          <span className="font-semibold" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.poNumberLabel}
-                              onChange={(val) => handleContentChange('poNumberLabel', val)}
-                              placeholder="PO #:"
-                            />
-                          </span>{' '}
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.poNumber}
-                            onChange={(val) => handleContentChange('poNumber', val)}
-                            placeholder="PO-12345"
-                          />
-                        </div>
-                        <div>
-                          <span className="font-semibold" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.dueDateLabel}
-                              onChange={(val) => handleContentChange('dueDateLabel', val)}
-                              placeholder="Due Date:"
-                            />
-                          </span>{' '}
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.dueDate}
-                            onChange={(val) => handleContentChange('dueDate', val)}
-                            placeholder="Feb 28, 2026"
-                          />
-                        </div>
-                      </div>
-                    </Rnd>
-                  )}
-
-                  {/* Invoice Title */}
-                  <Rnd
-                    bounds="parent"
-                    position={{ x: templateConfig.invoiceTitlePosition.x, y: templateConfig.invoiceTitlePosition.y }}
-                    size={{ width: templateConfig.invoiceTitlePosition.width, height: templateConfig.invoiceTitlePosition.height }}
-                    onDragStop={(_, d) => updatePosition('invoiceTitle', d.x, d.y)}
-                    onResizeStop={(_, __, ref, ___, position) => {
-                      updateSize('invoiceTitle', ref.offsetWidth, ref.offsetHeight);
-                      updatePosition('invoiceTitle', position.x, position.y);
-                    }}
-                    disableDragging={!isEditMode}
-                    enableResizing={isEditMode}
-                    style={{ zIndex: 10 }}
-                  >
-                    <div>
-                      <h1 
-                        style={{
-                          fontFamily: templateConfig.typography.headingFont,
-                          fontSize: templateConfig.typography.headingSize,
-                          color: templateConfig.primaryColor
-                        }}
-                        className="font-bold"
-                      >
-                        <EditableText readOnly={!isEditMode}
-                          value={templateConfig.content.invoiceTitle}
-                          onChange={(val) => handleContentChange('invoiceTitle', val)}
-                          placeholder="INVOICE"
-                        />
-                      </h1>
                     </div>
-                  </Rnd>
 
-                  {/* Business Info (From) */}
-                  {templateConfig.visibility.businessInfo && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.businessInfoPosition.x, y: templateConfig.businessInfoPosition.y }}
-                      size={{ width: templateConfig.businessInfoPosition.width, height: templateConfig.businessInfoPosition.height }}
-                      onDragStop={(_, d) => updatePosition('businessInfo', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('businessInfo', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('businessInfo', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div>
-                        <h3 className="font-semibold mb-2" style={{ color: templateConfig.primaryColor }}>
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.fromLabel}
-                            onChange={(val) => handleContentChange('fromLabel', val)}
-                            placeholder="From"
+                    {/* Sections */}
+                    <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
+                      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
+                        Sections
+                      </h3>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.logoSection}
+                            onChange={() => handleSectionToggle("logoSection")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
                           />
-                        </h3>
-                        <p className="text-sm">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.businessName}
-                            onChange={(val) => handleContentChange('businessName', val)}
-                            placeholder="Your Business Name"
-                            className="block"
+                          <span className="text-sm text-gray-700">Logo</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.businessInfo}
+                            onChange={() => handleSectionToggle("businessInfo")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
                           />
-                        </p>
-                        <p className="text-sm">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.businessAddress1}
-                            onChange={(val) => handleContentChange('businessAddress1', val)}
-                            placeholder="123 Business St"
-                            className="block"
+                          <span className="text-sm text-gray-700">
+                            Business Info
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.clientInfo}
+                            onChange={() => handleSectionToggle("clientInfo")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
                           />
-                        </p>
-                        <p className="text-sm">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.businessAddress2}
-                            onChange={(val) => handleContentChange('businessAddress2', val)}
-                            placeholder="City, State 12345"
-                            className="block"
+                          <span className="text-sm text-gray-700">
+                            Client Info
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.shipTo}
+                            onChange={() => handleSectionToggle("shipTo")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
                           />
-                        </p>
-                      </div>
-                    </Rnd>
-                  )}
-
-                  {/* Client Info (Bill To) */}
-                  {templateConfig.visibility.clientInfo && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.clientInfoPosition.x, y: templateConfig.clientInfoPosition.y }}
-                      size={{ width: templateConfig.clientInfoPosition.width, height: templateConfig.clientInfoPosition.height }}
-                      onDragStop={(_, d) => updatePosition('clientInfo', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('clientInfo', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('clientInfo', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div>
-                        <h3 className="font-semibold mb-2" style={{ color: templateConfig.primaryColor }}>
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.billToLabel}
-                            onChange={(val) => handleContentChange('billToLabel', val)}
-                            placeholder="Bill To"
+                          <span className="text-sm text-gray-700">Ship To</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.invoiceMeta}
+                            onChange={() => handleSectionToggle("invoiceMeta")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
                           />
-                        </h3>
-                        <p className="text-sm">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.clientName}
-                            onChange={(val) => handleContentChange('clientName', val)}
-                            placeholder="Client Name"
-                            className="block"
+                          <span className="text-sm text-gray-700">
+                            Invoice Meta
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.itemsTable}
+                            onChange={() => handleSectionToggle("itemsTable")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
                           />
-                        </p>
-                        <p className="text-sm">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.clientAddress1}
-                            onChange={(val) => handleContentChange('clientAddress1', val)}
-                            placeholder="456 Client Ave"
-                            className="block"
+                          <span className="text-sm text-gray-700">
+                            Items Table
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.totals}
+                            onChange={() => handleSectionToggle("totals")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
                           />
-                        </p>
-                        <p className="text-sm">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.clientAddress2}
-                            onChange={(val) => handleContentChange('clientAddress2', val)}
-                            placeholder="City, State 67890"
-                            className="block"
+                          <span className="text-sm text-gray-700">Totals</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.terms}
+                            onChange={() => handleSectionToggle("terms")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
                           />
-                        </p>
-                      </div>
-                    </Rnd>
-                  )}
-
-                  {/* Ship To */}
-                  {templateConfig.visibility.shipTo && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.shipToPosition.x, y: templateConfig.shipToPosition.y }}
-                      size={{ width: templateConfig.shipToPosition.width, height: templateConfig.shipToPosition.height }}
-                      onDragStop={(_, d) => updatePosition('shipTo', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('shipTo', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('shipTo', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div>
-                        <h3 className="font-semibold mb-2" style={{ color: templateConfig.primaryColor }}>
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.shipToLabel}
-                            onChange={(val) => handleContentChange('shipToLabel', val)}
-                            placeholder="Ship To"
+                          <span className="text-sm text-gray-700">Terms</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.paymentInfo}
+                            onChange={() => handleSectionToggle("paymentInfo")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
                           />
-                        </h3>
-                        <p className="text-sm">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.shipToName}
-                            onChange={(val) => handleContentChange('shipToName', val)}
-                            placeholder="Ship To Name"
-                            className="block"
-                          />
-                        </p>
-                        <p className="text-sm">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.shipToAddress1}
-                            onChange={(val) => handleContentChange('shipToAddress1', val)}
-                            placeholder="789 Shipping St"
-                            className="block"
-                          />
-                        </p>
-                        <p className="text-sm">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.shipToAddress2}
-                            onChange={(val) => handleContentChange('shipToAddress2', val)}
-                            placeholder="City, State 11111"
-                            className="block"
-                          />
-                        </p>
-                      </div>
-                    </Rnd>
-                  )}
-
-                  {/* Items Table */}
-                  {templateConfig.visibility.itemsTable && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.itemsTablePosition.x, y: templateConfig.itemsTablePosition.y }}
-                      size={{ width: templateConfig.itemsTablePosition.width, height: templateConfig.itemsTablePosition.height }}
-                      onDragStop={(_, d) => updatePosition('itemsTable', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('itemsTable', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('itemsTable', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div className="w-full">
-                        <table className="w-full text-sm table-fixed">
-                          <thead>
-                            <tr 
-                              style={{ 
-                                backgroundColor: templateConfig.primaryColor,
-                                color: '#FFFFFF'
-                              }}
+                          <span className="text-sm text-gray-700">
+                            Payment Info
+                          </span>
+                        </label>
+                        {templateConfig.visibility.paymentInfo && (
+                          <div className="ml-6">
+                            <select
+                              value={templateConfig.content.paymentInfoType}
+                              onChange={(e) =>
+                                handleContentChange(
+                                  "paymentInfoType",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
-                              <th className="text-left p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.descriptionLabel}
-                                  onChange={(val) => handleContentChange('descriptionLabel', val)}
-                                  placeholder="Description"
-                                />
-                              </th>
-                              <th className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.qtyLabel}
-                                  onChange={(val) => handleContentChange('qtyLabel', val)}
-                                  placeholder="Qty"
-                                />
-                              </th>
-                              <th className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.rateLabel}
-                                  onChange={(val) => handleContentChange('rateLabel', val)}
-                                  placeholder="Rate"
-                                />
-                              </th>
-                              <th className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.amountLabel}
-                                  onChange={(val) => handleContentChange('amountLabel', val)}
-                                  placeholder="Amount"
-                                />
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td className="p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.item1Desc}
-                                  onChange={(val) => handleContentChange('item1Desc', val)}
-                                  placeholder="Sample Item 1"
-                                />
-                              </td>
-                              <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.item1Qty}
-                                  onChange={(val) => handleContentChange('item1Qty', val)}
-                                  placeholder="2"
-                                />
-                              </td>
-                              <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.item1Rate}
-                                  onChange={(val) => handleContentChange('item1Rate', val)}
-                                  placeholder="50.00"
-                                />
-                              </td>
-                              <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.item1Amount}
-                                  onChange={(val) => handleContentChange('item1Amount', val)}
-                                  placeholder="100.00"
-                                />
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.item2Desc}
-                                  onChange={(val) => handleContentChange('item2Desc', val)}
-                                  placeholder="Sample Item 2"
-                                />
-                              </td>
-                              <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.item2Qty}
-                                  onChange={(val) => handleContentChange('item2Qty', val)}
-                                  placeholder="1"
-                                />
-                              </td>
-                              <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.item2Rate}
-                                  onChange={(val) => handleContentChange('item2Rate', val)}
-                                  placeholder="75.00"
-                                />
-                              </td>
-                              <td className="text-right p-2 border" style={{ borderColor: templateConfig.borderColor }}>
-                                <span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.item2Amount}
-                                  onChange={(val) => handleContentChange('item2Amount', val)}
-                                  placeholder="75.00"
-                                />
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
+                              <option value="bank">Bank Details</option>
+                              <option value="upi">UPI Info</option>
+                            </select>
+                          </div>
+                        )}
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.signature}
+                            onChange={() => handleSectionToggle("signature")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">
+                            Signature
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.qrCodeSection}
+                            onChange={() =>
+                              handleSectionToggle("qrCodeSection")
+                            }
+                            className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                          />
+                          <span className="text-sm text-gray-700">QR Code</span>
+                        </label>
                       </div>
-                    </Rnd>
-                  )}
+                    </div>
+                  </div>
+                )}
 
-                  {/* Totals */}
-                  {templateConfig.visibility.totals && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.totalsPosition.x, y: templateConfig.totalsPosition.y }}
-                      size={{ width: templateConfig.totalsPosition.width, height: templateConfig.totalsPosition.height }}
-                      onDragStop={(_, d) => updatePosition('totals', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('totals', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('totals', position.x, position.y);
+                {/* Preview Panel */}
+                <div
+                  className={
+                    activeTab === "edit" && !previewMode
+                      ? "lg:col-span-2"
+                      : "lg:col-span-3"
+                  }
+                >
+                  <div className="flex justify-center">
+                    <div
+                      ref={templateRef}
+                      id="invoice-template-preview"
+                      className="border border-slate-200 rounded-3xl shadow-2xl p-8 bg-white"
+                      style={{
+                        backgroundColor: templateConfig.backgroundColor,
+                        fontFamily: templateConfig.typography.bodyFont,
+                        fontSize: templateConfig.typography.bodySize,
+                        color: templateConfig.textColor,
+                        width: "850px",
+                        minHeight: "1123px",
+                        position: "relative",
+                        boxSizing: "border-box",
+                        paddingBottom: "60px",
                       }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
                     >
-                      <div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>
-                              <EditableText readOnly={!isEditMode}
-                                value={templateConfig.content.subtotalLabel}
-                                onChange={(val) => handleContentChange('subtotalLabel', val)}
-                                placeholder="Subtotal:"
-                              />
-                            </span>
-                            <span><span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.subtotal}
-                              onChange={(val) => handleContentChange('subtotal', val)}
-                              placeholder="175.00"
-                            /></span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>
-                              <EditableText readOnly={!isEditMode}
-                                value={templateConfig.content.taxLabel}
-                                onChange={(val) => handleContentChange('taxLabel', val)}
-                                placeholder="Tax (10%):"
-                              />
-                            </span>
-                            <span><span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.tax}
-                              onChange={(val) => handleContentChange('tax', val)}
-                              placeholder="17.50"
-                            /></span>
-                          </div>
-                          <div 
-                            className="flex justify-between font-bold text-lg pt-2 border-t"
-                            style={{ 
-                              borderColor: templateConfig.borderColor,
-                              color: templateConfig.secondaryColor
+                      {useAiTemplatePreview && SelectedTemplateComponent ? (
+                        <SelectedTemplateComponent
+                          data={selectedTemplatePreviewData}
+                        />
+                      ) : (
+                        <>
+                          {/* Background Patterns */}
+                          <BackgroundPattern
+                            pattern={templateConfig.backgroundPattern}
+                            position="header"
+                            color={templateConfig.backgroundHeaderColor}
+                          />
+                          <BackgroundPattern
+                            pattern={templateConfig.backgroundPattern}
+                            position="footer"
+                            color={templateConfig.backgroundFooterColor}
+                          />
+
+                          {/* Logo */}
+                          {templateConfig.visibility.logoSection && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.logoPosition.x,
+                                y: templateConfig.logoPosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.logoPosition.width,
+                                height: templateConfig.logoPosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("logo", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "logo",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition("logo", position.x, position.y);
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div className="relative group w-full h-full">
+                                {templateConfig.content.logoImage ? (
+                                  <img
+                                    src={templateConfig.content.logoImage}
+                                    alt="Logo"
+                                    className="w-full h-full object-contain rounded"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full rounded flex items-center justify-center text-gray-500 border-2 border-dashed border-gray-300">
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={templateConfig.content.logoText}
+                                      onChange={(val) =>
+                                        handleContentChange("logoText", val)
+                                      }
+                                      placeholder="LOGO"
+                                    />
+                                  </div>
+                                )}
+                                {isEditMode && (
+                                  <>
+                                    <label className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700">
+                                      📷 Upload
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) =>
+                                          handleImageUpload(
+                                            "logoImage",
+                                            e.target.files[0],
+                                          )
+                                        }
+                                        className="hidden"
+                                      />
+                                    </label>
+                                    {templateConfig.content.logoImage && (
+                                      <button
+                                        onClick={() =>
+                                          handleContentChange("logoImage", null)
+                                        }
+                                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-red-600"
+                                        title="Remove image"
+                                      >
+                                        ×
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Invoice Meta on Right */}
+                          {templateConfig.visibility.invoiceMeta && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.invoiceMetaPosition.x,
+                                y: templateConfig.invoiceMetaPosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.invoiceMetaPosition.width,
+                                height:
+                                  templateConfig.invoiceMetaPosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("invoiceMeta", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "invoiceMeta",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "invoiceMeta",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div className="text-right text-sm">
+                                <div className="mb-2">
+                                  <span
+                                    className="font-semibold"
+                                    style={{
+                                      color: templateConfig.primaryColor,
+                                    }}
+                                  >
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={
+                                        templateConfig.content
+                                          .invoiceNumberLabel
+                                      }
+                                      onChange={(val) =>
+                                        handleContentChange(
+                                          "invoiceNumberLabel",
+                                          val,
+                                        )
+                                      }
+                                      placeholder="Invoice #:"
+                                    />
+                                  </span>{" "}
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.invoiceNumber}
+                                    onChange={(val) =>
+                                      handleContentChange("invoiceNumber", val)
+                                    }
+                                    placeholder="INV-001"
+                                  />
+                                </div>
+                                <div className="mb-2">
+                                  <span
+                                    className="font-semibold"
+                                    style={{
+                                      color: templateConfig.primaryColor,
+                                    }}
+                                  >
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={templateConfig.content.dateLabel}
+                                      onChange={(val) =>
+                                        handleContentChange("dateLabel", val)
+                                      }
+                                      placeholder="Date:"
+                                    />
+                                  </span>{" "}
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.invoiceDate}
+                                    onChange={(val) =>
+                                      handleContentChange("invoiceDate", val)
+                                    }
+                                    placeholder="Jan 29, 2026"
+                                  />
+                                </div>
+                                <div className="mb-2">
+                                  <span
+                                    className="font-semibold"
+                                    style={{
+                                      color: templateConfig.primaryColor,
+                                    }}
+                                  >
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={
+                                        templateConfig.content.poNumberLabel
+                                      }
+                                      onChange={(val) =>
+                                        handleContentChange(
+                                          "poNumberLabel",
+                                          val,
+                                        )
+                                      }
+                                      placeholder="PO #:"
+                                    />
+                                  </span>{" "}
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.poNumber}
+                                    onChange={(val) =>
+                                      handleContentChange("poNumber", val)
+                                    }
+                                    placeholder="PO-12345"
+                                  />
+                                </div>
+                                <div>
+                                  <span
+                                    className="font-semibold"
+                                    style={{
+                                      color: templateConfig.primaryColor,
+                                    }}
+                                  >
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={
+                                        templateConfig.content.dueDateLabel
+                                      }
+                                      onChange={(val) =>
+                                        handleContentChange("dueDateLabel", val)
+                                      }
+                                      placeholder="Due Date:"
+                                    />
+                                  </span>{" "}
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.dueDate}
+                                    onChange={(val) =>
+                                      handleContentChange("dueDate", val)
+                                    }
+                                    placeholder="Feb 28, 2026"
+                                  />
+                                </div>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Invoice Title */}
+                          <Rnd
+                            bounds="parent"
+                            position={{
+                              x: templateConfig.invoiceTitlePosition.x,
+                              y: templateConfig.invoiceTitlePosition.y,
+                            }}
+                            size={{
+                              width: templateConfig.invoiceTitlePosition.width,
+                              height:
+                                templateConfig.invoiceTitlePosition.height,
+                            }}
+                            onDragStop={(_, d) =>
+                              updatePosition("invoiceTitle", d.x, d.y)
+                            }
+                            onResizeStop={(_, __, ref, ___, position) => {
+                              updateSize(
+                                "invoiceTitle",
+                                ref.offsetWidth,
+                                ref.offsetHeight,
+                              );
+                              updatePosition(
+                                "invoiceTitle",
+                                position.x,
+                                position.y,
+                              );
+                            }}
+                            disableDragging={!isEditMode}
+                            enableResizing={isEditMode}
+                            style={{ zIndex: 10 }}
+                          >
+                            <div>
+                              <h1
+                                style={{
+                                  fontFamily:
+                                    templateConfig.typography.headingFont,
+                                  fontSize:
+                                    templateConfig.typography.headingSize,
+                                  color: templateConfig.primaryColor,
+                                }}
+                                className="font-bold"
+                              >
+                                <EditableText
+                                  readOnly={!isEditMode}
+                                  value={templateConfig.content.invoiceTitle}
+                                  onChange={(val) =>
+                                    handleContentChange("invoiceTitle", val)
+                                  }
+                                  placeholder="INVOICE"
+                                />
+                              </h1>
+                            </div>
+                          </Rnd>
+
+                          {/* Business Info (From) */}
+                          {templateConfig.visibility.businessInfo && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.businessInfoPosition.x,
+                                y: templateConfig.businessInfoPosition.y,
+                              }}
+                              size={{
+                                width:
+                                  templateConfig.businessInfoPosition.width,
+                                height:
+                                  templateConfig.businessInfoPosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("businessInfo", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "businessInfo",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "businessInfo",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div>
+                                <h3
+                                  className="font-semibold mb-2"
+                                  style={{ color: templateConfig.primaryColor }}
+                                >
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.fromLabel}
+                                    onChange={(val) =>
+                                      handleContentChange("fromLabel", val)
+                                    }
+                                    placeholder="From"
+                                  />
+                                </h3>
+                                <p className="text-sm">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.businessName}
+                                    onChange={(val) =>
+                                      handleContentChange("businessName", val)
+                                    }
+                                    placeholder="Your Business Name"
+                                    className="block"
+                                  />
+                                </p>
+                                <p className="text-sm">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={
+                                      templateConfig.content.businessAddress1
+                                    }
+                                    onChange={(val) =>
+                                      handleContentChange(
+                                        "businessAddress1",
+                                        val,
+                                      )
+                                    }
+                                    placeholder="123 Business St"
+                                    className="block"
+                                  />
+                                </p>
+                                <p className="text-sm">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={
+                                      templateConfig.content.businessAddress2
+                                    }
+                                    onChange={(val) =>
+                                      handleContentChange(
+                                        "businessAddress2",
+                                        val,
+                                      )
+                                    }
+                                    placeholder="City, State 12345"
+                                    className="block"
+                                  />
+                                </p>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Client Info (Bill To) */}
+                          {templateConfig.visibility.clientInfo && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.clientInfoPosition.x,
+                                y: templateConfig.clientInfoPosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.clientInfoPosition.width,
+                                height:
+                                  templateConfig.clientInfoPosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("clientInfo", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "clientInfo",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "clientInfo",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div>
+                                <h3
+                                  className="font-semibold mb-2"
+                                  style={{ color: templateConfig.primaryColor }}
+                                >
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.billToLabel}
+                                    onChange={(val) =>
+                                      handleContentChange("billToLabel", val)
+                                    }
+                                    placeholder="Bill To"
+                                  />
+                                </h3>
+                                <p className="text-sm">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.clientName}
+                                    onChange={(val) =>
+                                      handleContentChange("clientName", val)
+                                    }
+                                    placeholder="Client Name"
+                                    className="block"
+                                  />
+                                </p>
+                                <p className="text-sm">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={
+                                      templateConfig.content.clientAddress1
+                                    }
+                                    onChange={(val) =>
+                                      handleContentChange("clientAddress1", val)
+                                    }
+                                    placeholder="456 Client Ave"
+                                    className="block"
+                                  />
+                                </p>
+                                <p className="text-sm">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={
+                                      templateConfig.content.clientAddress2
+                                    }
+                                    onChange={(val) =>
+                                      handleContentChange("clientAddress2", val)
+                                    }
+                                    placeholder="City, State 67890"
+                                    className="block"
+                                  />
+                                </p>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Ship To */}
+                          {templateConfig.visibility.shipTo && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.shipToPosition.x,
+                                y: templateConfig.shipToPosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.shipToPosition.width,
+                                height: templateConfig.shipToPosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("shipTo", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "shipTo",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "shipTo",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div>
+                                <h3
+                                  className="font-semibold mb-2"
+                                  style={{ color: templateConfig.primaryColor }}
+                                >
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.shipToLabel}
+                                    onChange={(val) =>
+                                      handleContentChange("shipToLabel", val)
+                                    }
+                                    placeholder="Ship To"
+                                  />
+                                </h3>
+                                <p className="text-sm">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.shipToName}
+                                    onChange={(val) =>
+                                      handleContentChange("shipToName", val)
+                                    }
+                                    placeholder="Ship To Name"
+                                    className="block"
+                                  />
+                                </p>
+                                <p className="text-sm">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={
+                                      templateConfig.content.shipToAddress1
+                                    }
+                                    onChange={(val) =>
+                                      handleContentChange("shipToAddress1", val)
+                                    }
+                                    placeholder="789 Shipping St"
+                                    className="block"
+                                  />
+                                </p>
+                                <p className="text-sm">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={
+                                      templateConfig.content.shipToAddress2
+                                    }
+                                    onChange={(val) =>
+                                      handleContentChange("shipToAddress2", val)
+                                    }
+                                    placeholder="City, State 11111"
+                                    className="block"
+                                  />
+                                </p>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Items Table */}
+                          {templateConfig.visibility.itemsTable && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.itemsTablePosition.x,
+                                y: templateConfig.itemsTablePosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.itemsTablePosition.width,
+                                height:
+                                  templateConfig.itemsTablePosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("itemsTable", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "itemsTable",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "itemsTable",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div className="w-full">
+                                <table className="w-full text-sm table-fixed">
+                                  <thead>
+                                    <tr
+                                      style={{
+                                        backgroundColor:
+                                          templateConfig.primaryColor,
+                                        color: "#FFFFFF",
+                                      }}
+                                    >
+                                      <th
+                                        className="text-left p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content
+                                              .descriptionLabel
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "descriptionLabel",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="Description"
+                                        />
+                                      </th>
+                                      <th
+                                        className="text-right p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.qtyLabel
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange("qtyLabel", val)
+                                          }
+                                          placeholder="Qty"
+                                        />
+                                      </th>
+                                      <th
+                                        className="text-right p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.rateLabel
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "rateLabel",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="Rate"
+                                        />
+                                      </th>
+                                      <th
+                                        className="text-right p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.amountLabel
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "amountLabel",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="Amount"
+                                        />
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td
+                                        className="p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.item1Desc
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "item1Desc",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="Sample Item 1"
+                                        />
+                                      </td>
+                                      <td
+                                        className="text-right p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.item1Qty
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange("item1Qty", val)
+                                          }
+                                          placeholder="2"
+                                        />
+                                      </td>
+                                      <td
+                                        className="text-right p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <span>{currencySymbol}</span>
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.item1Rate
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "item1Rate",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="50.00"
+                                        />
+                                      </td>
+                                      <td
+                                        className="text-right p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <span>{currencySymbol}</span>
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.item1Amount
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "item1Amount",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="100.00"
+                                        />
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td
+                                        className="p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.item2Desc
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "item2Desc",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="Sample Item 2"
+                                        />
+                                      </td>
+                                      <td
+                                        className="text-right p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.item2Qty
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange("item2Qty", val)
+                                          }
+                                          placeholder="1"
+                                        />
+                                      </td>
+                                      <td
+                                        className="text-right p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <span>{currencySymbol}</span>
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.item2Rate
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "item2Rate",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="75.00"
+                                        />
+                                      </td>
+                                      <td
+                                        className="text-right p-2 border"
+                                        style={{
+                                          borderColor:
+                                            templateConfig.borderColor,
+                                        }}
+                                      >
+                                        <span>{currencySymbol}</span>
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.item2Amount
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "item2Amount",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="75.00"
+                                        />
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Totals */}
+                          {templateConfig.visibility.totals && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.totalsPosition.x,
+                                y: templateConfig.totalsPosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.totalsPosition.width,
+                                height: templateConfig.totalsPosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("totals", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "totals",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "totals",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span>
+                                      <EditableText
+                                        readOnly={!isEditMode}
+                                        value={
+                                          templateConfig.content.subtotalLabel
+                                        }
+                                        onChange={(val) =>
+                                          handleContentChange(
+                                            "subtotalLabel",
+                                            val,
+                                          )
+                                        }
+                                        placeholder="Subtotal:"
+                                      />
+                                    </span>
+                                    <span>
+                                      <span>{currencySymbol}</span>
+                                      <EditableText
+                                        readOnly={!isEditMode}
+                                        value={templateConfig.content.subtotal}
+                                        onChange={(val) =>
+                                          handleContentChange("subtotal", val)
+                                        }
+                                        placeholder="175.00"
+                                      />
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>
+                                      <EditableText
+                                        readOnly={!isEditMode}
+                                        value={templateConfig.content.taxLabel}
+                                        onChange={(val) =>
+                                          handleContentChange("taxLabel", val)
+                                        }
+                                        placeholder="Tax (10%):"
+                                      />
+                                    </span>
+                                    <span>
+                                      <span>{currencySymbol}</span>
+                                      <EditableText
+                                        readOnly={!isEditMode}
+                                        value={templateConfig.content.tax}
+                                        onChange={(val) =>
+                                          handleContentChange("tax", val)
+                                        }
+                                        placeholder="17.50"
+                                      />
+                                    </span>
+                                  </div>
+                                  <div
+                                    className="flex justify-between font-bold text-lg pt-2 border-t"
+                                    style={{
+                                      borderColor: templateConfig.borderColor,
+                                      color: templateConfig.secondaryColor,
+                                    }}
+                                  >
+                                    <span>
+                                      <EditableText
+                                        readOnly={!isEditMode}
+                                        value={
+                                          templateConfig.content.totalLabel
+                                        }
+                                        onChange={(val) =>
+                                          handleContentChange("totalLabel", val)
+                                        }
+                                        placeholder="Total:"
+                                      />
+                                    </span>
+                                    <span>
+                                      <span>{currencySymbol}</span>
+                                      <EditableText
+                                        readOnly={!isEditMode}
+                                        value={templateConfig.content.total}
+                                        onChange={(val) =>
+                                          handleContentChange("total", val)
+                                        }
+                                        placeholder="192.50"
+                                      />
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Terms */}
+                          {templateConfig.visibility.terms && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.termsPosition.x,
+                                y: templateConfig.termsPosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.termsPosition.width,
+                                height: templateConfig.termsPosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("terms", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "terms",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition("terms", position.x, position.y);
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div className="text-sm">
+                                <h3
+                                  className="font-semibold mb-2"
+                                  style={{ color: templateConfig.primaryColor }}
+                                >
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.termsLabel}
+                                    onChange={(val) =>
+                                      handleContentChange("termsLabel", val)
+                                    }
+                                    placeholder="Terms & Conditions"
+                                  />
+                                </h3>
+                                <p className="text-gray-600">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.terms}
+                                    onChange={(val) =>
+                                      handleContentChange("terms", val)
+                                    }
+                                    placeholder="Payment is due within 30 days. Thank you for your business!"
+                                    className="block"
+                                  />
+                                </p>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Payment Information */}
+                          {templateConfig.visibility.paymentInfo && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.paymentInfoPosition.x,
+                                y: templateConfig.paymentInfoPosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.paymentInfoPosition.width,
+                                height:
+                                  templateConfig.paymentInfoPosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("paymentInfo", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "paymentInfo",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "paymentInfo",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div
+                                className="bg-white border rounded-lg p-4"
+                                style={{
+                                  borderColor: templateConfig.borderColor,
+                                }}
+                              >
+                                <h3
+                                  className="font-semibold mb-3 text-sm"
+                                  style={{ color: templateConfig.primaryColor }}
+                                >
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={
+                                      templateConfig.content.paymentInfoLabel
+                                    }
+                                    onChange={(val) =>
+                                      handleContentChange(
+                                        "paymentInfoLabel",
+                                        val,
+                                      )
+                                    }
+                                    placeholder="PAYMENT INFORMATION"
+                                  />
+                                </h3>
+                                <div className="space-y-2 text-sm">
+                                  {templateConfig.content.paymentInfoType ===
+                                  "upi" ? (
+                                    <div className="flex gap-2">
+                                      <span className="text-gray-600 w-24">
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.upiLabel
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange("upiLabel", val)
+                                          }
+                                          placeholder="UPI ID:"
+                                        />
+                                      </span>
+                                      <EditableText
+                                        readOnly={!isEditMode}
+                                        value={templateConfig.content.upiId}
+                                        onChange={(val) =>
+                                          handleContentChange("upiId", val)
+                                        }
+                                        placeholder="business@upi"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="flex gap-2">
+                                        <span className="text-gray-600 w-24">
+                                          <EditableText
+                                            readOnly={!isEditMode}
+                                            value={
+                                              templateConfig.content.bankLabel
+                                            }
+                                            onChange={(val) =>
+                                              handleContentChange(
+                                                "bankLabel",
+                                                val,
+                                              )
+                                            }
+                                            placeholder="Bank:"
+                                          />
+                                        </span>
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.bankName
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange("bankName", val)
+                                          }
+                                          placeholder="Bank of America"
+                                        />
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <span className="text-gray-600 w-24">
+                                          <EditableText
+                                            readOnly={!isEditMode}
+                                            value={
+                                              templateConfig.content
+                                                .accountLabel
+                                            }
+                                            onChange={(val) =>
+                                              handleContentChange(
+                                                "accountLabel",
+                                                val,
+                                              )
+                                            }
+                                            placeholder="Account:"
+                                          />
+                                        </span>
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.accountNumber
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange(
+                                              "accountNumber",
+                                              val,
+                                            )
+                                          }
+                                          placeholder="****1234"
+                                        />
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <span className="text-gray-600 w-24">
+                                          <EditableText
+                                            readOnly={!isEditMode}
+                                            value={
+                                              templateConfig.content.ifscLabel
+                                            }
+                                            onChange={(val) =>
+                                              handleContentChange(
+                                                "ifscLabel",
+                                                val,
+                                              )
+                                            }
+                                            placeholder="IFSC/Routing:"
+                                          />
+                                        </span>
+                                        <EditableText
+                                          readOnly={!isEditMode}
+                                          value={
+                                            templateConfig.content.ifscCode
+                                          }
+                                          onChange={(val) =>
+                                            handleContentChange("ifscCode", val)
+                                          }
+                                          placeholder="BOFA0001234"
+                                        />
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* QR Code */}
+                          {templateConfig.visibility.qrCodeSection && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.qrCodePosition.x,
+                                y: templateConfig.qrCodePosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.qrCodePosition.width,
+                                height: templateConfig.qrCodePosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("qrCode", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "qrCode",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "qrCode",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div className="text-center flex flex-col items-center justify-center">
+                                <div className="relative group">
+                                  {templateConfig.content.qrCodeImage ? (
+                                    <img
+                                      src={templateConfig.content.qrCodeImage}
+                                      alt="QR Code"
+                                      className="w-32 h-32 object-contain rounded"
+                                    />
+                                  ) : (
+                                    <div className="w-32 h-32 mb-2 rounded flex items-center justify-center border-2 border-dashed border-gray-300">
+                                      <span className="text-gray-500 text-xs">
+                                        QR Code
+                                      </span>
+                                    </div>
+                                  )}
+                                  {isEditMode && (
+                                    <>
+                                      <label className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700">
+                                        📷 Upload
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          onChange={(e) =>
+                                            handleImageUpload(
+                                              "qrCodeImage",
+                                              e.target.files[0],
+                                            )
+                                          }
+                                          className="hidden"
+                                        />
+                                      </label>
+                                      {templateConfig.content.qrCodeImage && (
+                                        <button
+                                          onClick={() =>
+                                            handleContentChange(
+                                              "qrCodeImage",
+                                              null,
+                                            )
+                                          }
+                                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-red-600"
+                                          title="Remove image"
+                                        >
+                                          ×
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                                <p
+                                  className="text-sm font-semibold mt-2"
+                                  style={{ color: templateConfig.primaryColor }}
+                                >
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={templateConfig.content.qrCodeText}
+                                    onChange={(val) =>
+                                      handleContentChange("qrCodeText", val)
+                                    }
+                                    placeholder="Scan to Pay"
+                                  />
+                                </p>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Signature */}
+                          {templateConfig.visibility.signature && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.signaturePosition.x,
+                                y: templateConfig.signaturePosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.signaturePosition.width,
+                                height: templateConfig.signaturePosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("signature", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "signature",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "signature",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div className="text-center">
+                                <div className="relative group inline-block">
+                                  {templateConfig.content.signatureImage ? (
+                                    <div className="w-48 mx-auto mb-2">
+                                      <img
+                                        src={
+                                          templateConfig.content.signatureImage
+                                        }
+                                        alt="Signature"
+                                        className="w-full h-16 object-contain"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div
+                                      className="w-48 mx-auto mb-2 border-b-2"
+                                      style={{
+                                        borderColor:
+                                          templateConfig.primaryColor,
+                                        height: "60px",
+                                      }}
+                                    >
+                                      <div className="text-gray-400 text-xs pt-10">
+                                        Signature Area
+                                      </div>
+                                    </div>
+                                  )}
+                                  {isEditMode && (
+                                    <>
+                                      <button
+                                        onClick={() =>
+                                          setShowSignatureModal(true)
+                                        }
+                                        className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700"
+                                      >
+                                        ✏️ Sign
+                                      </button>
+                                      {templateConfig.content
+                                        .signatureImage && (
+                                        <button
+                                          onClick={() =>
+                                            handleContentChange(
+                                              "signatureImage",
+                                              null,
+                                            )
+                                          }
+                                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-red-600"
+                                          title="Remove image"
+                                        >
+                                          ×
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                                <p className="text-sm font-semibold">
+                                  <EditableText
+                                    readOnly={!isEditMode}
+                                    value={
+                                      templateConfig.content.signatureLabel
+                                    }
+                                    onChange={(val) =>
+                                      handleContentChange("signatureLabel", val)
+                                    }
+                                    placeholder="Authorized Signature"
+                                  />
+                                </p>
+                              </div>
+                            </Rnd>
+                          )}
+
+                          {/* Footer */}
+                          {(templateConfig.visibility.businessInfo ||
+                            templateConfig.visibility.paymentInfo) && (
+                            <Rnd
+                              bounds="parent"
+                              position={{
+                                x: templateConfig.footerPosition.x,
+                                y: templateConfig.footerPosition.y,
+                              }}
+                              size={{
+                                width: templateConfig.footerPosition.width,
+                                height: templateConfig.footerPosition.height,
+                              }}
+                              onDragStop={(_, d) =>
+                                updatePosition("footer", d.x, d.y)
+                              }
+                              onResizeStop={(_, __, ref, ___, position) => {
+                                updateSize(
+                                  "footer",
+                                  ref.offsetWidth,
+                                  ref.offsetHeight,
+                                );
+                                updatePosition(
+                                  "footer",
+                                  position.x,
+                                  position.y,
+                                );
+                              }}
+                              disableDragging={!isEditMode}
+                              enableResizing={isEditMode}
+                              style={{ zIndex: 10 }}
+                            >
+                              <div
+                                className="grid grid-cols-3 gap-4 text-center text-sm border-t"
+                                style={{
+                                  borderColor: templateConfig.borderColor,
+                                }}
+                              >
+                                <div>
+                                  <p
+                                    className="font-semibold mb-1"
+                                    style={{
+                                      color: templateConfig.primaryColor,
+                                    }}
+                                  >
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={templateConfig.content.emailLabel}
+                                      onChange={(val) =>
+                                        handleContentChange("emailLabel", val)
+                                      }
+                                      placeholder="EMAIL"
+                                    />
+                                  </p>
+                                  <p className="text-xs">
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={templateConfig.content.footerEmail}
+                                      onChange={(val) =>
+                                        handleContentChange("footerEmail", val)
+                                      }
+                                      placeholder="contact@business.com"
+                                    />
+                                  </p>
+                                </div>
+                                <div>
+                                  <p
+                                    className="font-semibold mb-1"
+                                    style={{
+                                      color: templateConfig.primaryColor,
+                                    }}
+                                  >
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={templateConfig.content.phoneLabel}
+                                      onChange={(val) =>
+                                        handleContentChange("phoneLabel", val)
+                                      }
+                                      placeholder="PHONE"
+                                    />
+                                  </p>
+                                  <p className="text-xs">
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={templateConfig.content.footerPhone}
+                                      onChange={(val) =>
+                                        handleContentChange("footerPhone", val)
+                                      }
+                                      placeholder="+1 (555) 123-4567"
+                                    />
+                                  </p>
+                                </div>
+                                <div>
+                                  <p
+                                    className="font-semibold mb-1"
+                                    style={{
+                                      color: templateConfig.primaryColor,
+                                    }}
+                                  >
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={
+                                        templateConfig.content.websiteLabel
+                                      }
+                                      onChange={(val) =>
+                                        handleContentChange("websiteLabel", val)
+                                      }
+                                      placeholder="WEBSITE"
+                                    />
+                                  </p>
+                                  <p className="text-xs">
+                                    <EditableText
+                                      readOnly={!isEditMode}
+                                      value={
+                                        templateConfig.content.footerWebsite
+                                      }
+                                      onChange={(val) =>
+                                        handleContentChange(
+                                          "footerWebsite",
+                                          val,
+                                        )
+                                      }
+                                      placeholder="www.business.com"
+                                    />
+                                  </p>
+                                </div>
+                              </div>
+                            </Rnd>
+                          )}
+                          {/* Disclaimer */}
+                          <div
+                            style={{
+                              position: "absolute",
+                              bottom: 32,
+                              left: 32,
+                              right: 32,
+                              textAlign: "center",
+                              padding: "6px 0",
+                              borderTop: "1px solid #e5e7eb",
                             }}
                           >
-                            <span>
-                              <EditableText readOnly={!isEditMode}
-                                value={templateConfig.content.totalLabel}
-                                onChange={(val) => handleContentChange('totalLabel', val)}
-                                placeholder="Total:"
-                              />
-                            </span>
-                            <span><span>{currencySymbol}</span><EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.total}
-                              onChange={(val) => handleContentChange('total', val)}
-                              placeholder="192.50"
-                            /></span>
-                          </div>
-                        </div>
-                      </div>
-                    </Rnd>
-                  )}
-
-                  {/* Terms */}
-                  {templateConfig.visibility.terms && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.termsPosition.x, y: templateConfig.termsPosition.y }}
-                      size={{ width: templateConfig.termsPosition.width, height: templateConfig.termsPosition.height }}
-                      onDragStop={(_, d) => updatePosition('terms', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('terms', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('terms', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div className="text-sm">
-                        <h3 className="font-semibold mb-2" style={{ color: templateConfig.primaryColor }}>
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.termsLabel}
-                            onChange={(val) => handleContentChange('termsLabel', val)}
-                            placeholder="Terms & Conditions"
-                          />
-                        </h3>
-                        <p className="text-gray-600">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.terms}
-                            onChange={(val) => handleContentChange('terms', val)}
-                            placeholder="Payment is due within 30 days. Thank you for your business!"
-                            className="block"
-                          />
-                        </p>
-                      </div>
-                    </Rnd>
-                  )}
-
-                  {/* Payment Information */}
-                  {templateConfig.visibility.paymentInfo && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.paymentInfoPosition.x, y: templateConfig.paymentInfoPosition.y }}
-                      size={{ width: templateConfig.paymentInfoPosition.width, height: templateConfig.paymentInfoPosition.height }}
-                      onDragStop={(_, d) => updatePosition('paymentInfo', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('paymentInfo', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('paymentInfo', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div className="bg-white border rounded-lg p-4" style={{ borderColor: templateConfig.borderColor }}>
-                          <h3 className="font-semibold mb-3 text-sm" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.paymentInfoLabel}
-                              onChange={(val) => handleContentChange('paymentInfoLabel', val)}
-                              placeholder="PAYMENT INFORMATION"
-                            />
-                          </h3>
-                          <div className="space-y-2 text-sm">
-                            {templateConfig.content.paymentInfoType === 'upi' ? (
-                              <div className="flex gap-2">
-                                <span className="text-gray-600 w-24">
-                                  <EditableText readOnly={!isEditMode}
-                                    value={templateConfig.content.upiLabel}
-                                    onChange={(val) => handleContentChange('upiLabel', val)}
-                                    placeholder="UPI ID:"
-                                  />
-                                </span>
-                                <EditableText readOnly={!isEditMode}
-                                  value={templateConfig.content.upiId}
-                                  onChange={(val) => handleContentChange('upiId', val)}
-                                  placeholder="business@upi"
-                                />
-                              </div>
-                            ) : (
-                              <>
-                                <div className="flex gap-2">
-                                  <span className="text-gray-600 w-24">
-                                    <EditableText readOnly={!isEditMode}
-                                      value={templateConfig.content.bankLabel}
-                                      onChange={(val) => handleContentChange('bankLabel', val)}
-                                      placeholder="Bank:"
-                                    />
-                                  </span>
-                                  <EditableText readOnly={!isEditMode}
-                                    value={templateConfig.content.bankName}
-                                    onChange={(val) => handleContentChange('bankName', val)}
-                                    placeholder="Bank of America"
-                                  />
-                                </div>
-                                <div className="flex gap-2">
-                                  <span className="text-gray-600 w-24">
-                                    <EditableText readOnly={!isEditMode}
-                                      value={templateConfig.content.accountLabel}
-                                      onChange={(val) => handleContentChange('accountLabel', val)}
-                                      placeholder="Account:"
-                                    />
-                                  </span>
-                                  <EditableText readOnly={!isEditMode}
-                                    value={templateConfig.content.accountNumber}
-                                    onChange={(val) => handleContentChange('accountNumber', val)}
-                                    placeholder="****1234"
-                                  />
-                                </div>
-                                <div className="flex gap-2">
-                                  <span className="text-gray-600 w-24">
-                                    <EditableText readOnly={!isEditMode}
-                                      value={templateConfig.content.ifscLabel}
-                                      onChange={(val) => handleContentChange('ifscLabel', val)}
-                                      placeholder="IFSC/Routing:"
-                                    />
-                                  </span>
-                                  <EditableText readOnly={!isEditMode}
-                                    value={templateConfig.content.ifscCode}
-                                    onChange={(val) => handleContentChange('ifscCode', val)}
-                                    placeholder="BOFA0001234"
-                                  />
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                    </Rnd>
-                  )}
-
-                  {/* QR Code */}
-                  {templateConfig.visibility.qrCodeSection && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.qrCodePosition.x, y: templateConfig.qrCodePosition.y }}
-                      size={{ width: templateConfig.qrCodePosition.width, height: templateConfig.qrCodePosition.height }}
-                      onDragStop={(_, d) => updatePosition('qrCode', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('qrCode', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('qrCode', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div className="text-center flex flex-col items-center justify-center">
-                          <div className="relative group">
-                            {templateConfig.content.qrCodeImage ? (
-                              <img 
-                                src={templateConfig.content.qrCodeImage} 
-                                alt="QR Code" 
-                                className="w-32 h-32 object-contain rounded"
-                              />
-                            ) : (
-                              <div className="w-32 h-32 mb-2 rounded flex items-center justify-center border-2 border-dashed border-gray-300">
-                                <span className="text-gray-500 text-xs">QR Code</span>
-                              </div>
-                            )}
-                            {isEditMode && (
-                              <>
-                                <label className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700">
-                                  📷 Upload
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageUpload('qrCodeImage', e.target.files[0])}
-                                    className="hidden"
-                                  />
-                                </label>
-                                {templateConfig.content.qrCodeImage && (
-                                  <button
-                                    onClick={() => handleContentChange('qrCodeImage', null)}
-                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-red-600"
-                                    title="Remove image"
-                                  >
-                                    ×
-                                  </button>
-                                )}
-                              </>
-                            )}
-                          </div>
-                          <p className="text-sm font-semibold mt-2" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.qrCodeText}
-                              onChange={(val) => handleContentChange('qrCodeText', val)}
-                              placeholder="Scan to Pay"
-                            />
-                          </p>
-                        </div>
-                    </Rnd>
-                  )}
-
-                  {/* Signature */}
-                  {templateConfig.visibility.signature && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.signaturePosition.x, y: templateConfig.signaturePosition.y }}
-                      size={{ width: templateConfig.signaturePosition.width, height: templateConfig.signaturePosition.height }}
-                      onDragStop={(_, d) => updatePosition('signature', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('signature', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('signature', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div className="text-center">
-                        <div className="relative group inline-block">
-                          {templateConfig.content.signatureImage ? (
-                            <div className="w-48 mx-auto mb-2">
-                              <img 
-                                src={templateConfig.content.signatureImage} 
-                                alt="Signature" 
-                                className="w-full h-16 object-contain"
-                              />
-                            </div>
-                          ) : (
-                            <div 
-                              className="w-48 mx-auto mb-2 border-b-2"
-                              style={{ 
-                                borderColor: templateConfig.primaryColor,
-                                height: '60px'
+                            <p
+                              style={{
+                                fontSize: "10px",
+                                color: "#9ca3af",
+                                margin: 0,
+                                fontStyle: "italic",
                               }}
                             >
-                              <div className="text-gray-400 text-xs pt-10">Signature Area</div>
-                            </div>
-                          )}
-                          {isEditMode && (
-                            <>
-                              <button
-                                onClick={() => setShowSignatureModal(true)}
-                                className="absolute bottom-2 right-2 bg-indigo-600 text-white px-2 py-1 rounded text-xs cursor-pointer opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-indigo-700"
-                              >
-                                ✏️ Sign
-                              </button>
-                              {templateConfig.content.signatureImage && (
-                                <button
-                                  onClick={() => handleContentChange('signatureImage', null)}
-                                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition shadow-lg hover:bg-red-600"
-                                  title="Remove image"
-                                >
-                                  ×
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                        <p className="text-sm font-semibold">
-                          <EditableText readOnly={!isEditMode}
-                            value={templateConfig.content.signatureLabel}
-                            onChange={(val) => handleContentChange('signatureLabel', val)}
-                            placeholder="Authorized Signature"
-                          />
-                        </p>
-                      </div>
-                    </Rnd>
-                  )}
-
-                  {/* Footer */}
-                  {(templateConfig.visibility.businessInfo || templateConfig.visibility.paymentInfo) && (
-                    <Rnd
-                      bounds="parent"
-                      position={{ x: templateConfig.footerPosition.x, y: templateConfig.footerPosition.y }}
-                      size={{ width: templateConfig.footerPosition.width, height: templateConfig.footerPosition.height }}
-                      onDragStop={(_, d) => updatePosition('footer', d.x, d.y)}
-                      onResizeStop={(_, __, ref, ___, position) => {
-                        updateSize('footer', ref.offsetWidth, ref.offsetHeight);
-                        updatePosition('footer', position.x, position.y);
-                      }}
-                      disableDragging={!isEditMode}
-                      enableResizing={isEditMode}
-                      style={{ zIndex: 10 }}
-                    >
-                      <div 
-                        className="grid grid-cols-3 gap-4 text-center text-sm border-t"
-                        style={{ borderColor: templateConfig.borderColor }}
-                      >
-                        <div>
-                          <p className="font-semibold mb-1" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.emailLabel}
-                              onChange={(val) => handleContentChange('emailLabel', val)}
-                              placeholder="EMAIL"
-                            />
-                          </p>
-                          <p className="text-xs">
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.footerEmail}
-                              onChange={(val) => handleContentChange('footerEmail', val)}
-                              placeholder="contact@business.com"
-                            />
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold mb-1" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.phoneLabel}
-                              onChange={(val) => handleContentChange('phoneLabel', val)}
-                              placeholder="PHONE"
-                            />
-                          </p>
-                          <p className="text-xs">
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.footerPhone}
-                              onChange={(val) => handleContentChange('footerPhone', val)}
-                              placeholder="+1 (555) 123-4567"
-                            />
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold mb-1" style={{ color: templateConfig.primaryColor }}>
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.websiteLabel}
-                              onChange={(val) => handleContentChange('websiteLabel', val)}
-                              placeholder="WEBSITE"
-                            />
-                          </p>
-                          <p className="text-xs">
-                            <EditableText readOnly={!isEditMode}
-                              value={templateConfig.content.footerWebsite}
-                              onChange={(val) => handleContentChange('footerWebsite', val)}
-                              placeholder="www.business.com"
-                            />
-                          </p>
-                        </div>
-                      </div>
-                    </Rnd>
-                  )}
-                  {/* Disclaimer */}
-                  <div style={{ position: "absolute", bottom: 32, left: 32, right: 32, textAlign: "center", padding: "6px 0", borderTop: "1px solid #e5e7eb" }}>
-                    <p style={{ fontSize: "10px", color: "#9ca3af", margin: 0, fontStyle: "italic" }}>
-                      This invoice has been generated electronically and is valid without signature.
-                    </p>
+                              This invoice has been generated electronically and
+                              is valid without signature.
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                    </>
-                  )}
                 </div>
               </div>
             </div>
-              </div>
-            </div>
-            </div>
-          </div>
-
-      {/* Footer */}
-      <footer className="bg-white mt-8 py-6">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mb-4">
-            <a href="/" className="hover:text-gray-700">Home</a>
-            <a href="/templates" className="hover:text-gray-700">Invoice Templates</a>
-            <a href="/features" className="hover:text-gray-700">Features</a>
-            <a href="/pricing" className="hover:text-gray-700">Pricing</a>
-            <a href="/testimonials" className="hover:text-gray-700">Testimonials</a>
-            <a href="/faq" className="hover:text-gray-700">FAQ</a>
-            <a href="/contact" className="hover:text-gray-700">Contact Us</a>
           </div>
         </div>
-      </footer>
-    </div>
 
-    <SignatureModal
-      isOpen={showSignatureModal}
-      onClose={() => setShowSignatureModal(false)}
-      onUpload={(e) => {
-        const file = e.target.files[0];
-        if (file) handleImageUpload('signatureImage', file);
-      }}
-    />
+        {/* Footer */}
+        <footer className="bg-white mt-8 py-6">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mb-4">
+              <a href="/" className="hover:text-gray-700">
+                Home
+              </a>
+              <a href="/templates" className="hover:text-gray-700">
+                Invoice Templates
+              </a>
+              <a href="/features" className="hover:text-gray-700">
+                Features
+              </a>
+              <a href="/pricing" className="hover:text-gray-700">
+                Pricing
+              </a>
+              <a href="/testimonials" className="hover:text-gray-700">
+                Testimonials
+              </a>
+              <a href="/faq" className="hover:text-gray-700">
+                FAQ
+              </a>
+              <a href="/contact" className="hover:text-gray-700">
+                Contact Us
+              </a>
+            </div>
+          </div>
+        </footer>
+      </div>
+
+      <SignatureModal
+        isOpen={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        onUpload={(e) => {
+          const file = e.target.files[0];
+          if (file) handleImageUpload("signatureImage", file);
+        }}
+      />
     </>
   );
-
-
-
-
 };
 
 export default TemplateBuilder;

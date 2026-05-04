@@ -9,6 +9,7 @@ import {
   getSession,
   deleteSession,
   syncGuestSession,
+  updateSession,
 } from "../../controller/ai/userSessions.js";
 import { authenticateUser } from "../../middleware/auth.middleware.js";
 
@@ -24,6 +25,7 @@ router.post("/refine", authenticateUser, refineInvoice);
 // User chat sessions
 router.get("/sessions", authenticateUser, listSessions);
 router.get("/sessions/:sessionId", authenticateUser, getSession);
+router.patch("/sessions/:sessionId", authenticateUser, updateSession);
 router.delete("/sessions/:sessionId", authenticateUser, deleteSession);
 router.post("/sessions/sync", authenticateUser, syncGuestSession);
 

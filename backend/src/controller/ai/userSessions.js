@@ -46,10 +46,44 @@ export const deleteSession = async (req, res) => {
   }
 };
 
+export const updateSession = async (req, res) => {
+  try {
+    const { selectedTemplateId } = req.body;
+    const updateFields = {};
+
+    if (typeof selectedTemplateId === "number") {
+      updateFields.selectedTemplateId = selectedTemplateId;
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      return res.json({ success: true, skipped: true });
+    }
+
+    const session = await UserAiSession.findOneAndUpdate(
+      { userId: req.user.userId, sessionId: req.params.sessionId },
+      { $set: updateFields },
+      { new: true },
+    );
+
+    if (!session) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Session not found" });
+    }
+
+    return res.json({ success: true });
+  } catch (e) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to update session" });
+  }
+};
+
 // Called after login to migrate guest localStorage session into DB
 export const syncGuestSession = async (req, res) => {
   try {
-    const { sessionId, messages, knownContent, title } = req.body;
+    const { sessionId, messages, knownContent, title, selectedTemplateId } =
+      req.body;
     if (!sessionId || !Array.isArray(messages) || messages.length === 0) {
       return res.json({ success: true, skipped: true });
     }
@@ -70,6 +104,8 @@ export const syncGuestSession = async (req, res) => {
           messages,
           knownContent: knownContent || {},
           lastAction: "generate",
+          selectedTemplateId:
+            typeof selectedTemplateId === "number" ? selectedTemplateId : 1,
         },
       },
       { upsert: true, new: true },

@@ -31,6 +31,11 @@ export const aiService = {
   // User chat sessions (authenticated)
   listSessions: () => apiCall("/ai/sessions"),
   getSession: (sessionId) => apiCall(`/ai/sessions/${sessionId}`),
+  updateSession: (sessionId, payload) =>
+    apiCall(`/ai/sessions/${sessionId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
   deleteSession: (sessionId) =>
     apiCall(`/ai/sessions/${sessionId}`, { method: "DELETE" }),
   syncGuestSession: (payload) =>

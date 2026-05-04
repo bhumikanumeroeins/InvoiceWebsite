@@ -13,6 +13,7 @@ const userAiSessionSchema = new mongoose.Schema(
     messages: { type: mongoose.Schema.Types.Mixed, default: [] },
     knownContent: { type: mongoose.Schema.Types.Mixed, default: {} },
     lastAction: { type: String, enum: ["ask", "generate", ""], default: "" },
+    selectedTemplateId: { type: Number, default: 1 },
   },
   { timestamps: true },
 );

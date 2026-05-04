@@ -23,7 +23,7 @@ const navItems = [
   { icon: BarChart3, label: "Reports", path: "/dashboard?tab=myReports" },
 ];
 
-const Sidebar = ({ expanded, onToggle, onLoadSession }) => {
+const Sidebar = ({ expanded, onToggle, activeSessionId }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const loggedIn = isAuthenticated();
@@ -43,10 +43,10 @@ const Sidebar = ({ expanded, onToggle, onLoadSession }) => {
     e.stopPropagation();
     await aiService.deleteSession(sessionId);
     setSessions((prev) => prev.filter((s) => s.sessionId !== sessionId));
+    if (sessionId === activeSessionId) navigate("/");
   };
 
   const handleNewChat = () => {
-    onLoadSession?.(null); // null = start fresh
     navigate("/");
   };
 
@@ -66,7 +66,8 @@ const Sidebar = ({ expanded, onToggle, onLoadSession }) => {
         {navItems.map(({ icon: Icon, label, path }) => {
           const isActive =
             path === "/"
-              ? location.pathname === "/"
+              ? location.pathname === "/" ||
+                location.pathname.startsWith("/chat/")
               : location.pathname + location.search === path ||
                 location.pathname === path.split("?")[0];
           return (
@@ -117,14 +118,17 @@ const Sidebar = ({ expanded, onToggle, onLoadSession }) => {
             {sessions.map((s) => (
               <button
                 key={s.sessionId}
-                onClick={() => {
-                  onLoadSession?.(s.sessionId);
-                  navigate("/");
-                }}
-                className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors group"
+                onClick={() => navigate(`/chat/${s.sessionId}`)}
+                className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors group ${
+                  s.sessionId === activeSessionId
+                    ? "bg-indigo-50 text-indigo-700"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                }`}
                 title={s.title}
               >
-                <MessageSquare className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+                <MessageSquare
+                  className={`w-3.5 h-3.5 shrink-0 ${s.sessionId === activeSessionId ? "text-indigo-500" : "text-gray-400"}`}
+                />
                 {expanded && (
                   <>
                     <span className="text-xs truncate flex-1">{s.title}</span>

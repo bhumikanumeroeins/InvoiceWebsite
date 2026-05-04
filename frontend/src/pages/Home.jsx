@@ -1,19 +1,20 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
 import Sidebar from "../components/home/Sidebar";
 import MainWorkspace from "../components/home/MainWorkspace";
 
 const Home = () => {
+  const { sessionId } = useParams(); // present on /chat/:sessionId, undefined on /
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [loadSessionId, setLoadSessionId] = useState(undefined);
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar
         expanded={sidebarExpanded}
         onToggle={() => setSidebarExpanded(!sidebarExpanded)}
-        onLoadSession={setLoadSessionId}
+        activeSessionId={sessionId}
       />
-      <MainWorkspace loadSessionId={loadSessionId} />
+      <MainWorkspace urlSessionId={sessionId} />
     </div>
   );
 };

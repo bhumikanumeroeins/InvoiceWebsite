@@ -5,9 +5,10 @@ import {
   ArrowUp,
   Loader2,
   CheckCircle2,
-  ListTodo,
   LayoutTemplate,
-  FileCheck2,
+  X,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
 import { aiService } from "../../services/aiService";
 import { isAuthenticated } from "../../services/authService";
@@ -43,10 +44,10 @@ const QUICK_FOLLOW_UPS = [
   "Add one more line item",
 ];
 
-const SESSION_STORAGE_KEY = "invoicepro_ai_workspace_v1";
-
-const MainWorkspace = ({ loadSessionId }) => {
+// urlSessionId — the :sessionId from the URL (undefined on /)
+const MainWorkspace = ({ urlSessionId }) => {
   const navigate = useNavigate();
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -54,21 +55,22 @@ const MainWorkspace = ({ loadSessionId }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState(1);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
-  const confirmationShownRef = useRef(false); // track if confirmation already fired
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authReason, setAuthReason] = useState("");
   const [remainingQuota, setRemainingQuota] = useState(FREE_LIMIT);
   const [loggedIn, setLoggedIn] = useState(isAuthenticated());
   const [requiredFields, setRequiredFields] = useState([]);
   const [requiredFieldValues, setRequiredFieldValues] = useState({});
-  const [isRestoredSession, setIsRestoredSession] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const [loadingSession, setLoadingSession] = useState(false);
+  const [showChangeTemplate, setShowChangeTemplate] = useState(false);
+
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
-  const sessionIdRef = useRef(createChatSessionId());
-  const hasHydratedSessionRef = useRef(false);
+  // sessionIdRef holds the active backend session ID for the current chat
+  const sessionIdRef = useRef(urlSessionId || createChatSessionId());
+  const confirmationShownRef = useRef(false);
 
-  const buildDefaultVisibilityFromAiData = (_data = {}) => ({
+  const buildDefaultVisibility = () => ({
     businessInfo: true,
     clientInfo: true,
     shipTo: true,
@@ -82,14 +84,82 @@ const MainWorkspace = ({ loadSessionId }) => {
     logoSection: true,
   });
 
-  const getFlowStep = () => {
-    if (showPreview && aiData) return 4;
-    if (showTemplatePicker) return 3;
-    if (requiredFields.length) return 2;
-    if (messages.length > 0) return 1;
-    return 0;
-  };
+  useEffect(() => {
+    if (!urlSessionId) {
+      setMessages([]);
+      setAiData(null);
+      setShowPreview(false);
+      setShowTemplatePicker(false);
+      setRequiredFields([]);
+      setRequiredFieldValues({});
+      confirmationShownRef.current = false;
+      sessionIdRef.current = createChatSessionId();
+      return;
+    }
 
+    setLoadingSession(true);
+    aiService
+      .getSession(urlSessionId)
+      .then((res) => {
+        if (!res?.session) return;
+        const s = res.session;
+
+        const hasInvoice =
+          s.knownContent && Object.keys(s.knownContent).length > 0;
+        const templateId =
+          typeof s.selectedTemplateId === "number" ? s.selectedTemplateId : 1;
+
+        let restoredMessages = Array.isArray(s.messages) ? [...s.messages] : [];
+        if (hasInvoice) {
+          const pickerIdx = restoredMessages.findLastIndex(
+            (m) => m.role === "assistant" && m.kind === "template-ready",
+          );
+          if (pickerIdx !== -1) {
+            restoredMessages = restoredMessages.map((m, i) =>
+              i === pickerIdx
+                ? {
+                    ...m,
+                    aiData: s.knownContent,
+                    showTemplatePicker: true,
+                    confirmationMsg: m.confirmationMsg || "",
+                    quickActions: m.quickActions || QUICK_FOLLOW_UPS,
+                  }
+                : m,
+            );
+          }
+          const refinedIdx = restoredMessages.findLastIndex(
+            (m) => m.role === "assistant" && m.kind === "refined",
+          );
+          if (refinedIdx !== -1 && !restoredMessages[refinedIdx].quickActions) {
+            restoredMessages = restoredMessages.map((m, i) =>
+              i === refinedIdx ? { ...m, quickActions: QUICK_FOLLOW_UPS } : m,
+            );
+          }
+        }
+
+        setMessages(restoredMessages);
+        if (hasInvoice) setAiData(s.knownContent);
+        setSelectedTemplateId(templateId);
+        setShowPreview(hasInvoice && s.lastAction === "generate");
+        setShowTemplatePicker(false);
+        confirmationShownRef.current = hasInvoice;
+        setRequiredFields([]);
+        setRequiredFieldValues({});
+        sessionIdRef.current = s.sessionId;
+      })
+      .catch(() => {})
+      .finally(() => setLoadingSession(false));
+  }, [urlSessionId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    if (!loading) textareaRef.current?.focus();
+  }, [loading, messages]);
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
   const getMissingFieldsFromQuestion = (question = "") =>
     question
       .split("\n")
@@ -117,118 +187,12 @@ const MainWorkspace = ({ loadSessionId }) => {
     handleSend(payload);
   };
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Re-focus input after every AI response and on mount
-  useEffect(() => {
-    if (!loading) {
-      textareaRef.current?.focus();
-    }
-  }, [loading, messages]);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (!raw) {
-        hasHydratedSessionRef.current = true;
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed.messages)) setMessages(parsed.messages);
-      if (parsed.aiData) setAiData(parsed.aiData);
-      if (typeof parsed.showPreview === "boolean")
-        setShowPreview(parsed.showPreview);
-      if (typeof parsed.showTemplatePicker === "boolean")
-        setShowTemplatePicker(parsed.showTemplatePicker);
-      if (typeof parsed.selectedTemplateId === "number")
-        setSelectedTemplateId(parsed.selectedTemplateId);
-      if (Array.isArray(parsed.requiredFields))
-        setRequiredFields(parsed.requiredFields);
-      if (
-        parsed.requiredFieldValues &&
-        typeof parsed.requiredFieldValues === "object"
-      )
-        setRequiredFieldValues(parsed.requiredFieldValues);
-      if (typeof parsed.sessionId === "string" && parsed.sessionId.trim())
-        sessionIdRef.current = parsed.sessionId;
-      if ((parsed.messages?.length || 0) > 0 || parsed.aiData)
-        setIsRestoredSession(true);
-    } catch (error) {
-      console.error("Failed to restore AI session", error);
-    } finally {
-      hasHydratedSessionRef.current = true;
-      setHydrated(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!hasHydratedSessionRef.current) return;
-    const snapshot = {
-      messages,
-      aiData,
-      showPreview,
-      showTemplatePicker,
-      selectedTemplateId,
-      requiredFields,
-      requiredFieldValues,
-      sessionId: sessionIdRef.current,
-    };
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(snapshot));
-  }, [
-    messages,
-    aiData,
-    showPreview,
-    showTemplatePicker,
-    selectedTemplateId,
-    requiredFields,
-    requiredFieldValues,
-  ]);
-
-  // Load a session from the backend when sidebar item is clicked
-  useEffect(() => {
-    if (loadSessionId === undefined) return;
-
-    if (loadSessionId === null) {
-      // New chat — reset everything
-      setMessages([]);
-      setAiData(null);
-      setShowPreview(false);
-      setShowTemplatePicker(false);
-      setRequiredFields([]);
-      setRequiredFieldValues({});
-      setIsRestoredSession(false);
-      sessionIdRef.current = createChatSessionId();
-      localStorage.removeItem(SESSION_STORAGE_KEY);
-      return;
-    }
-
-    aiService
-      .getSession(loadSessionId)
-      .then((res) => {
-        if (!res?.session) return;
-        const s = res.session;
-        if (Array.isArray(s.messages)) setMessages(s.messages);
-        if (s.knownContent && Object.keys(s.knownContent).length > 0)
-          setAiData(s.knownContent);
-        setShowPreview(false);
-        setShowTemplatePicker(false);
-        setRequiredFields([]);
-        setRequiredFieldValues({});
-        sessionIdRef.current = s.sessionId;
-        setIsRestoredSession(true);
-      })
-      .catch(() => {});
-  }, [loadSessionId]);
-
+  // ── Send message ─────────────────────────────────────────────────────────────
   const handleSend = async (forcedMessage = "") => {
     const text = (forcedMessage || input).trim();
     if (!text || loading) return;
 
-    const userMsg = { role: "user", content: text };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setLoading(true);
 
@@ -238,8 +202,15 @@ const MainWorkspace = ({ loadSessionId }) => {
         message: text,
       });
 
-      if (res.sessionId) {
+      // Backend may assign/confirm the session ID — update URL if it changed
+      if (res.sessionId && res.sessionId !== sessionIdRef.current) {
         sessionIdRef.current = res.sessionId;
+        // Push the session URL so refresh / back button work
+        navigate(`/chat/${res.sessionId}`, { replace: true });
+      } else if (res.sessionId && !urlSessionId) {
+        // First message on a fresh / chat — move to the session URL
+        sessionIdRef.current = res.sessionId;
+        navigate(`/chat/${res.sessionId}`, { replace: true });
       }
 
       if (res.limitReached) {
@@ -273,17 +244,11 @@ const MainWorkspace = ({ loadSessionId }) => {
       if (res.action === "clarify") {
         setMessages((prev) => [
           ...prev,
-          {
-            role: "assistant",
-            kind: "clarify",
-            content: res.question,
-          },
+          { role: "assistant", kind: "clarify", content: res.question },
         ]);
       } else if (res.action === "ask") {
-        // AI needs required fields — store extracted data but DON'T show preview yet
         if (res.extracted && Object.keys(res.extracted).length > 0) {
           setAiData(res.extracted);
-          // intentionally NOT setting showPreview here
         }
         const missingFields = getMissingFieldsFromQuestion(res.question || "");
         const nextValues = {};
@@ -309,10 +274,9 @@ const MainWorkspace = ({ loadSessionId }) => {
         setRequiredFields([]);
         setRequiredFieldValues({});
 
-        const isRefinement = showPreview; // preview already open = refinement
+        const isRefinement = showPreview;
 
         if (isRefinement) {
-          // Just update data — keep preview open, no template picker
           setMessages((prev) => [
             ...prev,
             {
@@ -323,7 +287,6 @@ const MainWorkspace = ({ loadSessionId }) => {
             },
           ]);
         } else {
-          // First generation — show template picker
           setShowPreview(false);
           setShowTemplatePicker(true);
           confirmationShownRef.current = false;
@@ -361,41 +324,36 @@ const MainWorkspace = ({ loadSessionId }) => {
     }
   };
 
+  // ── Auth success ─────────────────────────────────────────────────────────────
   const handleAuthSuccess = () => {
     setLoggedIn(true);
     setShowAuthModal(false);
 
-    // Sync any guest localStorage session to DB
-    try {
-      const raw = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (raw) {
-        const snap = JSON.parse(raw);
-        if (
-          snap.sessionId &&
-          Array.isArray(snap.messages) &&
-          snap.messages.length > 0
-        ) {
-          aiService
-            .syncGuestSession({
-              sessionId: snap.sessionId,
-              messages: snap.messages,
-              knownContent: snap.aiData || {},
-              title:
-                snap.messages.find((m) => m.role === "user")?.content ||
-                "Invoice",
-            })
-            .catch(() => {});
-        }
-      }
-    } catch {}
+    if (sessionIdRef.current && messages.length > 0) {
+      aiService
+        .syncGuestSession({
+          sessionId: sessionIdRef.current,
+          messages,
+          knownContent: aiData || {},
+          selectedTemplateId,
+          title: messages.find((m) => m.role === "user")?.content || "Invoice",
+        })
+        .then((res) => {
+          if (res?.success && sessionIdRef.current) {
+            navigate(`/chat/${sessionIdRef.current}`, { replace: true });
+          }
+        })
+        .catch(() => {});
+    }
 
-    // If user signed in from AI preview lock state, continue directly into builder.
+    // If signed in from the preview lock, go straight to the builder
     if (aiData && showPreview) {
       navigate("/template-builder", {
         state: {
+          fromAiChatSessionId: sessionIdRef.current,
           aiContent: aiData,
           selectedTemplateId,
-          visibility: buildDefaultVisibilityFromAiData(aiData),
+          visibility: buildDefaultVisibility(),
         },
       });
     }
@@ -408,9 +366,14 @@ const MainWorkspace = ({ loadSessionId }) => {
 
   const isFirstMessage = messages.length === 0;
 
-  if (!hydrated) return null;
+  if (loadingSession) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-white">
+        <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
+      </div>
+    );
+  }
 
-  // Shared input box — rendered in two different positions
   const InputBox = (
     <div className={isFirstMessage ? "w-full max-w-xl" : "w-full"}>
       {!loggedIn && (
@@ -432,6 +395,7 @@ const MainWorkspace = ({ loadSessionId }) => {
           )}
         </div>
       )}
+      {/* spacer — overlay is rendered at root level, not here */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm focus-within:border-indigo-400 focus-within:shadow-md transition-all">
         <textarea
           ref={textareaRef}
@@ -447,10 +411,40 @@ const MainWorkspace = ({ loadSessionId }) => {
           className="w-full px-4 pt-3.5 pb-2 text-sm text-gray-800 placeholder-gray-400 bg-transparent resize-none focus:outline-none rounded-t-2xl"
         />
         <div className="flex items-center justify-between px-3 pb-3">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-indigo-600 bg-indigo-50 rounded-lg font-medium select-none">
-            <Sparkles className="w-3 h-3" />
-            {loading ? "Processing…" : "AI Assistant"}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-indigo-600 bg-indigo-50 rounded-lg font-medium select-none">
+              <Sparkles className="w-3 h-3" />
+              {loading ? "Processing…" : "AI Assistant"}
+            </span>
+            {/* Change Template button — only when invoice data is ready */}
+            {aiData && !isFirstMessage && (
+              <>
+                <button
+                  onClick={() => setShowChangeTemplate((v) => !v)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
+                    showChangeTemplate
+                      ? "bg-indigo-600 text-white"
+                      : "text-gray-500 bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600"
+                  }`}
+                >
+                  <LayoutTemplate className="w-3 h-3" />
+                  Template
+                </button>
+                <button
+                  onClick={() => setShowPreview((v) => !v)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-gray-500 bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                  title={showPreview ? "Hide preview" : "Show preview"}
+                >
+                  {showPreview ? (
+                    <PanelRightClose className="w-3 h-3" />
+                  ) : (
+                    <PanelRightOpen className="w-3 h-3" />
+                  )}
+                  {showPreview ? "Hide" : "Show"}
+                </button>
+              </>
+            )}{" "}
+          </div>
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || loading}
@@ -484,7 +478,6 @@ const MainWorkspace = ({ loadSessionId }) => {
           className={`flex flex-col ${showPreview ? "w-1/2 border-r border-gray-200" : "w-full"} transition-all duration-300 overflow-hidden`}
         >
           {isFirstMessage ? (
-            /* ── CENTERED welcome + input ── */
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 overflow-y-auto">
               <h1 className="text-[28px] font-bold text-gray-900 flex items-center gap-2 mb-1">
                 InvoicePro Workspace
@@ -493,11 +486,7 @@ const MainWorkspace = ({ loadSessionId }) => {
               <p className="text-gray-400 text-sm mb-8">
                 Describe your invoice — AI fills in the details instantly
               </p>
-
-              {/* Input centered */}
               {InputBox}
-
-              {/* Suggestion chips */}
               <div className="w-full max-w-xl space-y-3 mt-5">
                 {STARTER_PROMPTS.map((group) => (
                   <div key={group.label}>
@@ -518,13 +507,11 @@ const MainWorkspace = ({ loadSessionId }) => {
                   </div>
                 ))}
               </div>
-
               <div className="mt-10 w-full flex justify-center">
                 <ToolGrid />
               </div>
             </div>
           ) : (
-            /* ── CHAT mode: messages scroll + input pinned bottom ── */
             <>
               <div className="flex-1 overflow-y-auto">
                 <div className="max-w-2xl mx-auto w-full px-6 py-6 space-y-4">
@@ -534,7 +521,7 @@ const MainWorkspace = ({ loadSessionId }) => {
                       className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                     >
                       {msg.role === "assistant" && (
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-600 to-emerald-500 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-linear-to-br from-indigo-600 to-emerald-500 flex items-center justify-center mr-2 mt-1 shrink-0">
                           <Sparkles className="w-3.5 h-3.5 text-white" />
                         </div>
                       )}
@@ -558,6 +545,8 @@ const MainWorkspace = ({ loadSessionId }) => {
                               )}
                           </p>
                         ))}
+
+                        {/* Missing fields form */}
                         {msg.kind === "missing-fields" &&
                           Array.isArray(msg.missingFields) &&
                           msg.missingFields.length > 0 && (
@@ -591,19 +580,30 @@ const MainWorkspace = ({ loadSessionId }) => {
                               </div>
                             </div>
                           )}
+
+                        {/* Invoice ready badge */}
                         {msg.aiData && (
                           <div className="mt-3 flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                             Invoice data ready — pick a template below
                           </div>
                         )}
+
+                        {/* Template picker */}
                         {msg.showTemplatePicker && (
                           <TemplatePicker
                             selectedId={selectedTemplateId}
+                            readOnly={showPreview}
                             onSelect={(t) => {
                               setSelectedTemplateId(t.id);
                               setShowPreview(true);
-                              // Only fire confirmation message once
+                              if (loggedIn) {
+                                aiService
+                                  .updateSession(sessionIdRef.current, {
+                                    selectedTemplateId: t.id,
+                                  })
+                                  .catch(() => {});
+                              }
                               if (
                                 !confirmationShownRef.current &&
                                 msg.confirmationMsg
@@ -620,6 +620,8 @@ const MainWorkspace = ({ loadSessionId }) => {
                             }}
                           />
                         )}
+
+                        {/* Quick-action chips */}
                         {Array.isArray(msg.quickActions) &&
                           msg.quickActions.length > 0 && (
                             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -640,7 +642,7 @@ const MainWorkspace = ({ loadSessionId }) => {
 
                   {loading && (
                     <div className="flex justify-start">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-600 to-emerald-500 flex items-center justify-center mr-2 mt-1">
+                      <div className="w-7 h-7 rounded-full bg-linear-to-br from-indigo-600 to-emerald-500 flex items-center justify-center mr-2 mt-1">
                         <Sparkles className="w-3.5 h-3.5 text-white" />
                       </div>
                       <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
@@ -655,8 +657,7 @@ const MainWorkspace = ({ loadSessionId }) => {
                 </div>
               </div>
 
-              {/* Input pinned to bottom */}
-              <div className="border-t border-gray-100 bg-white px-6 py-4 flex-shrink-0">
+              <div className="border-t border-gray-100 bg-white px-6 py-4 shrink-0">
                 {InputBox}
               </div>
             </>
@@ -664,21 +665,71 @@ const MainWorkspace = ({ loadSessionId }) => {
         </div>
 
         {/* ── RIGHT: Live invoice preview ── */}
-        {showPreview && aiData && (
-          <div className="w-1/2 flex flex-col bg-gray-50 overflow-hidden">
-            <InvoiceLivePreview
-              aiData={aiData}
-              templateId={selectedTemplateId}
-              isLoggedIn={loggedIn}
-              onSignInClick={() =>
-                openAuthModal(
-                  "Sign in to edit, download, and save your invoice.",
-                )
-              }
-            />
+        {aiData && (
+          <div
+            className={`flex flex-col bg-gray-50 overflow-hidden transition-all duration-300 ease-in-out ${
+              showPreview ? "w-1/2" : "w-0"
+            }`}
+          >
+            {showPreview && (
+              <InvoiceLivePreview
+                aiData={aiData}
+                templateId={selectedTemplateId}
+                sessionId={sessionIdRef.current}
+                isLoggedIn={loggedIn}
+                onSignInClick={() =>
+                  openAuthModal(
+                    "Sign in to edit, download, and save your invoice.",
+                  )
+                }
+              />
+            )}
           </div>
         )}
       </div>
+
+      {/* Change Template — fixed full-screen overlay, always properly sized */}
+      {showChangeTemplate && aiData && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={() => setShowChangeTemplate(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
+              <span className="text-sm font-semibold text-gray-800">
+                Change template
+              </span>
+              <button
+                onClick={() => setShowChangeTemplate(false)}
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4">
+              <TemplatePicker
+                selectedId={selectedTemplateId}
+                readOnly={false}
+                onSelect={(t) => {
+                  setSelectedTemplateId(t.id);
+                  setShowPreview(true);
+                  setShowChangeTemplate(false);
+                  if (loggedIn) {
+                    aiService
+                      .updateSession(sessionIdRef.current, {
+                        selectedTemplateId: t.id,
+                      })
+                      .catch(() => {});
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAuthModal && (
         <AuthModal

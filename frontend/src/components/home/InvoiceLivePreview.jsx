@@ -36,6 +36,7 @@ const TEMPLATES = {
 const InvoiceLivePreview = ({
   aiData,
   templateId = 1,
+  sessionId,
   isLoggedIn,
   onSignInClick,
 }) => {
@@ -164,9 +165,9 @@ const InvoiceLivePreview = ({
   };
 
   const handleEditInvoice = () => {
-    // Navigate to template builder with AI data in state
     navigate("/template-builder", {
       state: {
+        fromAiChatSessionId: sessionId,
         aiContent: aiData,
         selectedTemplateId: templateId,
         visibility: {
@@ -228,22 +229,6 @@ const InvoiceLivePreview = ({
             >
               <Edit className="w-3.5 h-3.5" />
               Continue to Editor
-            </button>
-            <button
-              onClick={handleSaveInvoice}
-              disabled={saving}
-              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-            >
-              <Save className="w-3.5 h-3.5" />
-              {saving ? "Saving..." : "Save Draft"}
-            </button>
-            <button
-              onClick={handleDownloadPDF}
-              disabled={saving}
-              className="flex items-center gap-1.5 px-3 py-2 bg-gray-600 text-white text-xs font-medium rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              {saving ? "Generating..." : "Download"}
             </button>
           </div>
         )}
