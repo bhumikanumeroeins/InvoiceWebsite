@@ -37,7 +37,7 @@ const Sidebar = ({ expanded, onToggle, activeSessionId }) => {
         if (res?.sessions) setSessions(res.sessions);
       })
       .catch(() => {});
-  }, [loggedIn, expanded]);
+  }, [loggedIn, expanded, activeSessionId]);
 
   const handleDelete = async (e, sessionId) => {
     e.stopPropagation();
@@ -115,6 +115,16 @@ const Sidebar = ({ expanded, onToggle, activeSessionId }) => {
             </button>
           )}
           <div className="flex-1 overflow-y-auto px-2 space-y-0.5">
+            {!activeSessionId && location.pathname === "/" && (
+              <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left bg-indigo-50 text-indigo-700 cursor-default">
+                <MessageSquare className="w-3.5 h-3.5 shrink-0 text-indigo-500" />
+                {expanded && (
+                  <span className="text-xs truncate flex-1 italic">
+                    New chat
+                  </span>
+                )}
+              </button>
+            )}
             {sessions.map((s) => (
               <button
                 key={s.sessionId}
