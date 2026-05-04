@@ -925,7 +925,7 @@ const cleanupEntityName = (value) =>
     .trim();
 
 const looksLikeNonItemSegment = (segment) =>
-  /invoice|client|business|from|to|due|tax|gst|vat|currency|bank transfer|payment|terms/i.test(
+  /\b(?:invoice|client(?:\s+is|\s+name)?|business(?:\s+is|\s+name)?|from\s+\w|to\s+\w|due\s+(?:in|date|within)|tax\s+(?:rate|is)|gst\s+(?:is|rate)|vat\s+(?:is|rate)|currency|bank\s+transfer|payment\s+terms)\b/i.test(
     segment,
   );
 
@@ -936,7 +936,13 @@ const extractItemsFromText = (text) => {
     .map((segment) => segment.trim())
     .filter(Boolean);
 
-  for (const segment of segments) {
+  for (let rawSegment of segments) {
+    const preambleStripped = rawSegment.replace(
+      /^(?:invoice\s+)?from\s+[^,]+?\s+to\s+[^,]+?\s+for\s+/i,
+      "",
+    );
+    const segment = preambleStripped.trim() || rawSegment;
+
     if (looksLikeNonItemSegment(segment)) {
       continue;
     }
@@ -981,8 +987,10 @@ const extractItemsFromText = (text) => {
 const extractNameBlocks = (text) => {
   const result = {};
 
+  // Match "from X to Y" but stop the client capture at "for", "for the", etc.
+  // so item descriptions after "for" don't bleed into the client name.
   const fromToMatch = text.match(
-    /\bfrom\s+([^,.\n]+?)\s+to\s+([^,.\n]+?)(?:[,.\n]|$)/i,
+    /\bfrom\s+([^,.\n]+?)\s+to\s+([^,.\n]+?)(?:\s+for\b|[,.\n]|$)/i,
   );
   if (fromToMatch) {
     result.business = {
