@@ -34,7 +34,12 @@ export const getNextEmptyIndex = (rawItems) => {
  * Clicking it sets item{n}Desc to a space so getEditableRows includes it,
  * then the user can type the real description.
  */
-export const AddItemButton = ({ rawItems, onFieldChange, colSpan = 4 }) => {
+export const AddItemButton = ({
+  rawItems,
+  onFieldChange,
+  readOnly = false,
+}) => {
+  if (readOnly) return null; // never show in preview or PDF
   const nextIndex = getNextEmptyIndex(rawItems);
   if (nextIndex === -1) return null; // all 4 slots used
 

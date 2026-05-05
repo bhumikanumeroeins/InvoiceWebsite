@@ -282,7 +282,7 @@ const Templates7 = ({
                     </div>
                   </div>
                 ))}
-            <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} />
+            <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} readOnly={readOnly} />
           </div>
         </div>
 

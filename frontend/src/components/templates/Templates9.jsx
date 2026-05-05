@@ -190,7 +190,7 @@ const Templates9 = ({
                 />
               </div>
             ))}
-            <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} />
+            <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} readOnly={readOnly} />
           </div>
         </div>
 

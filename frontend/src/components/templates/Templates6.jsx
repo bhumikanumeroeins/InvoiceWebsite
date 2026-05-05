@@ -239,7 +239,7 @@ const Templates6 = ({
                   </div>
                 </div>
               ))}
-          <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} />
+          <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} readOnly={readOnly} />
         </div>
 
         <div className="px-[50px] mt-8 flex justify-between text-sm">

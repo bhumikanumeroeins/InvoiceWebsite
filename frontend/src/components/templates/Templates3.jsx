@@ -292,7 +292,7 @@ const Templates3 = ({
                 {h}
               </div>
             ))}
-            <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} />
+            <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} readOnly={readOnly} />
           </div>
           <div style={{ backgroundColor: "#feffeb", marginTop: "10px" }}>
             {readOnly

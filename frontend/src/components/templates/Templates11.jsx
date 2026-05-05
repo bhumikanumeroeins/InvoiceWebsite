@@ -307,7 +307,7 @@ const Templates11 = ({
                   </div>
                 </div>
               ))}
-          <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} />
+          <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} readOnly={readOnly} />
         </div>
 
         <div style={{ position: "absolute", top: 525, right: 75, width: 260 }}>
