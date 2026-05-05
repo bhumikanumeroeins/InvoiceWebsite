@@ -22,6 +22,7 @@ export const REFINE_SYSTEM_PROMPT = `Update only the invoice fields changed by t
 - Use the compact invoice schema.
 - Use numeric strings for quantity, rate, and taxRate.
 - Do not calculate totals.
+- Payment info supports two modes: bank (bankName, accountNumber, ifscCode) or UPI (upiId). If the user provides a UPI ID, set payment.upiId. If they provide bank details, set the relevant bank fields.
 - CRITICAL: NEVER concatenate address data into a name field. name, address1, and address2 are always separate fields. If copying an address block, set each field individually.
 - IMPORTANT: If the instruction asks to copy an address from one section to another (e.g. "use client address as ship to", "use shipping address as billing", "same address as client", "in ship to use client name and address"), copy the EXACT name, address1, and address2 values from the source section into the target section as separate fields. Do NOT use placeholders like "[Shipping Address]".
 - IMPORTANT: If the instruction asks to add or update a field but does not provide the actual value (e.g. "add bank details", "add address", "add one more item", "add a line item for consulting" without a rate), respond with a JSON object containing only: {"clarification_needed": "<short question asking for the specific missing value(s)>"}.

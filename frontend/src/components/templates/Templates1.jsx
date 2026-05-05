@@ -8,9 +8,32 @@ import EditableText from "../shared/EditableText";
 import LogoUpload from "../shared/LogoUpload";
 import SignatureField from "../shared/SignatureField";
 import QRUpload from "../shared/QRUpload";
-import { getRawItems, getEditableRows, AddItemButton } from "../shared/templateHelpers";
+import {
+  getRawItems,
+  getEditableRows,
+  AddItemButton,
+} from "../shared/templateHelpers";
 
-const Templates1 = ({ data = {}, onFieldChange, readOnly = true }) => {
+const DEFAULT_VIS = {
+  logoSection: true,
+  businessInfo: true,
+  clientInfo: true,
+  shipTo: true,
+  invoiceMeta: true,
+  itemsTable: true,
+  totals: true,
+  terms: true,
+  paymentInfo: true,
+  signature: true,
+  qrCodeSection: true,
+};
+
+const Templates1 = ({
+  data = {},
+  onFieldChange,
+  readOnly = true,
+  visibility = DEFAULT_VIS,
+}) => {
   const {
     logo,
     companyName,
@@ -40,6 +63,8 @@ const Templates1 = ({ data = {}, onFieldChange, readOnly = true }) => {
   } = getInvoiceData(data);
 
   const f = (field) => (val) => onFieldChange && onFieldChange(field, val);
+  const vis = { ...DEFAULT_VIS, ...visibility };
+  const paymentType = data.paymentInfoType || "bank";
   const magenta = "#e91e8c";
   const darkBg = "#0d1021";
 
@@ -237,7 +262,10 @@ const Templates1 = ({ data = {}, onFieldChange, readOnly = true }) => {
                     </span>
                   </div>
                 ))}
-                  <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} />
+                <AddItemButton
+                  rawItems={rawItems}
+                  onFieldChange={onFieldChange}
+                />
               </div>
             </div>
           </div>
@@ -430,63 +458,82 @@ const Templates1 = ({ data = {}, onFieldChange, readOnly = true }) => {
                   right: "12px",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    marginBottom: "2px",
-                    fontSize: "11px",
-                  }}
-                >
-                  <span style={{ color: "#71717a", width: "75px" }}>
-                    Bank Name:
-                  </span>
-                  <span style={{ color: "#27272a", fontWeight: "600" }}>
-                    <EditableText
-                      value={bankName}
-                      onChange={f("bankName")}
-                      readOnly={readOnly}
-                    />
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    marginBottom: "2px",
-                    fontSize: "10px",
-                  }}
-                >
-                  <span style={{ color: "#71717a", width: "75px" }}>
-                    Account No:
-                  </span>
-                  <span style={{ color: "#27272a", fontWeight: "600" }}>
-                    <EditableText
-                      value={accountNo}
-                      onChange={f("accountNumber")}
-                      readOnly={readOnly}
-                    />
-                  </span>
-                </div>
-                <div style={{ display: "flex", fontSize: "10px" }}>
-                  <span style={{ color: "#71717a", width: "75px" }}>
-                    IFSC Code:
-                  </span>
-                  <span style={{ color: "#27272a", fontWeight: "600" }}>
-                    <EditableText
-                      value={ifscCode}
-                      onChange={f("ifscCode")}
-                      readOnly={readOnly}
-                    />
-                  </span>
-                </div>
+                {paymentType === "bank" ? (
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        marginBottom: "2px",
+                        fontSize: "11px",
+                      }}
+                    >
+                      <span style={{ color: "#71717a", width: "75px" }}>
+                        Bank Name:
+                      </span>
+                      <span style={{ color: "#27272a", fontWeight: "600" }}>
+                        <EditableText
+                          value={bankName}
+                          onChange={f("bankName")}
+                          readOnly={readOnly}
+                        />
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        marginBottom: "2px",
+                        fontSize: "10px",
+                      }}
+                    >
+                      <span style={{ color: "#71717a", width: "75px" }}>
+                        Account No:
+                      </span>
+                      <span style={{ color: "#27272a", fontWeight: "600" }}>
+                        <EditableText
+                          value={accountNo}
+                          onChange={f("accountNumber")}
+                          readOnly={readOnly}
+                        />
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", fontSize: "10px" }}>
+                      <span style={{ color: "#71717a", width: "75px" }}>
+                        IFSC Code:
+                      </span>
+                      <span style={{ color: "#27272a", fontWeight: "600" }}>
+                        <EditableText
+                          value={ifscCode}
+                          onChange={f("ifscCode")}
+                          readOnly={readOnly}
+                        />
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ display: "flex", fontSize: "11px" }}>
+                    <span style={{ color: "#71717a", width: "75px" }}>
+                      UPI ID:
+                    </span>
+                    <span style={{ color: "#27272a", fontWeight: "600" }}>
+                      <EditableText
+                        value={data.upiId || ""}
+                        onChange={f("upiId")}
+                        readOnly={readOnly}
+                      />
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <div style={{ flex: 1, textAlign: "center", paddingBottom: "8px" }}>
-              <SignatureField
-                signatureImage={data.signatureImage}
-                onSignatureChange={f("signatureImage")}
-                readOnly={readOnly}
-                lineWidth="90px"
-              />
+              {vis.signature && (
+                <SignatureField
+                  signatureImage={data.signatureImage}
+                  onSignatureChange={f("signatureImage")}
+                  readOnly={readOnly}
+                  lineWidth="90px"
+                />
+              )}
             </div>
             <div style={{ width: "160px", textAlign: "center" }}>
               <div style={{ position: "relative" }}>
@@ -521,28 +568,19 @@ const Templates1 = ({ data = {}, onFieldChange, readOnly = true }) => {
                     width: "100%",
                   }}
                 >
-                  <QRUpload
-                    qrImage={data.qrCodeImage}
-                    fallbackImage={qrCodeImg}
-                    onQRChange={f("qrCodeImage")}
-                    readOnly={readOnly}
-                    label=""
-                    size={90}
-                  />
+                  {vis.qrCodeSection && (
+                    <QRUpload
+                      qrImage={data.qrCodeImage}
+                      fallbackImage={qrCodeImg}
+                      onQRChange={f("qrCodeImage")}
+                      readOnly={readOnly}
+                      label=""
+                      size={90}
+                    />
+                  )}
                 </div>
               </div>
-              <p
-                style={{
-                  color: "#27272a",
-                  fontSize: "12px",
-                  margin: "6px 0 0 0",
-                  lineHeight: "1.3",
-                }}
-              >
-                Dynamic QR Code will
-                <br />
-                be inserted here
-              </p>
+              
             </div>
           </div>
 

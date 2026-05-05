@@ -42,11 +42,6 @@ const QRUpload = ({
           <p style={{ fontWeight: "700", margin: "0 0 6px" }}>{label}</p>
         )}
         {imgEl}
-        <p style={{ fontSize: "11px", marginTop: "6px" }}>
-          Dynamic QR Code will
-          <br />
-          be inserted here
-        </p>
       </div>
     );
   }
@@ -71,11 +66,7 @@ const QRUpload = ({
           click to upload
         </p>
       </div>
-      <p style={{ fontSize: "11px", marginTop: "4px" }}>
-        Dynamic QR Code will
-        <br />
-        be inserted here
-      </p>
+
       <input
         ref={inputRef}
         type="file"

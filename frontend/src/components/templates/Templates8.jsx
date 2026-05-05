@@ -5,9 +5,32 @@ import EditableText from "../shared/EditableText";
 import LogoUpload from "../shared/LogoUpload";
 import SignatureField from "../shared/SignatureField";
 import QRUpload from "../shared/QRUpload";
-import { getRawItems, getEditableRows, AddItemButton } from "../shared/templateHelpers";
+import {
+  getRawItems,
+  getEditableRows,
+  AddItemButton,
+} from "../shared/templateHelpers";
 
-const Templates8 = ({ data = {}, onFieldChange, readOnly = true }) => {
+const DEFAULT_VIS = {
+  logoSection: true,
+  businessInfo: true,
+  clientInfo: true,
+  shipTo: true,
+  invoiceMeta: true,
+  itemsTable: true,
+  totals: true,
+  terms: true,
+  paymentInfo: true,
+  signature: true,
+  qrCodeSection: true,
+};
+
+const Templates8 = ({
+  data = {},
+  onFieldChange,
+  readOnly = true,
+  visibility = DEFAULT_VIS,
+}) => {
   const {
     companyName,
     companyAddress,
@@ -36,6 +59,8 @@ const Templates8 = ({ data = {}, onFieldChange, readOnly = true }) => {
   } = getInvoiceData(data);
 
   const f = (field) => (val) => onFieldChange && onFieldChange(field, val);
+  const vis = { ...DEFAULT_VIS, ...visibility };
+  const paymentType = data.paymentInfoType || "bank";
   const rawItems = getRawItems(data, items);
   const purple = "#3b2d4a",
     cream = "#fdeccd";
@@ -163,7 +188,7 @@ const Templates8 = ({ data = {}, onFieldChange, readOnly = true }) => {
                 </b>
               </div>
             ))}
-              <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} />
+            <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} />
           </div>
           <div
             style={{
@@ -335,49 +360,66 @@ const Templates8 = ({ data = {}, onFieldChange, readOnly = true }) => {
         >
           <div>
             <p style={{ fontWeight: "700" }}>Payment Info</p>
-            <div>
-              <b className="inline-block min-w-[60px]">Bank: </b>
-              <EditableText
-                value={bankName}
-                onChange={f("bankName")}
-                readOnly={readOnly}
-              />
-            </div>
-            <div>
-              <b className="inline-block min-w-[60px]">Account: </b>
-              <EditableText
-                value={accountNo}
-                onChange={f("accountNumber")}
-                readOnly={readOnly}
-              />
-            </div>
-            <div>
-              <b className="inline-block min-w-[60px]">IFSC: </b>
-              <EditableText
-                value={ifscCode}
-                onChange={f("ifscCode")}
-                readOnly={readOnly}
-              />
-            </div>
+            {paymentType === "bank" ? (
+              <>
+                <div>
+                  <b className="inline-block min-w-[60px]">Bank: </b>
+                  <EditableText
+                    value={bankName}
+                    onChange={f("bankName")}
+                    readOnly={readOnly}
+                  />
+                </div>
+                <div>
+                  <b className="inline-block min-w-[60px]">Account: </b>
+                  <EditableText
+                    value={accountNo}
+                    onChange={f("accountNumber")}
+                    readOnly={readOnly}
+                  />
+                </div>
+                <div>
+                  <b className="inline-block min-w-[60px]">IFSC: </b>
+                  <EditableText
+                    value={ifscCode}
+                    onChange={f("ifscCode")}
+                    readOnly={readOnly}
+                  />
+                </div>
+              </>
+            ) : (
+              <div>
+                <b className="inline-block min-w-[60px]">UPI: </b>
+                <EditableText
+                  value={data.upiId || ""}
+                  onChange={f("upiId")}
+                  readOnly={readOnly}
+                />
+              </div>
+            )}
             <div style={{ marginTop: "40px", textAlign: "center" }}>
-              <SignatureField
-                signatureImage={data.signatureImage}
-                onSignatureChange={f("signatureImage")}
-                readOnly={readOnly}
-              />
+              {vis.signature && (
+                <SignatureField
+                  signatureImage={data.signatureImage}
+                  onSignatureChange={f("signatureImage")}
+                  readOnly={readOnly}
+                />
+              )}
             </div>
           </div>
           <div
             style={{ background: cream, padding: "20px", textAlign: "center" }}
           >
-            <QRUpload
-              qrImage={data.qrCodeImage}
-              fallbackImage={qrCodeImg}
-              onQRChange={f("qrCodeImage")}
-              readOnly={readOnly}
-              label="Scan To Pay"
-              size={100}
-            />
+            {vis.qrCodeSection && (
+              <QRUpload
+                qrImage={data.qrCodeImage}
+                fallbackImage={qrCodeImg}
+                onQRChange={f("qrCodeImage")}
+                readOnly={readOnly}
+                label="Scan To Pay"
+                size={100}
+              />
+            )}
           </div>
         </div>
 

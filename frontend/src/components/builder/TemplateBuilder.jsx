@@ -993,6 +993,145 @@ Best regards`,
                       lastSnapshot={lastAiSnapshot}
                     />
 
+                    {/* Sections */}
+                    <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
+                      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
+                        Sections
+                      </h3>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.logoSection}
+                            onChange={() => handleSectionToggle("logoSection")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">Logo</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.businessInfo}
+                            onChange={() => handleSectionToggle("businessInfo")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">
+                            Business Info
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.clientInfo}
+                            onChange={() => handleSectionToggle("clientInfo")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">
+                            Client Info
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.shipTo}
+                            onChange={() => handleSectionToggle("shipTo")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">Ship To</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.invoiceMeta}
+                            onChange={() => handleSectionToggle("invoiceMeta")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">
+                            Invoice Meta
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.itemsTable}
+                            onChange={() => handleSectionToggle("itemsTable")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">
+                            Items Table
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.totals}
+                            onChange={() => handleSectionToggle("totals")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">Totals</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.terms}
+                            onChange={() => handleSectionToggle("terms")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">Terms</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.paymentInfo}
+                            onChange={() => handleSectionToggle("paymentInfo")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">
+                            Payment Info
+                          </span>
+                        </label>
+                        {templateConfig.visibility.paymentInfo && (
+                          <div className="ml-6">
+                            <select
+                              value={templateConfig.content.paymentInfoType}
+                              onChange={(e) =>
+                                handleContentChange(
+                                  "paymentInfoType",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <option value="bank">Bank Details</option>
+                              <option value="upi">UPI Info</option>
+                            </select>
+                          </div>
+                        )}
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.signature}
+                            onChange={() => handleSectionToggle("signature")}
+                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">
+                            Signature
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateConfig.visibility.qrCodeSection}
+                            onChange={() =>
+                              handleSectionToggle("qrCodeSection")
+                            }
+                            className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                          />
+                          <span className="text-sm text-gray-700">QR Code</span>
+                        </label>
+                      </div>
+                    </div>
+
                     {/* Currency */}
                     <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
                       <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
@@ -1346,145 +1485,6 @@ Best regards`,
                             </div>
                           </>
                         )}
-                      </div>
-                    </div>
-
-                    {/* Sections */}
-                    <div className="bg-white/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl p-6">
-                      <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
-                        Sections
-                      </h3>
-                      <div className="space-y-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.logoSection}
-                            onChange={() => handleSectionToggle("logoSection")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">Logo</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.businessInfo}
-                            onChange={() => handleSectionToggle("businessInfo")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">
-                            Business Info
-                          </span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.clientInfo}
-                            onChange={() => handleSectionToggle("clientInfo")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">
-                            Client Info
-                          </span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.shipTo}
-                            onChange={() => handleSectionToggle("shipTo")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">Ship To</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.invoiceMeta}
-                            onChange={() => handleSectionToggle("invoiceMeta")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">
-                            Invoice Meta
-                          </span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.itemsTable}
-                            onChange={() => handleSectionToggle("itemsTable")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">
-                            Items Table
-                          </span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.totals}
-                            onChange={() => handleSectionToggle("totals")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">Totals</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.terms}
-                            onChange={() => handleSectionToggle("terms")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">Terms</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.paymentInfo}
-                            onChange={() => handleSectionToggle("paymentInfo")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">
-                            Payment Info
-                          </span>
-                        </label>
-                        {templateConfig.visibility.paymentInfo && (
-                          <div className="ml-6">
-                            <select
-                              value={templateConfig.content.paymentInfoType}
-                              onChange={(e) =>
-                                handleContentChange(
-                                  "paymentInfoType",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                              <option value="bank">Bank Details</option>
-                              <option value="upi">UPI Info</option>
-                            </select>
-                          </div>
-                        )}
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.signature}
-                            onChange={() => handleSectionToggle("signature")}
-                            className="w-4 h-4 text-indigo-600 rounded-md focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-700">
-                            Signature
-                          </span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={templateConfig.visibility.qrCodeSection}
-                            onChange={() =>
-                              handleSectionToggle("qrCodeSection")
-                            }
-                            className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
-                          />
-                          <span className="text-sm text-gray-700">QR Code</span>
-                        </label>
                       </div>
                     </div>
                   </div>

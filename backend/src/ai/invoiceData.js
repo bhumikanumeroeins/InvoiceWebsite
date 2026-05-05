@@ -256,11 +256,11 @@ const normalizePaymentBlock = (block = {}, partial = false, fallback = {}) => {
   if (!block || typeof block !== "object" || Array.isArray(block)) {
     return partial
       ? undefined
-      : { bankName: "", accountNumber: "", ifscCode: "" };
+      : { bankName: "", accountNumber: "", ifscCode: "", upiId: "" };
   }
 
   const normalized = {};
-  for (const key of ["bankName", "accountNumber", "ifscCode"]) {
+  for (const key of ["bankName", "accountNumber", "ifscCode", "upiId"]) {
     if (partial && !hasOwn(block, key)) {
       continue;
     }
@@ -428,6 +428,7 @@ const legacyToCanonicalInvoice = (raw = {}, options = {}) => {
       ...(partial && !hasOwn(raw, "ifscCode")
         ? {}
         : { ifscCode: raw.ifscCode }),
+      ...(partial && !hasOwn(raw, "upiId") ? {} : { upiId: raw.upiId }),
     },
     partial,
   );
@@ -486,6 +487,7 @@ export const buildInvoiceDefaults = (baseDate = new Date()) => ({
     bankName: "[Bank Name]",
     accountNumber: "[Account Number]",
     ifscCode: "[IFSC / Routing Code]",
+    upiId: "",
   },
   footer: {
     email: "[your@email.com]",
@@ -658,6 +660,7 @@ export const canonicalToLegacyInvoice = (raw, options = {}) => {
   setValue("bankName", canonical.payment?.bankName);
   setValue("accountNumber", canonical.payment?.accountNumber);
   setValue("ifscCode", canonical.payment?.ifscCode);
+  setValue("upiId", canonical.payment?.upiId);
   setValue("footerEmail", canonical.footer?.email);
   setValue("footerPhone", canonical.footer?.phone);
   setValue("footerWebsite", canonical.footer?.website);
@@ -1329,6 +1332,17 @@ export const extractDeterministicRefinement = (
     updates.payment = {
       ...(updates.payment || {}),
       ifscCode: trimString(ifscMatch[1]),
+    };
+  }
+
+  // UPI ID — matches "upi id as business@upi" or "vpa business@upi" etc.
+  const upiMatch = text.match(
+    /\b(?:upi(?:\s+id)?|vpa)\s+(?:as\s+|to\s+|is\s+)?(\S+)/i,
+  );
+  if (upiMatch) {
+    updates.payment = {
+      ...(updates.payment || {}),
+      upiId: trimString(upiMatch[1]),
     };
   }
 

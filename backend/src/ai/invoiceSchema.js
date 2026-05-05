@@ -56,6 +56,7 @@ export const INVOICE_FIELD_KEYS = [
   "bankName",
   "accountNumber",
   "ifscCode",
+  "upiId",
   "footerEmail",
   "footerPhone",
   "footerWebsite",
@@ -117,6 +118,9 @@ const paymentField = {
     bankName: stringField("Bank name"),
     accountNumber: stringField("Account number"),
     ifscCode: stringField("IFSC or routing code"),
+    upiId: stringField(
+      "UPI ID (e.g. business@upi) — used when payment method is UPI",
+    ),
   },
 };
 

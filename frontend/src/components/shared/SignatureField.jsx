@@ -27,7 +27,7 @@ const SignatureField = ({
     <img
       src={signatureImage}
       alt="Signature"
-      style={{ height: "40px", marginBottom: "5px", display: "block" }}
+      style={{ height: "40px", display: "block", margin: "0 auto 5px" }}
     />
   ) : (
     <div

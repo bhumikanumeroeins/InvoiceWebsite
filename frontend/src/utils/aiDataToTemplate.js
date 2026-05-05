@@ -188,6 +188,7 @@ export const aiDataToFlatContent = (aiData = {}) => {
     bankName: d.payment?.bankName || "",
     accountNumber: d.payment?.accountNumber || "",
     ifscCode: d.payment?.ifscCode || "",
+    upiId: d.payment?.upiId || "",
     footerEmail: d.footer?.email || "",
     footerPhone: d.footer?.phone || "",
     footerWebsite: d.footer?.website || "",
