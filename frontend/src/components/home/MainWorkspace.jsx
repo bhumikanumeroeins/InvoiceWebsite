@@ -45,7 +45,11 @@ const QUICK_FOLLOW_UPS = [
 ];
 
 // urlSessionId — the :sessionId from the URL (undefined on /)
-const MainWorkspace = ({ urlSessionId }) => {
+const MainWorkspace = ({
+  urlSessionId,
+  loggedIn: loggedInProp,
+  onAuthSuccess,
+}) => {
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
@@ -58,7 +62,7 @@ const MainWorkspace = ({ urlSessionId }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authReason, setAuthReason] = useState("");
   const [remainingQuota, setRemainingQuota] = useState(FREE_LIMIT);
-  const [loggedIn, setLoggedIn] = useState(isAuthenticated());
+  const [loggedIn, setLoggedIn] = useState(loggedInProp ?? isAuthenticated());
   const [requiredFields, setRequiredFields] = useState([]);
   const [requiredFieldValues, setRequiredFieldValues] = useState({});
   const [loadingSession, setLoadingSession] = useState(false);
@@ -327,6 +331,7 @@ const MainWorkspace = ({ urlSessionId }) => {
   // ── Auth success ─────────────────────────────────────────────────────────────
   const handleAuthSuccess = () => {
     setLoggedIn(true);
+    onAuthSuccess?.();
     setShowAuthModal(false);
 
     if (sessionIdRef.current && messages.length > 0) {

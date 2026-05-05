@@ -23,10 +23,9 @@ const navItems = [
   { icon: BarChart3, label: "Reports", path: "/dashboard?tab=myReports" },
 ];
 
-const Sidebar = ({ expanded, onToggle, activeSessionId }) => {
+const Sidebar = ({ expanded, onToggle, activeSessionId, loggedIn }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const loggedIn = isAuthenticated();
   const [sessions, setSessions] = useState([]);
 
   useEffect(() => {
