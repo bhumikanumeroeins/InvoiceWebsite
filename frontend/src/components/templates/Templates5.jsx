@@ -1,183 +1,506 @@
-import bgImage from '../../assets/templates/5_1.jpg';
-import qrCodeImg from '../../assets/templates/images (1).png';
-import { getInvoiceData } from '../../utils/invoiceDefaults';
+import bgImage from "../../assets/templates/5_1.jpg";
+import qrCodeImg from "../../assets/templates/images (1).png";
+import { getInvoiceData } from "../../utils/invoiceDefaults";
+import EditableText from "../shared/EditableText";
+import LogoUpload from "../shared/LogoUpload";
+import { getRawItems, getEditableRows, AddItemButton } from "../shared/templateHelpers";
 
-const Templates5 = ({ data = {} }) => {
+const Templates5 = ({ data = {}, onFieldChange, readOnly = true }) => {
   const {
-    companyName, companyAddress, billToName, billToAddress,
-    shipToName, shipToAddress, invoiceNumber, invoiceDate, poNumber,
-    dueDate, items, terms, subtotal, taxAmount, total, bankName,
-    accountNo, ifscCode, signature, qrCode, email, phone, website,
-    currencySymbol
+    companyName,
+    companyAddress,
+    billToName,
+    billToAddress,
+    shipToName,
+    shipToAddress,
+    invoiceNumber,
+    invoiceDate,
+    poNumber,
+    dueDate,
+    items,
+    terms,
+    subtotal,
+    taxAmount,
+    total,
+    bankName,
+    accountNo,
+    ifscCode,
+    signature,
+    qrCode,
+    email,
+    phone,
+    website,
+    currencySymbol,
   } = getInvoiceData(data);
 
-  const purple = '#33265d';
-  const orange = '#fec62f';
-  const gray = '#374151';
+  const f = (field) => (val) => onFieldChange && onFieldChange(field, val);
+  const rawItems = getRawItems(data, items);
+  const purple = "#33265d",
+    orange = "#fec62f",
+    gray = "#374151";
 
   return (
     <>
-    <div 
-      style={{ 
-        width: '794px', 
-        height: '1123px', 
-        position: 'relative',
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: '794px 1123px',
-        backgroundPosition: 'top left',
-        backgroundRepeat: 'no-repeat',
-        fontFamily: "'Albert Sans', sans-serif",
-      }}
-    >
-      {/* HEADER - Purple section */}
-      <div style={{ padding: '38px 100px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {/* Left - Logo & Company */}
-        <div>
-          <p style={{ color: '#fff', fontSize: '28px', fontWeight: '400', margin: '0 0 0 0', fontFamily: "'Albert Sans', sans-serif" }}>LOGO</p>
-          <p style={{ color: orange, fontSize: '32px', fontWeight: '400', margin: '0 0 0 0', fontFamily: "'Passion One', cursive" }}>{companyName}</p>
-          <p style={{ color: '#fff', fontSize: '14px', margin: 0, whiteSpace: 'pre-line', lineHeight: '1.6' }}>{companyAddress}</p>
+      <div
+        style={{
+          width: "794px",
+          height: "1123px",
+          position: "relative",
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: "794px 1123px",
+          backgroundPosition: "top left",
+          backgroundRepeat: "no-repeat",
+          fontFamily: "'Albert Sans', sans-serif",
+        }}
+      >
+        <div
+          style={{
+            padding: "38px 100px 0",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <LogoUpload
+              logoImage={data.logoImage}
+              logoText="LOGO"
+              onLogoChange={f("logoImage")}
+              readOnly={readOnly}
+              textStyle={{ color: "#fff", fontSize: "28px", fontWeight: "400" }}
+            />
+            <p
+              style={{
+                color: orange,
+                fontSize: "32px",
+                fontWeight: "400",
+                margin: "0",
+                fontFamily: "'Passion One', cursive",
+              }}
+            >
+              <EditableText
+                value={companyName}
+                onChange={f("businessName")}
+                readOnly={readOnly}
+              />
+            </p>
+            <p
+              style={{
+                color: "#fff",
+                fontSize: "14px",
+                margin: 0,
+                whiteSpace: "pre-line",
+              }}
+            >
+              <EditableText
+                value={companyAddress}
+                onChange={f("businessAddress1")}
+                readOnly={readOnly}
+              />
+            </p>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ marginBottom: "20px" }}>
+              <p
+                style={{
+                  color: "#fff",
+                  fontSize: "14px",
+                  fontWeight: "800",
+                  margin: "0 0 5px 0",
+                }}
+              >
+                Bill To
+              </p>
+              <p style={{ color: "#fff", fontSize: "14px", margin: 0 }}>
+                <EditableText
+                  value={billToName}
+                  onChange={f("clientName")}
+                  readOnly={readOnly}
+                />
+              </p>
+              <p style={{ color: "#fff", fontSize: "14px", margin: 0 }}>
+                <EditableText
+                  value={billToAddress}
+                  onChange={f("clientAddress1")}
+                  readOnly={readOnly}
+                />
+              </p>
+            </div>
+            <div>
+              <p
+                style={{
+                  color: "#fff",
+                  fontSize: "14px",
+                  fontWeight: "800",
+                  margin: "0 0 5px 0",
+                }}
+              >
+                Ship To
+              </p>
+              <p style={{ color: "#fff", fontSize: "14px", margin: 0 }}>
+                <EditableText
+                  value={shipToName}
+                  onChange={f("shipToName")}
+                  readOnly={readOnly}
+                />
+              </p>
+              <p style={{ color: "#fff", fontSize: "14px", margin: 0 }}>
+                <EditableText
+                  value={shipToAddress}
+                  onChange={f("shipToAddress1")}
+                  readOnly={readOnly}
+                />
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Right - Bill To & Ship To */}
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ marginBottom: '20px' }}>
-            <p style={{ color: '#fff', fontSize: '14px', fontWeight: '800', margin: '0 0 5px 0' }}>Bill To</p>
-            <p style={{ color: '#fff', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{billToName}<br />{billToAddress.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}</p>
+        <div
+          style={{
+            padding: "25px 80px 0",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+          }}
+        >
+          <div>
+            {[
+              ["Invoice#:", invoiceNumber, "invoiceNumber"],
+              ["Invoice Date:", invoiceDate, "invoiceDate"],
+              ["P.O#:", poNumber, "poNumber"],
+              ["Due Date:", dueDate, "dueDate"],
+            ].map(([label, val, field]) => (
+              <div key={field} style={{ display: "flex", marginBottom: "5px" }}>
+                <span
+                  style={{
+                    color: purple,
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    width: "100px",
+                  }}
+                >
+                  {label}
+                </span>
+                <span style={{ color: gray, fontSize: "16px" }}>
+                  <EditableText
+                    value={val}
+                    onChange={f(field)}
+                    readOnly={readOnly}
+                  />
+                </span>
+              </div>
+            ))}
+              <AddItemButton rawItems={rawItems} onFieldChange={onFieldChange} />
           </div>
           <div>
-            <p style={{ color: '#fff', fontSize: '14px', fontWeight: '800', margin: '0 0 5px 0' }}>Ship To</p>
-            <p style={{ color: '#fff', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{shipToName}<br />{shipToAddress.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* INVOICE DETAILS & INVOICE text */}
-      <div style={{ padding: '25px 80px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        {/* Left - Invoice Details */}
-        <div>
-          <div style={{ display: 'flex', marginBottom: '5px' }}>
-            <span style={{ color: purple, fontSize: '16px', fontWeight: '600', width: '100px' }}>Invoice#:</span>
-            <span style={{ color: gray, fontSize: '16px' }}>{invoiceNumber}</span>
-          </div>
-          <div style={{ display: 'flex', marginBottom: '5px' }}>
-            <span style={{ color: purple, fontSize: '16px', fontWeight: '600', width: '100px' }}>Invoice Date:</span>
-            <span style={{ color: gray, fontSize: '16px' }}>{invoiceDate}</span>
-          </div>
-          <div style={{ display: 'flex', marginBottom: '5px' }}>
-            <span style={{ color: purple, fontSize: '16px', fontWeight: '600', width: '100px' }}>P.O#:</span>
-            <span style={{ color: gray, fontSize: '16px' }}>{poNumber}</span>
-          </div>
-          <div style={{ display: 'flex' }}>
-            <span style={{ color: purple, fontSize: '16px', fontWeight: '600', width: '100px' }}>Due Date:</span>
-            <span style={{ color: gray, fontSize: '16px' }}>{dueDate}</span>
+            <p
+              style={{
+                color: "#b374fe",
+                fontSize: "50px",
+                fontWeight: "400",
+                margin: 0,
+                fontFamily: "'Passion One', cursive",
+              }}
+            >
+              INVOICE
+            </p>
           </div>
         </div>
 
-        {/* Right - INVOICE text */}
-        <div>
-          <p style={{ color: '#b374fe', fontSize: '50px', fontWeight: '400', margin: 0, fontFamily: "'Passion One', cursive", letterSpacing: '1px' }}>INVOICE</p>
-        </div>
-      </div>
-
-      {/* ITEMS TABLE */}
-      <div style={{ padding: '30px 80px 0' }}>
-        {/* Table Header - light purple background with rounded corners */}
-        <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f1e4fe', padding: '12px 15px', borderRadius: '25px' }}>
-          <div style={{ width: '10%', color: purple, fontSize: '17px', fontWeight: '500', fontFamily: "'Passion One', cursive" }}>Qty</div>
-          <div style={{ width: '45%', color: purple, fontSize: '17px', fontWeight: '500', fontFamily: "'Passion One', cursive" }}>Description</div>
-          <div style={{ width: '22%', color: purple, fontSize: '17px', fontWeight: '500', textAlign: 'center',fontFamily: "'Passion One', cursive" }}>Unit Price</div>
-          <div style={{ width: '23%', color: purple, fontSize: '17px', fontWeight: '500', textAlign: 'right', fontFamily: "'Passion One', cursive" }}>Amount</div>
-        </div>
-
-        {/* Table Rows - alternating light purple and white with rounded corners */}
-        <div>
-          {items.map((item, index) => (
-            <div key={index} style={{ display: 'flex', alignItems: 'center', padding: '15px 15px', backgroundColor: index % 2 === 0 ? '#fff' : '#f1e4fe', borderRadius: index % 2 === 0 ? '0' : '25px', marginTop: '5px' }}>
-              <div style={{ width: '10%', color: purple, fontSize: '15px', fontFamily: "'Passion One', cursive" }}>{item.quantity}</div>
-              <div style={{ width: '45%', color: purple, fontSize: '15px' }}>{item.description}</div>
-              <div style={{ width: '22%', color: purple, fontSize: '15px', textAlign: 'center' }}>{currencySymbol}{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-              <div style={{ width: '23%', color: purple, fontSize: '15px', textAlign: 'right' }}>{currencySymbol}{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* TERMS & TOTALS */}
-      <div style={{ padding: '25px 80px 0', display: 'flex', justifyContent: 'space-between' }}>
-        {/* Left - Terms */}
-        <div style={{ width: '40%' }}>
-          <p style={{ color: gray, fontWeight: '700', fontSize: '16px', margin: '0 0 10px 0' }}>Terms and Conditions</p>
-          {terms.map((term, index) => (
-            <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '3px' }}>
-              <span style={{ color: orange, fontSize: '14px', marginTop: '3px' }}>◆</span>
-              <span style={{ color: gray, fontSize: '14px', lineHeight: '1.5' }}>{term}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Right - Totals */}
-        <div style={{ width: '40%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: gray, fontSize: '15px', fontWeight: '600' }}>Sub total</span>
-            <span style={{ color: gray, fontSize: '15px' }}>{currencySymbol}{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: gray, fontSize: '15px', fontWeight: '600' }}>Tax</span>
-            <span style={{ color: gray, fontSize: '15px' }}>{currencySymbol}{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: gray, fontSize: '15px', fontWeight: '700' }}>Total</span>
-            <span style={{ color: gray, fontSize: '15px', fontWeight: '700' }}>{currencySymbol}{total.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* PAYMENT INFO & QR CODE */}
-      <div style={{ padding: '15px 80px 0', display: 'flex', justifyContent: 'space-between' }}>
-        {/* Left - Payment Info */}
-        <div style={{ width: '50%' }}>
-          <p style={{ color: gray, fontWeight: '700', fontSize: '13px', margin: '0 0 10px 0' }}>Payment Info</p>
-          <p style={{ color: gray, fontSize: '11px', margin: '0 0 3px 0' }}><span style={{ fontWeight: '600' }}>Bank Name:</span> {bankName}</p>
-          <p style={{ color: gray, fontSize: '11px', margin: '0 0 3px 0' }}><span style={{ fontWeight: '600' }}>Account No:</span> {accountNo}</p>
-          <p style={{ color: gray, fontSize: '11px', margin: 0 }}><span style={{ fontWeight: '600' }}>IFSC Code:</span> {ifscCode}</p>
-        </div>
-
-        {/* Right - QR Code & Signature */}
-        <div style={{ width: '70%', textAlign: 'center' }}>
-          <p style={{ color: gray, fontWeight: '600', fontSize: '13px', margin: '0 0 0 0' }}>Scan to Pay</p>
-          {qrCode ? (
-            <img src={qrCode} alt="QR Code" style={{ width: '80px', height: '80px', display: 'block', margin: '0 auto' }} />
-          ) : (
-            <img src={qrCodeImg} alt="QR Code" style={{ width: '80px', height: '80px', display: 'block', margin: '0 auto' }} />
-          )}
-          <p style={{ color: gray, fontSize: '10px', margin: '8px 0 0 0', lineHeight: '1.4' }}>Dynamic QR Code will<br />be inserted here</p>
-          
-          {/* Signature */}
-          <div style={{ marginTop: '10px' }}>
-            {signature ? (
-              <img src={signature} alt="Signature" style={{ height: '35px', marginBottom: '5px' }} />
-            ) : (
-              <div style={{ height: '35px', marginBottom: '5px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                <span style={{ fontStyle: 'italic', color: '#9ca3af', fontSize: '16px', fontFamily: 'cursive' }}>Sign</span>
+        {/* Items */}
+        <div style={{ padding: "30px 80px 0" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "#f1e4fe",
+              padding: "12px 15px",
+              borderRadius: "25px",
+            }}
+          >
+            {["Qty", "Description", "Unit Price", "Amount"].map((h, i) => (
+              <div
+                key={h}
+                style={{
+                  width: ["10%", "45%", "22%", "23%"][i],
+                  color: purple,
+                  fontSize: "17px",
+                  fontWeight: "500",
+                  fontFamily: "'Passion One', cursive",
+                  textAlign: i > 1 ? "center" : "left",
+                }}
+              >
+                {h}
               </div>
-            )}
-            <div style={{ borderTop: '1px solid #374151', width: '120px', margin: '0 auto 5px' }}></div>
-            <p style={{ color: purple, fontSize: '12px', fontWeight: '600', margin: 0 }}>Authorised Sign</p>
+            ))}
+          </div>
+          {readOnly
+            ? items.map((item, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "15px 15px",
+                    backgroundColor: i % 2 === 0 ? "#fff" : "#f1e4fe",
+                    borderRadius: i % 2 === 0 ? "0" : "25px",
+                    marginTop: "5px",
+                  }}
+                >
+                  <div style={{ width: "10%", color: purple }}>
+                    {item.quantity}
+                  </div>
+                  <div style={{ width: "45%", color: purple }}>
+                    {item.description}
+                  </div>
+                  <div
+                    style={{ width: "22%", color: purple, textAlign: "center" }}
+                  >
+                    {currencySymbol}
+                    {item.rate.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </div>
+                  <div
+                    style={{ width: "23%", color: purple, textAlign: "right" }}
+                  >
+                    {currencySymbol}
+                    {item.amount.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </div>
+                </div>
+              ))
+            : getEditableRows(rawItems).map((raw, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "8px 15px",
+                    backgroundColor: i % 2 === 0 ? "#fff" : "#f1e4fe",
+                    borderRadius: i % 2 === 0 ? "0" : "25px",
+                    marginTop: "5px",
+                  }}
+                >
+                  <div style={{ width: "10%" }}>
+                    <EditableText
+                      value={raw.qty}
+                      onChange={f(`item${i + 1}Qty`)}
+                      readOnly={false}
+                      placeholder="1"
+                    />
+                  </div>
+                  <div style={{ width: "45%" }}>
+                    <EditableText
+                      value={raw.desc}
+                      onChange={f(`item${i + 1}Desc`)}
+                      readOnly={false}
+                      placeholder={`Item ${i + 1}`}
+                    />
+                  </div>
+                  <div style={{ width: "22%", textAlign: "center" }}>
+                    <EditableText
+                      value={raw.rate}
+                      onChange={f(`item${i + 1}Rate`)}
+                      readOnly={false}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div style={{ width: "23%", textAlign: "right" }}>
+                    {currencySymbol}
+                    {(
+                      (parseFloat(raw.qty) || 1) * (parseFloat(raw.rate) || 0)
+                    ).toFixed(2)}
+                  </div>
+                </div>
+              ))}
+        </div>
+
+        <div
+          style={{
+            padding: "25px 80px 0",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ width: "40%" }}>
+            <p
+              style={{
+                color: gray,
+                fontWeight: "700",
+                fontSize: "16px",
+                margin: "0 0 10px 0",
+              }}
+            >
+              Terms and Conditions
+            </p>
+            <EditableText
+              value={Array.isArray(terms) ? terms.join(", ") : data.terms || ""}
+              onChange={f("terms")}
+              readOnly={readOnly}
+              multiline
+            />
+          </div>
+          <div style={{ width: "40%" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "8px",
+              }}
+            >
+              <span style={{ fontWeight: "600" }}>Sub total</span>
+              <span>
+                {currencySymbol}
+                {subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "8px",
+              }}
+            >
+              <span style={{ fontWeight: "600" }}>
+                <EditableText
+                  value={data.taxLabel || "Tax"}
+                  onChange={f("taxLabel")}
+                  readOnly={readOnly}
+                />
+              </span>
+              <span>
+                {currencySymbol}
+                {taxAmount.toLocaleString("en-IN", {
+                  minimumFractionDigits: 0,
+                })}
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontWeight: "700" }}>Total</span>
+              <span style={{ fontWeight: "700" }}>
+                {currencySymbol}
+                {total.toLocaleString("en-IN", { minimumFractionDigits: 0 })}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* FOOTER */}
-      <div style={{ position: 'absolute', bottom: '45px', left: '80px', right: '80px', display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ color: '#fff', fontSize: '11px' }}>{email}</span>
-        <span style={{ color: '#fff', fontSize: '11px' }}>{phone}</span>
-        <span style={{ color: '#fff', fontSize: '11px' }}>{website}</span>
+        <div
+          style={{
+            padding: "15px 80px 0",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ width: "50%" }}>
+            <p
+              style={{
+                color: gray,
+                fontWeight: "700",
+                fontSize: "13px",
+                margin: "0 0 10px 0",
+              }}
+            >
+              Payment Info
+            </p>
+            <p style={{ fontSize: "11px", margin: "0 0 3px 0" }}>
+              <b>Bank Name:</b>{" "}
+              <EditableText
+                value={bankName}
+                onChange={f("bankName")}
+                readOnly={readOnly}
+              />
+            </p>
+            <p style={{ fontSize: "11px", margin: "0 0 3px 0" }}>
+              <b>Account No:</b>{" "}
+              <EditableText
+                value={accountNo}
+                onChange={f("accountNumber")}
+                readOnly={readOnly}
+              />
+            </p>
+            <p style={{ fontSize: "11px", margin: 0 }}>
+              <b>IFSC Code:</b>{" "}
+              <EditableText
+                value={ifscCode}
+                onChange={f("ifscCode")}
+                readOnly={readOnly}
+              />
+            </p>
+          </div>
+          <div style={{ width: "70%", textAlign: "center" }}>
+            <QRUpload
+              qrImage={data.qrCodeImage}
+              fallbackImage={qrCodeImg}
+              onQRChange={f("qrCodeImage")}
+              readOnly={readOnly}
+              label="Scan to Pay"
+              size={80}
+            />
+            <div style={{ marginTop: "10px" }}>
+              <SignatureField
+                signatureImage={data.signatureImage}
+                onSignatureChange={f("signatureImage")}
+                readOnly={readOnly}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: "45px",
+            left: "80px",
+            right: "80px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span style={{ color: "#fff", fontSize: "11px" }}>
+            <EditableText
+              value={email}
+              onChange={f("footerEmail")}
+              readOnly={readOnly}
+            />
+          </span>
+          <span style={{ color: "#fff", fontSize: "11px" }}>
+            <EditableText
+              value={phone}
+              onChange={f("footerPhone")}
+              readOnly={readOnly}
+            />
+          </span>
+          <span style={{ color: "#fff", fontSize: "11px" }}>
+            <EditableText
+              value={website}
+              onChange={f("footerWebsite")}
+              readOnly={readOnly}
+            />
+          </span>
+        </div>
       </div>
-    </div>
-      {/* Disclaimer */}
-      <div style={{ width: "794px", textAlign: "center", padding: "8px 50px 4px", borderTop: "1px solid #e5e7eb", backgroundColor: "#fff" }}>
-        <p style={{ fontSize: "10px", color: "#9ca3af", margin: 0, fontStyle: "italic" }}>
-          This invoice has been generated electronically and is valid without signature.
+      <div
+        style={{
+          width: "794px",
+          textAlign: "center",
+          padding: "8px 50px 4px",
+          borderTop: "1px solid #e5e7eb",
+          backgroundColor: "#fff",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "10px",
+            color: "#9ca3af",
+            margin: 0,
+            fontStyle: "italic",
+          }}
+        >
+          This invoice has been generated electronically and is valid without
+          signature.
         </p>
       </div>
     </>

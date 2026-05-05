@@ -31,7 +31,10 @@ import Templates9 from "../templates/Templates9";
 import Templates10 from "../templates/Templates10";
 import Templates11 from "../templates/Templates11";
 import Templates12 from "../templates/Templates12";
-import { aiDataToTemplateFormat } from "../../utils/aiDataToTemplate";
+import {
+  aiDataToTemplateFormat,
+  aiDataToFlatContent,
+} from "../../utils/aiDataToTemplate";
 
 const INVOICE_TEMPLATES = {
   1: Templates1,
@@ -61,79 +64,8 @@ const CURRENCIES = [
   { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
 ];
 
-const EditableText = ({
-  value,
-  onChange,
-  style,
-  className,
-  placeholder,
-  readOnly = false,
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempValue, setTempValue] = useState(value);
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleBlur = () => {
-    setIsEditing(false);
-    onChange(tempValue);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleBlur();
-    }
-  };
-
-  if (isEditing && !readOnly) {
-    return (
-      <input
-        type="text"
-        value={tempValue}
-        onChange={(e) => setTempValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        autoFocus
-        style={{
-          ...style,
-          border: "2px solid #4F46E5",
-          outline: "none",
-          background: "white",
-          padding: "2px 4px",
-          borderRadius: "2px",
-        }}
-        className={className}
-      />
-    );
-  }
-
-  return (
-    <span
-      onClick={() => {
-        if (!readOnly) {
-          setIsEditing(true);
-          setTempValue(value);
-        }
-      }}
-      onMouseEnter={() => {
-        if (!readOnly) setIsHovered(true);
-      }}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        ...style,
-        cursor: readOnly ? "default" : "pointer",
-        padding: "2px 4px",
-        borderRadius: "2px",
-        transition: "background 0.2s",
-        background: !readOnly && isHovered ? "#EFF6FF" : "transparent",
-      }}
-      className={className}
-      title={readOnly ? undefined : "Click to edit"}
-    >
-      {value || placeholder}
-    </span>
-  );
-};
+// EditableText is defined in shared — import it
+import EditableText from "../shared/EditableText";
 
 const TemplateBuilder = () => {
   const navigate = useNavigate();
@@ -284,15 +216,14 @@ Best regards`,
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastAiSnapshot, setLastAiSnapshot] = useState(null);
   const hasInitializedDraftRef = useRef(false);
+  const [loadedTemplateId, setLoadedTemplateId] = useState(0); // set when loading a saved AI invoice
 
   const isEditMode = activeTab === "edit";
   const selectedTemplateIdFromAi = Number(
-    location.state?.selectedTemplateId || 0,
+    location.state?.selectedTemplateId || loadedTemplateId || 0,
   );
   const useAiTemplatePreview =
-    !customInvoiceId &&
-    selectedTemplateIdFromAi >= 1 &&
-    selectedTemplateIdFromAi <= 12;
+    selectedTemplateIdFromAi >= 1 && selectedTemplateIdFromAi <= 12;
   const SelectedTemplateComponent = useAiTemplatePreview
     ? INVOICE_TEMPLATES[selectedTemplateIdFromAi]
     : null;
@@ -438,24 +369,35 @@ Best regards`,
 
   const currencySymbol =
     CURRENCIES.find((c) => c.code === templateConfig.currency)?.symbol || "$";
-  const selectedTemplatePreviewData = aiDataToTemplateFormat({
+  // Build the nested data for getInvoiceData(), then merge the flat content.
+  // 'terms' must stay as the array form — the flat string would overwrite it.
+  const _flatContent = {
     ...templateConfig.content,
     currency: templateConfig.currency,
-  });
+  };
+  const _nestedContent = aiDataToTemplateFormat(_flatContent);
+  const { terms: _flatTerms2, ...flatContentWithoutTerms } = _flatContent;
+  const selectedTemplatePreviewData = {
+    ..._nestedContent,
+    ...flatContentWithoutTerms,
+    terms: _nestedContent.terms,
+  };
   const builderDraftKey = `invoicepro_builder_draft_${customInvoiceId || "ai"}`;
 
   const parseNum = (val) =>
     parseFloat(String(val).replace(/[^0-9.]/g, "")) || 0;
 
   const recalcTotals = (content) => {
-    const item1Amount =
-      parseNum(content.item1Qty) * parseNum(content.item1Rate);
-    const item2Amount =
-      parseNum(content.item2Qty) * parseNum(content.item2Rate);
-    const item3Amount =
-      parseNum(content.item3Qty) * parseNum(content.item3Rate);
-    const item4Amount =
-      parseNum(content.item4Qty) * parseNum(content.item4Rate);
+    // When qty is empty/zero but rate exists, default qty to 1 (matches template display)
+    const itemAmount = (qty, rate) => {
+      const r = parseNum(rate);
+      if (!r) return 0; // no rate → no contribution
+      return (parseNum(qty) || 1) * r; // empty qty defaults to 1
+    };
+    const item1Amount = itemAmount(content.item1Qty, content.item1Rate);
+    const item2Amount = itemAmount(content.item2Qty, content.item2Rate);
+    const item3Amount = itemAmount(content.item3Qty, content.item3Rate);
+    const item4Amount = itemAmount(content.item4Qty, content.item4Rate);
 
     const subtotal = item1Amount + item2Amount + item3Amount + item4Amount;
 
@@ -658,6 +600,15 @@ Best regards`,
             invoiceTitlePosition:
               data.invoiceTitlePosition || prev.invoiceTitlePosition,
           }));
+          // If this was saved from an AI template path, restore the template ID
+          if (
+            data.selectedTemplateId &&
+            data.selectedTemplateId >= 1 &&
+            data.selectedTemplateId <= 12
+          ) {
+            setLoadedTemplateId(data.selectedTemplateId);
+            setActiveTab("edit");
+          }
         }
       } catch (error) {
         console.error("Failed to load custom invoice:", error);
@@ -673,15 +624,43 @@ Best regards`,
   useEffect(() => {
     const aiContent = location.state?.aiContent;
     if (!aiContent || customInvoiceId) return;
-    const { currency, templateName, ...contentFields } = aiContent;
+    // Clear any stale AI draft so this session always starts fresh from AI data
+    localStorage.removeItem(builderDraftKey);
+    // Normalize to flat format regardless of whether it came from a live chat
+    // (flat) or a restored backend session (canonical/nested).
+    const flat = aiDataToFlatContent(aiContent);
+    const { currency, templateName, ...contentFields } = flat;
+
+    // Always zero out all 4 item slots first so defaults don't bleed through,
+    // then overwrite with actual AI values (including empty strings).
+    const itemSlotDefaults = {
+      item1Desc: "",
+      item1Qty: "",
+      item1Rate: "",
+      item1Amount: "",
+      item2Desc: "",
+      item2Qty: "",
+      item2Rate: "",
+      item2Amount: "",
+      item3Desc: "",
+      item3Qty: "",
+      item3Rate: "",
+      item3Amount: "",
+      item4Desc: "",
+      item4Qty: "",
+      item4Rate: "",
+      item4Amount: "",
+    };
+
+    // Only filter out null/undefined — keep empty strings so they clear defaults.
     const cleanContent = Object.fromEntries(
       Object.entries(contentFields).filter(
-        ([, v]) => v !== null && v !== undefined && v !== "",
+        ([, v]) => v !== null && v !== undefined,
       ),
     );
     const aiVisibility = location.state?.visibility;
     setTemplateConfig((prev) => {
-      const merged = { ...prev.content, ...cleanContent };
+      const merged = { ...prev.content, ...itemSlotDefaults, ...cleanContent };
       return {
         ...prev,
         templateName:
@@ -707,7 +686,8 @@ Best regards`,
   useEffect(() => {
     try {
       const raw = localStorage.getItem(builderDraftKey);
-      if (!raw || customInvoiceId) {
+      // Skip draft restore when coming from AI chat — always start fresh from AI data
+      if (!raw || customInvoiceId || location.state?.aiContent) {
         hasInitializedDraftRef.current = true;
         return;
       }
@@ -778,6 +758,20 @@ Best regards`,
           return;
         }
 
+        // Never send server-managed fields
+        if (
+          [
+            "isDeleted",
+            "userId",
+            "__v",
+            "createdAt",
+            "updatedAt",
+            "_id",
+          ].includes(key)
+        ) {
+          return;
+        }
+
         if (positionFields.includes(key)) {
           return;
         }
@@ -790,6 +784,11 @@ Best regards`,
           formData.append(key, value);
         }
       });
+
+      // Persist which AI template was used so preview renders correctly
+      if (useAiTemplatePreview && selectedTemplateIdFromAi) {
+        formData.set("selectedTemplateId", String(selectedTemplateIdFromAi));
+      }
 
       const response = await apiCall("/build-invoice/customize-invoice", {
         method: "POST",
@@ -841,7 +840,7 @@ Best regards`,
       <div className="min-h-screen bg-gray-100">
         {/* Main Header */}
         <header className="bg-white border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => {
@@ -886,7 +885,7 @@ Best regards`,
         </header>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className=" mx-auto px-4 py-6">
           {/* Content Card with Tabs */}
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
             {/* Action Tabs */}
@@ -1519,6 +1518,11 @@ Best regards`,
                       {useAiTemplatePreview && SelectedTemplateComponent ? (
                         <SelectedTemplateComponent
                           data={selectedTemplatePreviewData}
+                          readOnly={!isEditMode}
+                          visibility={templateConfig.visibility}
+                          onFieldChange={(field, val) =>
+                            handleContentChange(field, val)
+                          }
                         />
                       ) : (
                         <>

@@ -231,6 +231,7 @@ const invoiceCustomizationSchema = new mongoose.Schema(
 
     backgroundHeaderColor: { type: String, default: "#4F46E5" },
     backgroundFooterColor: { type: String, default: "#4F46E5" },
+    selectedTemplateId: { type: Number, default: 0 }, // 0 = custom builder, 1-12 = AI template
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true },

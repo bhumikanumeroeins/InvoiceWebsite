@@ -1205,38 +1205,69 @@ export const extractDeterministicRefinement = (
     const address1 = trimString(block.address1);
     const address2 = trimString(block.address2);
     // If name looks like it has address data concatenated into it, extract just the first segment
-    const cleanName = name.includes('[') || name.split(/[.\n]/).length > 2
-      ? name.split(/[.\n]/)[0].trim()
-      : name;
+    const cleanName =
+      name.includes("[") || name.split(/[.\n]/).length > 2
+        ? name.split(/[.\n]/)[0].trim()
+        : name;
     return {
       name: cleanName,
-      address1: PLACEHOLDER_RE.test(address1) ? '' : address1,
-      address2: PLACEHOLDER_RE.test(address2) ? '' : address2,
+      address1: PLACEHOLDER_RE.test(address1) ? "" : address1,
+      address2: PLACEHOLDER_RE.test(address2) ? "" : address2,
     };
   };
 
   const copyAddressPatterns = [
     // client → shipTo
-    { from: 'client', to: 'shipTo', pattern: /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:client|billing|bill\s*to)\b.{0,30}\b(?:in\s+)?(?:ship(?:ping)?(?:\s+to)?|ship\s+to)\b/i },
+    {
+      from: "client",
+      to: "shipTo",
+      pattern:
+        /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:client|billing|bill\s*to)\b.{0,30}\b(?:in\s+)?(?:ship(?:ping)?(?:\s+to)?|ship\s+to)\b/i,
+    },
     // shipTo → client
-    { from: 'shipTo', to: 'client', pattern: /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:ship(?:ping)?(?:\s+to)?|ship\s+to)\b.{0,30}\b(?:in\s+)?(?:client|billing|bill\s*to)\b/i },
+    {
+      from: "shipTo",
+      to: "client",
+      pattern:
+        /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:ship(?:ping)?(?:\s+to)?|ship\s+to)\b.{0,30}\b(?:in\s+)?(?:client|billing|bill\s*to)\b/i,
+    },
     // business → client
-    { from: 'business', to: 'client', pattern: /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:business|from|sender|my)\b.{0,30}\b(?:in\s+)?(?:client|billing|bill\s*to)\b/i },
+    {
+      from: "business",
+      to: "client",
+      pattern:
+        /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:business|from|sender|my)\b.{0,30}\b(?:in\s+)?(?:client|billing|bill\s*to)\b/i,
+    },
     // client → business
-    { from: 'client', to: 'business', pattern: /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:client|billing|bill\s*to)\b.{0,30}\b(?:in\s+)?(?:business|from|sender)\b/i },
+    {
+      from: "client",
+      to: "business",
+      pattern:
+        /\b(?:use|copy|set|put|fill|same)\b.{0,40}\b(?:client|billing|bill\s*to)\b.{0,30}\b(?:in\s+)?(?:business|from|sender)\b/i,
+    },
     // "ship to same as client" / "shipping same as billing"
-    { from: 'client', to: 'shipTo', pattern: /\bship(?:ping)?(?:\s+to)?\s+(?:same\s+as|=|is\s+same\s+as)\s+(?:client|billing|bill\s*to)\b/i },
+    {
+      from: "client",
+      to: "shipTo",
+      pattern:
+        /\bship(?:ping)?(?:\s+to)?\s+(?:same\s+as|=|is\s+same\s+as)\s+(?:client|billing|bill\s*to)\b/i,
+    },
     // "client same as shipping"
-    { from: 'shipTo', to: 'client', pattern: /\bclient\s+(?:same\s+as|=|is\s+same\s+as)\s+(?:ship(?:ping)?(?:\s+to)?)\b/i },
+    {
+      from: "shipTo",
+      to: "client",
+      pattern:
+        /\bclient\s+(?:same\s+as|=|is\s+same\s+as)\s+(?:ship(?:ping)?(?:\s+to)?)\b/i,
+    },
   ];
 
   for (const { from, to, pattern } of copyAddressPatterns) {
     if (pattern.test(text)) {
       const cleaned = cleanContactBlock(current[from]);
       const fieldMap = {
-        client:   ['clientName',   'clientAddress1',   'clientAddress2'],
-        shipTo:   ['shipToName',   'shipToAddress1',   'shipToAddress2'],
-        business: ['businessName', 'businessAddress1', 'businessAddress2'],
+        client: ["clientName", "clientAddress1", "clientAddress2"],
+        shipTo: ["shipToName", "shipToAddress1", "shipToAddress2"],
+        business: ["businessName", "businessAddress1", "businessAddress2"],
       };
 
       if (cleaned && cleaned.name) {
@@ -1249,7 +1280,7 @@ export const extractDeterministicRefinement = (
           if (reverseCleaned && reverseCleaned.address1) {
             const [rNameKey, rAddr1Key, rAddr2Key] = fieldMap[from];
             return {
-              [rNameKey]:  reverseCleaned.name,
+              [rNameKey]: reverseCleaned.name,
               [rAddr1Key]: reverseCleaned.address1,
               [rAddr2Key]: reverseCleaned.address2,
             };
@@ -1261,13 +1292,44 @@ export const extractDeterministicRefinement = (
         // Return flat legacy fields directly — bypass applyInvoiceRefinement
         // so an identical-looking source/target still produces a real update
         return {
-          [nameKey]:  cleaned.name,
+          [nameKey]: cleaned.name,
           [addr1Key]: cleaned.address1,
           [addr2Key]: cleaned.address2,
         };
       }
       break;
     }
+  }
+
+  // Payment field patterns — bank name, account number, IFSC/routing code
+  const bankNameMatch = text.match(
+    /\b(?:bank(?:\s+name)?|bank\s+is)\s+(?:as\s+|to\s+|is\s+)?(.+?)(?:\s*,|\s+and\b|\s+account|\s+ifsc|\s*$)/i,
+  );
+  if (bankNameMatch) {
+    updates.payment = {
+      ...(updates.payment || {}),
+      bankName: trimString(bankNameMatch[1]),
+    };
+  }
+
+  const accountNumberMatch = text.match(
+    /\b(?:account\s+(?:number|no\.?|#)|a\/c\s+(?:number|no\.?|#)?)\s+(?:as\s+|to\s+|is\s+)?(\S+)/i,
+  );
+  if (accountNumberMatch) {
+    updates.payment = {
+      ...(updates.payment || {}),
+      accountNumber: trimString(accountNumberMatch[1]),
+    };
+  }
+
+  const ifscMatch = text.match(
+    /\b(?:ifsc|routing)\s+(?:code\s+)?(?:as\s+|to\s+|is\s+)?(\S+)/i,
+  );
+  if (ifscMatch) {
+    updates.payment = {
+      ...(updates.payment || {}),
+      ifscCode: trimString(ifscMatch[1]),
+    };
   }
 
   if (Object.keys(updates).length === 0) {

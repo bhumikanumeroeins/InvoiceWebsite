@@ -13,7 +13,10 @@ import Templates9 from "../templates/Templates9";
 import Templates10 from "../templates/Templates10";
 import Templates11 from "../templates/Templates11";
 import Templates12 from "../templates/Templates12";
-import { aiDataToTemplateFormat } from "../../utils/aiDataToTemplate";
+import {
+  aiDataToTemplateFormat,
+  aiDataToFlatContent,
+} from "../../utils/aiDataToTemplate";
 import { buildInvoiceAPI } from "../../services/buildInvoiceService";
 import { toast } from "react-toastify";
 
@@ -43,7 +46,19 @@ const InvoiceLivePreview = ({
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const TemplateComponent = TEMPLATES[templateId] || Templates1;
-  const templateData = aiDataToTemplateFormat(aiData);
+
+  // Always normalize to flat first so getInvoiceData gets the right nested shape,
+  // then merge flat keys back so templates can read data.item1Desc, data.taxLabel etc.
+  // 'terms' must stay as the array form from aiDataToTemplateFormat — the flat string
+  // would overwrite it and cause getInvoiceData to return an empty terms array.
+  const flatData = aiDataToFlatContent(aiData);
+  const nestedData = aiDataToTemplateFormat(flatData);
+  const { terms: _flatTerms, ...flatWithoutTerms } = flatData;
+  const templateData = {
+    ...nestedData, // nested shape for getInvoiceData (terms as array)
+    ...flatWithoutTerms, // flat keys for direct data.* access in templates
+    terms: nestedData.terms, // keep the array form for getInvoiceData
+  };
 
   const TEMPLATE_WIDTH = 794;
   const DISPLAY_WIDTH = 420;

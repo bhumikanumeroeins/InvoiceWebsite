@@ -138,3 +138,62 @@ const fromCanonical = (d = {}) => {
 
 export const aiDataToTemplateFormat = (aiData = {}) =>
   isCanonical(aiData) ? fromCanonical(aiData) : fromFlat(aiData);
+
+export const aiDataToFlatContent = (aiData = {}) => {
+  if (!isCanonical(aiData)) return aiData; // already flat
+
+  const d = aiData;
+  const items = Array.isArray(d.items) ? d.items : [];
+
+  const itemFields = {};
+  for (let i = 0; i < 4; i++) {
+    const n = i + 1;
+    const it = items[i] || {};
+    const qty = parseFloat(it.quantity) || (i === 0 ? 1 : 0);
+    const rate = parseFloat(it.rate) || 0;
+    const amount = parseFloat(it.amount) || qty * rate;
+    itemFields[`item${n}Desc`] = it.description || "";
+    itemFields[`item${n}Qty`] = qty ? String(qty) : "";
+    itemFields[`item${n}Rate`] = rate ? rate.toFixed(2) : "";
+    itemFields[`item${n}Amount`] = amount ? amount.toFixed(2) : "";
+  }
+
+  const subtotal = items.reduce((sum, it) => {
+    const qty = parseFloat(it.quantity) || 1;
+    const rate = parseFloat(it.rate) || 0;
+    return sum + (parseFloat(it.amount) || qty * rate);
+  }, 0);
+  const taxRate = parseFloat(d.taxRate) || 0;
+  const tax = (subtotal * taxRate) / 100;
+  const total = subtotal + tax;
+
+  return {
+    currency: d.currency || "USD",
+    templateName: d.templateName || "",
+    invoiceNumber: d.invoiceNumber || "",
+    invoiceDate: d.invoiceDate || "",
+    dueDate: d.dueDate || "",
+    poNumber: d.poNumber || "",
+    taxLabel: taxRate ? `Tax (${taxRate}%):` : "Tax (0%):",
+    terms: d.terms || "",
+    businessName: d.business?.name || "",
+    businessAddress1: d.business?.address1 || "",
+    businessAddress2: d.business?.address2 || "",
+    clientName: d.client?.name || "",
+    clientAddress1: d.client?.address1 || "",
+    clientAddress2: d.client?.address2 || "",
+    shipToName: d.shipTo?.name || "",
+    shipToAddress1: d.shipTo?.address1 || "",
+    shipToAddress2: d.shipTo?.address2 || "",
+    bankName: d.payment?.bankName || "",
+    accountNumber: d.payment?.accountNumber || "",
+    ifscCode: d.payment?.ifscCode || "",
+    footerEmail: d.footer?.email || "",
+    footerPhone: d.footer?.phone || "",
+    footerWebsite: d.footer?.website || "",
+    subtotal: subtotal.toFixed(2),
+    tax: tax.toFixed(2),
+    total: total.toFixed(2),
+    ...itemFields,
+  };
+};

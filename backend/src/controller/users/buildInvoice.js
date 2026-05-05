@@ -82,6 +82,11 @@ export const createOrUpdateInvoiceCustomization = async (req, res) => {
       }
     }
 
+    if (data.selectedTemplateId !== undefined) {
+      const parsed = Number(data.selectedTemplateId);
+      data.selectedTemplateId = isNaN(parsed) ? 0 : parsed;
+    }
+
     if (!data.templateName) {
       return res
         .status(400)
@@ -145,6 +150,7 @@ export const createOrUpdateInvoiceCustomization = async (req, res) => {
     const payload = {
       ...data,
       userId,
+      isDeleted: false,
       invoiceDate: parseDate(data.invoiceDate) || existing?.invoiceDate || null,
       dueDate: parseDate(data.dueDate) || existing?.dueDate || null,
       logo: logo ? `/uploads/${logo}` : existing?.logo || "",
